@@ -1,0 +1,64 @@
+services:
+
+  sqlserver:
+    build: ./sqlserver
+    environment:
+      SA_PASSWORD: ${DB_SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null -C
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    cap_add:
+      - NET_RAW
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ASPNETCORE_ENVIRONMENT: Production
+      # "sqlserver" = nombre del servicio en la red interna de Docker
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=red;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True"
+      JWT_SECRET: ${JWT_SECRET}
+      CAM_EMAIL: ${CAM_EMAIL}
+      CAM_PASSWORD: ${CAM_PASSWORD}
+      CAM_EMAIL2: ${CAM_EMAIL2}
+      CAM_PASSWORD2: ${CAM_PASSWORD2}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
+      GRAPH_SENDER: ${GRAPH_SENDER}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+
+# NOTA PRODUCCIÓN LINUX:
+# Para que los pings a IPs internas (10.15.x.x) funcionen en un servidor Linux real,
+# cambia backend y frontend a:  network_mode: host
+# Y la conexión SQL Server vuelve a:  Server=localhost,1433

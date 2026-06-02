@@ -1,0 +1,12 @@
+# Credenciales — nunca subir
+.env
+
+# Datos de producción generados por migrate.ps1
+sqlserver/migration_data.sql
+
+# Build artifacts
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.vs/

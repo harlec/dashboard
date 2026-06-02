@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0f0d0c] text-[#eae7e4] font-sans min-h-screen;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+}
