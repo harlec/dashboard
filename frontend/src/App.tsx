@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthContext, useAuthProvider } from './hooks/useAuth'
-import { NavBar }     from './components/NavBar'
-import { Login }      from './pages/Login'
-import { Dashboard }  from './pages/Dashboard'
-import { Incidentes } from './pages/Incidentes'
-import { ReporteSLA } from './pages/ReporteSLA'
+import { NavBar }          from './components/NavBar'
+import { Login }           from './pages/Login'
+import { Dashboard }       from './pages/Dashboard'
+import { Incidentes }      from './pages/Incidentes'
+import { ReporteSLA }      from './pages/ReporteSLA'
+import { Discrepancias }   from './pages/Discrepancias'
 import { AdminLayout }       from './pages/admin/AdminLayout'
 import { AdminDashboard }    from './pages/admin/AdminDashboard'
 import { AdminEstaciones }   from './pages/admin/Estaciones'
@@ -20,7 +21,8 @@ function AppLayout() {
       <Routes>
         <Route path="/"           element={<Dashboard />} />
         <Route path="/incidentes" element={<Incidentes />} />
-        <Route path="/reporte"    element={<ReporteSLA />} />
+        <Route path="/reporte"         element={<ReporteSLA />} />
+        <Route path="/discrepancias"   element={<Discrepancias />} />
         <Route path="/admin"      element={<AdminLayout />}>
           <Route index              element={<AdminDashboard />} />
           <Route path="estaciones"  element={<AdminEstaciones />} />

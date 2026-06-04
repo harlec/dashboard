@@ -29,6 +29,12 @@ export const api = {
   camaras:        () => request<CamaraStatus[]>('/camaras'),
   sla:            (p: SlaParams) =>
     request<SlaEquipo[]>(`/reporte/sla?${new URLSearchParams(p as any)}`),
+  discrepanciasResumen: (horas: number) =>
+    request<DiscrepanciasResumen>(`/discrepancias/resumen?horas=${horas}`),
+  discrepanciasDetalle: (p: DiscrepanciasParams) =>
+    request<DiscrepanciasDetalle>(`/discrepancias/detalle?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null).map(([k,v]) => [k, String(v)]))
+    )}`),
 }
 
 // ── Tipos ─────────────────────────────────────────────────────
@@ -78,3 +84,31 @@ export interface CamaraStatus { id: number; camara: number; ultimoEmail?: string
 
 export interface SlaEquipo { equipoId: number; nombre: string; tipoNombre: string; via: string; uptimePct: number; totalMin: number; downMin: number }
 export interface SlaParams { estacionId?: number; desde?: string; hasta?: string }
+
+// ── Discrepancias DAC ─────────────────────────────────────────
+export interface ConfusionPar   { desde: string; hasta: string; total: number }
+export interface EstacionConteo { estacion: string; total: number }
+export interface TrendPunto     { bucket: string; estacion: string; total: number }
+export interface ViaConteo { via: string; estacion: string; total: number }
+export interface DiscrepanciasResumen {
+  total: number
+  topPares: ConfusionPar[]
+  porEstacion: EstacionConteo[]
+  trend: TrendPunto[]
+  topVias: ViaConteo[]
+}
+export interface DiscrepanciaItem {
+  fecha: string; via: string; ticket?: number
+  placaTabulada: string; placaDetectada: string
+  tabulada: number; catTabulada: string
+  detectada?: number; catDetectada: string
+  tipoOperacion: string; unidad: string; cobrador: string
+}
+export interface DiscrepanciasDetalle {
+  total: number; pagina: number; porPagina: number
+  items: DiscrepanciaItem[]
+}
+export interface DiscrepanciasParams {
+  horas?: number; estacion?: string; placa?: string
+  pagina?: number; porPagina?: number
+}

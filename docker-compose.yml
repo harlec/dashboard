@@ -42,6 +42,7 @@ services:
       GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID}
       GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
       GRAPH_SENDER: ${GRAPH_SENDER}
+      CONSOLIDADO_CONN: ${CONSOLIDADO_CONN}
     depends_on:
       sqlserver:
         condition: service_healthy

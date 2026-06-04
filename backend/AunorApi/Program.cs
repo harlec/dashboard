@@ -107,6 +107,9 @@ builder.Services.AddSingleton<IConnectionStringProvider>(
     new ConnectionStringProvider(connStr));
 builder.Services.AddSingleton<EmailAlertService>();
 
+// ── Consolidado (BD externa — discrepancias DAC) ──────────────
+builder.Services.AddSingleton<DiscrepanciasService>();
+
 var app = builder.Build();
 
 // ── Migrate / init DB ─────────────────────────────────────────

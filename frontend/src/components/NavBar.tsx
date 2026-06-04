@@ -23,10 +23,11 @@ export function NavBar({ signalStatus }: Props) {
 
       <div className="flex gap-1">
         {[
-          { to: '/',           label: 'Dashboard' },
-          { to: '/incidentes', label: 'Incidentes' },
-          { to: '/reporte',    label: 'Reporte SLA' },
-          { to: '/admin',      label: '⚙ Admin' },
+          { to: '/',                label: 'Dashboard' },
+          { to: '/incidentes',      label: 'Incidentes' },
+          { to: '/reporte',         label: 'Reporte SLA' },
+          { to: '/discrepancias',   label: 'Discrepancias' },
+          { to: '/admin',           label: '⚙ Admin' },
         ].map(({ to, label }) => (
           <Link
             key={to}
