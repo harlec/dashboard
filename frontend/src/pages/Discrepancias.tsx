@@ -1,28 +1,24 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend
-} from 'recharts'
-import {
-  api,
-  type DiscrepanciasResumen,
-  type DiscrepanciasDetalle,
-  type ViaConteo,
-} from '../api/client'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
+import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo } from '../api/client'
 
-// ── Constantes ───────────────────────────────────────────────
-const HORAS = [1, 4, 8, 12] as const
-type Horas = typeof HORAS[number]
+// ── Períodos ──────────────────────────────────────────────────
+const PERIODOS = [
+  { key: '1h',   label: 'Última hora' },
+  { key: '4h',   label: 'Últimas 4h'  },
+  { key: '12h',  label: 'Últimas 12h' },
+  { key: '24h',  label: 'Últimas 24h' },
+  { key: 'ayer', label: 'Ayer'         },
+  { key: 'mes',  label: 'Mes actual'   },
+] as const
+type Periodo = typeof PERIODOS[number]['key']
 
+// ── Constantes ────────────────────────────────────────────────
 const ESTACIONES = ['FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA'] as const
-
 const COLORS: Record<string, string> = {
-  FORTALEZA: '#72BF44',
-  HUARMEY:   '#F99B1C',
-  '402':     '#4A9EE0',
-  VIRU:      '#E060A0',
-  SANTA:     '#9B6BE0',
+  FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
+  '402': '#4A9EE0', VIRU: '#E060A0', SANTA: '#9B6BE0',
 }
-
 const RANK_COLORS = ['#F04545', '#F99B1C', '#FACC15', '#4A9EE0', '#a09890']
 
 function abbrev(cat: string): string {
@@ -33,23 +29,39 @@ function abbrev(cat: string): string {
   return cat.slice(0, 7)
 }
 
-// ── Subcomponentes ────────────────────────────────────────────
+function efectColor(pct: number) {
+  if (pct >= 95) return '#72BF44'
+  if (pct >= 90) return '#F99B1C'
+  return '#F04545'
+}
 
-function HorasTab({ horas, onChange }: { horas: Horas; onChange: (h: Horas) => void }) {
+// ── Gauge de efectividad (SVG) ────────────────────────────────
+function EfectGauge({ pct }: { pct: number }) {
+  const r = 38, cx = 52, cy = 48
+  const circ = Math.PI * r          // semicírculo
+  const arc  = Math.max(0, Math.min(1, pct / 100)) * circ
+  const color = efectColor(pct)
+
   return (
-    <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5">
-      {HORAS.map(h => (
-        <button key={h} onClick={() => onChange(h)}
-          className={`px-3 py-1 rounded-md text-[0.8rem] font-semibold transition-all ${
-            horas === h ? 'bg-brand text-[#0f0d0c]' : 'text-white/50 hover:text-white/80'
-          }`}>
-          {h}h
-        </button>
-      ))}
-    </div>
+    <svg width="104" height="62" viewBox="0 0 104 62">
+      {/* track */}
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+        fill="none" stroke="#252220" strokeWidth="12" strokeLinecap="round" />
+      {/* arc */}
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+        fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
+        strokeDasharray={`${arc} ${circ}`} />
+      <text x={cx} y={cy - 2} textAnchor="middle" fill={color}
+        fontSize="17" fontWeight="800" fontFamily="Segoe UI,sans-serif">
+        {pct.toFixed(1)}%
+      </text>
+      <text x={cx} y={cy + 13} textAnchor="middle" fill="#7a7470"
+        fontSize="9" fontFamily="Segoe UI,sans-serif">EFECTIVIDAD</text>
+    </svg>
   )
 }
 
+// ── Tooltips ──────────────────────────────────────────────────
 function TrendTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const total = payload.reduce((s: number, p: any) => s + (p.value ?? 0), 0)
@@ -82,6 +94,7 @@ function ParTooltip({ active, payload }: any) {
   )
 }
 
+// ── Top vías ──────────────────────────────────────────────────
 function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }) {
   const max = vias[0]?.total ?? 1
   return (
@@ -93,36 +106,27 @@ function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }
         <div className="flex items-center justify-center h-24 text-muted text-sm">Sin datos</div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {vias.map((v, i) => {
-            const pct = Math.round((v.total / max) * 100)
-            return (
-              <div key={i} className="flex items-center gap-2.5">
-                <span className="text-[0.78rem] font-extrabold w-4 text-right flex-shrink-0"
-                  style={{ color: RANK_COLORS[i] }}>
-                  #{i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[0.8rem] text-[#eae7e4] font-semibold truncate">{v.via}</span>
-                    <span className="text-[0.78rem] font-bold ml-2 flex-shrink-0"
-                      style={{ color: RANK_COLORS[i] }}>
-                      {v.total.toLocaleString('es-PE')}
-                    </span>
+          {vias.map((v, i) => (
+            <div key={i} className="flex items-center gap-2.5">
+              <span className="text-[0.78rem] font-extrabold w-4 text-right flex-shrink-0"
+                style={{ color: RANK_COLORS[i] }}>#{i + 1}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-[0.8rem] text-[#eae7e4] font-semibold truncate">{v.via}</span>
+                  <span className="text-[0.78rem] font-bold ml-2 flex-shrink-0"
+                    style={{ color: RANK_COLORS[i] }}>{v.total.toLocaleString('es-PE')}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                    <div className="h-full rounded-full"
+                      style={{ width: `${Math.round(v.total / max * 100)}%`, background: COLORS[v.estacion] ?? RANK_COLORS[i] }} />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                      <div className="h-full rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: COLORS[v.estacion] ?? RANK_COLORS[i] }} />
-                    </div>
-                    <span className="text-[0.7rem] text-dim flex-shrink-0"
-                      style={{ color: COLORS[v.estacion] ?? '#a09890' }}>
-                      {v.estacion}
-                    </span>
-                  </div>
+                  <span className="text-[0.7rem] text-dim flex-shrink-0"
+                    style={{ color: COLORS[v.estacion] ?? '#a09890' }}>{v.estacion}</span>
                 </div>
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -131,7 +135,7 @@ function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }
 
 // ── Página principal ──────────────────────────────────────────
 export function Discrepancias() {
-  const [horas, setHoras]           = useState<Horas>(8)
+  const [periodo, setPeriodo]       = useState<Periodo>('12h')
   const [resumen, setResumen]       = useState<DiscrepanciasResumen | null>(null)
   const [detalle, setDetalle]       = useState<DiscrepanciasDetalle | null>(null)
   const [detalleError, setDetalleError] = useState(false)
@@ -141,51 +145,36 @@ export function Discrepancias() {
   const [pagina, setPagina]         = useState(1)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
   const [signal, setSignal]         = useState<'idle' | 'ok' | 'error'>('idle')
-  const [loadingResumen, setLoadingResumen] = useState(false)
-  const [loadingDetalle, setLoadingDetalle] = useState(false)
+  const [loadingR, setLoadingR]     = useState(false)
+  const [loadingD, setLoadingD]     = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadResumen = useCallback(async () => {
-    setLoadingResumen(true)
+    setLoadingR(true)
     try {
-      const r = await api.discrepanciasResumen(horas)
-      setResumen(r)
+      setResumen(await api.discrepanciasResumen(periodo))
       setLastUpdate(new Date())
       setSignal('ok')
-    } catch {
-      setSignal('error')
-    } finally {
-      setLoadingResumen(false)
-    }
-  }, [horas])
+    } catch { setSignal('error') }
+    finally { setLoadingR(false) }
+  }, [periodo])
 
   const loadDetalle = useCallback(async () => {
-    setLoadingDetalle(true)
+    setLoadingD(true)
     setDetalleError(false)
     try {
-      const d = await api.discrepanciasDetalle({
-        horas,
+      setDetalle(await api.discrepanciasDetalle({
+        periodo,
         estacion: estacion || undefined,
         placa: placa || undefined,
-        pagina,
-        porPagina: 50,
-      })
-      setDetalle(d)
-    } catch {
-      setDetalleError(true)
-    } finally {
-      setLoadingDetalle(false)
-    }
-  }, [horas, estacion, placa, pagina])
+        pagina, porPagina: 50,
+      }))
+    } catch { setDetalleError(true) }
+    finally { setLoadingD(false) }
+  }, [periodo, estacion, placa, pagina])
 
-  useEffect(() => {
-    setPagina(1)
-    loadResumen()
-    loadDetalle()
-  }, [horas, estacion, placa]) // eslint-disable-line
-
+  useEffect(() => { setPagina(1); loadResumen(); loadDetalle() }, [periodo, estacion, placa]) // eslint-disable-line
   useEffect(() => { loadDetalle() }, [pagina]) // eslint-disable-line
-
   useEffect(() => {
     timerRef.current = setInterval(loadResumen, 60_000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
@@ -208,41 +197,80 @@ export function Discrepancias() {
   [resumen?.topPares])
 
   const totalPaginas = detalle ? Math.ceil(detalle.total / detalle.porPagina) : 1
+  const ef = resumen?.efectividad ?? null
 
   return (
     <div className="px-5 py-4 pb-10">
 
-      {/* Topbar */}
-      <div className="flex items-center justify-between bg-surface rounded-xl px-6 py-3.5 mb-3.5 gap-4 flex-wrap">
-        <div className="flex flex-col gap-1">
-          <div className="text-[1.05rem] font-extrabold text-[#eae7e4]">Discrepancias DAC</div>
-          <div className="text-[0.78rem] text-muted">
-            Actualizado: <b className="text-[#d4cec9]">{lastUpdate.toLocaleTimeString('es-PE')}</b>
-            {' · '}refresco automático cada 60s
+      {/* ── Topbar ─────────────────────────────────────────── */}
+      <div className="bg-surface rounded-xl px-6 py-4 mb-3.5">
+        {/* Fila 1: título + signal */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[1.05rem] font-extrabold text-[#eae7e4]">Discrepancias DAC</div>
+            <div className="text-[0.75rem] text-muted">
+              Actualizado: <b className="text-[#d4cec9]">{lastUpdate.toLocaleTimeString('es-PE')}</b>
+              {' · '}refresco cada 60s
+            </div>
+          </div>
+          <div className={`flex items-center gap-1.5 text-[0.75rem] text-white/70
+            bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              signal === 'ok' ? 'bg-brand animate-ping-pulse' :
+              signal === 'error' ? 'bg-danger' : 'bg-[#a09890]'}`} />
+            <span>{signal === 'ok' ? 'En vivo' : signal === 'error' ? 'Sin conexión' : 'En espera'}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <HorasTab horas={horas} onChange={h => { setHoras(h); setPagina(1) }} />
+        {/* Fila 2: tabs + KPIs */}
+        <div className="flex items-center gap-6 flex-wrap">
+          {/* Tabs de período */}
+          <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 flex-wrap">
+            {PERIODOS.map(({ key, label }) => (
+              <button key={key} onClick={() => { setPeriodo(key); setPagina(1) }}
+                className={`px-3 py-1 rounded-md text-[0.78rem] font-semibold transition-all whitespace-nowrap ${
+                  periodo === key
+                    ? 'bg-warn text-[#0f0d0c]'
+                    : 'text-white/50 hover:text-white/80'
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Separador */}
+          <div className="w-px h-10 bg-border hidden sm:block" />
+
+          {/* Gauge efectividad */}
           <div className="flex flex-col items-center">
-            <span className="text-[2rem] font-extrabold text-warn leading-none">
-              {resumen?.total?.toLocaleString('es-PE') ?? '—'}
-            </span>
-            <span className="text-[0.7rem] text-muted uppercase tracking-widest">discrepancias</span>
+            {ef !== null
+              ? <EfectGauge pct={ef} />
+              : <div className="text-muted text-sm">—</div>
+            }
           </div>
-        </div>
 
-        <div className={`flex items-center gap-1.5 text-[0.75rem] text-white/70
-          bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-            signal === 'ok' ? 'bg-brand animate-ping-pulse' :
-            signal === 'error' ? 'bg-danger' : 'bg-[#a09890]'
-          }`} />
-          <span>{signal === 'ok' ? 'En vivo' : signal === 'error' ? 'Sin conexión' : 'En espera'}</span>
+          {/* Separador */}
+          <div className="w-px h-10 bg-border hidden sm:block" />
+
+          {/* Totales */}
+          <div className="flex gap-5">
+            <div className="flex flex-col items-center">
+              <span className="text-[1.8rem] font-extrabold text-warn leading-none">
+                {resumen?.total?.toLocaleString('es-PE') ?? '—'}
+              </span>
+              <span className="text-[0.68rem] text-muted uppercase tracking-wide">discrepancias</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[1.8rem] font-extrabold text-[#d4cec9] leading-none">
+                {resumen?.totalTransacciones?.toLocaleString('es-PE') ?? '—'}
+              </span>
+              <span className="text-[0.68rem] text-muted uppercase tracking-wide">transacciones</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Pills por estación */}
+      {/* ── Pills por estación ─────────────────────────────── */}
       {resumen && (
         <div className="flex gap-2 mb-3.5 flex-wrap">
           {resumen.porEstacion.map(e => (
@@ -252,8 +280,7 @@ export function Discrepancias() {
                 border transition-all ${
                 estacion === e.estacion
                   ? 'border-transparent text-[#0f0d0c]'
-                  : 'border-border text-[#eae7e4] bg-surface hover:bg-surface-2'
-              }`}
+                  : 'border-border text-[#eae7e4] bg-surface hover:bg-surface-2'}`}
               style={estacion === e.estacion ? { background: COLORS[e.estacion] ?? '#72BF44' } : {}}>
               <div className="w-2 h-2 rounded-full" style={{ background: COLORS[e.estacion] ?? '#888' }} />
               {e.estacion}
@@ -271,22 +298,20 @@ export function Discrepancias() {
         </div>
       )}
 
-      {/* Gráficas: top confusiones | tendencia | top 5 vías */}
+      {/* ── Gráficas ───────────────────────────────────────── */}
       <div className="grid grid-cols-[2fr_3fr_1.6fr] gap-3.5 mb-3.5">
 
         {/* Top confusiones */}
         <div className="bg-surface rounded-xl p-4">
           <div className="text-[0.85rem] font-bold text-[#eae7e4] mb-3">Top confusiones</div>
-          {loadingResumen ? (
+          {loadingR ? (
             <div className="h-[260px] flex items-center justify-center text-muted text-sm">Cargando…</div>
           ) : paresData.length === 0 ? (
             <div className="h-[260px] flex items-center justify-center text-muted text-sm">Sin datos</div>
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(220, paresData.length * 26)}>
-              <BarChart data={paresData} layout="vertical"
-                margin={{ left: 8, right: 36, top: 4, bottom: 4 }}>
-                <XAxis type="number" tick={{ fill: '#a09890', fontSize: 11 }}
-                  tickLine={false} axisLine={false} />
+              <BarChart data={paresData} layout="vertical" margin={{ left: 8, right: 36, top: 4, bottom: 4 }}>
+                <XAxis type="number" tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <YAxis type="category" dataKey="label" width={108}
                   tick={{ fill: '#d4cec9', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<ParTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
@@ -302,15 +327,16 @@ export function Discrepancias() {
           )}
         </div>
 
-        {/* Tendencia por estación */}
+        {/* Tendencia */}
         <div className="bg-surface rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="text-[0.85rem] font-bold text-[#eae7e4]">Tendencia por estación</div>
             <div className="text-[0.72rem] text-muted">
-              cada {horas === 1 ? '10' : horas === 4 ? '20' : horas === 8 ? '30' : '60'} min
+              {periodo === '1h' ? 'cada 10 min' : periodo === '4h' ? 'cada 20 min' :
+               periodo === '12h' ? 'cada 30 min' : periodo === 'mes' ? 'por día' : 'por hora'}
             </div>
           </div>
-          {loadingResumen ? (
+          {loadingR ? (
             <div className="h-[260px] flex items-center justify-center text-muted text-sm">Cargando…</div>
           ) : trendPivot.length === 0 ? (
             <div className="h-[260px] flex items-center justify-center text-muted text-sm">Sin datos</div>
@@ -332,17 +358,16 @@ export function Discrepancias() {
         </div>
 
         {/* Top 5 vías */}
-        <TopViasPanel vias={resumen?.topVias ?? []} loading={loadingResumen} />
+        <TopViasPanel vias={resumen?.topVias ?? []} loading={loadingR} />
       </div>
 
-      {/* Tabla de detalle */}
+      {/* ── Tabla de detalle ───────────────────────────────── */}
       <div className="bg-surface rounded-xl p-4">
         <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <div className="text-[0.85rem] font-bold text-[#eae7e4]">Detalle de discrepancias</div>
-          <div className="text-[0.78rem] text-muted ml-1">
+          <div className="text-[0.85rem] font-bold text-[#eae7e4]">Detalle</div>
+          <span className="text-[0.78rem] text-muted">
             {detalle ? `${detalle.total.toLocaleString('es-PE')} registros` : ''}
-          </div>
-
+          </span>
           <div className="ml-auto flex gap-2 flex-wrap">
             <select value={estacion} onChange={e => { setEstacion(e.target.value); setPagina(1) }}
               className="bg-surface-2 border border-border text-[0.82rem] text-[#eae7e4] px-2.5 py-1.5
@@ -350,7 +375,6 @@ export function Discrepancias() {
               <option value="">Todas las estaciones</option>
               {ESTACIONES.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
-
             <form onSubmit={e => { e.preventDefault(); setPlaca(placaInput.trim().toUpperCase()); setPagina(1) }}
               className="flex gap-1">
               <input type="text" placeholder="Buscar placa…" value={placaInput}
@@ -360,22 +384,17 @@ export function Discrepancias() {
                   rounded-lg w-28 outline-none focus:border-warn/60 placeholder:text-dim" />
               <button type="submit"
                 className="px-2.5 py-1.5 bg-surface-2 border border-border rounded-lg text-[0.82rem]
-                  text-white/60 hover:text-white hover:bg-surface-3 transition-colors">
-                🔍
-              </button>
+                  text-white/60 hover:text-white hover:bg-surface-3">🔍</button>
               {placa && (
-                <button type="button"
-                  onClick={() => { setPlacaInput(''); setPlaca(''); setPagina(1) }}
+                <button type="button" onClick={() => { setPlacaInput(''); setPlaca(''); setPagina(1) }}
                   className="px-2 py-1.5 text-[0.78rem] text-white/40 hover:text-white/70">✕</button>
               )}
             </form>
           </div>
         </div>
 
-        {/* Error de detalle */}
         {detalleError && (
-          <div className="mb-3 px-3 py-2 bg-danger/10 border border-danger/30 rounded-lg
-            text-[0.82rem] text-danger">
+          <div className="mb-3 px-3 py-2 bg-danger/10 border border-danger/30 rounded-lg text-[0.82rem] text-danger">
             Error al cargar el detalle. Verifica la conexión con la BD consolidado.
           </div>
         )}
@@ -386,60 +405,53 @@ export function Discrepancias() {
               <tr className="border-b border-border">
                 {['Fecha', 'Estación', 'VIA', 'Ticket', 'Tabulada', 'Detectada',
                   'Placa Tab.', 'Placa Det.', 'Cobrador'].map(h => (
-                  <th key={h} className="text-left py-2 px-2.5 text-muted font-semibold whitespace-nowrap">
-                    {h}
-                  </th>
+                  <th key={h} className="text-left py-2 px-2.5 text-muted font-semibold whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loadingDetalle ? (
+              {loadingD ? (
                 <tr><td colSpan={9} className="py-8 text-center text-muted">Cargando…</td></tr>
               ) : (detalle?.items ?? []).length === 0 && !detalleError ? (
                 <tr><td colSpan={9} className="py-8 text-center text-muted">Sin discrepancias en el período</td></tr>
-              ) : (
-                (detalle?.items ?? []).map((item, i) => {
-                  const placaDiff = !!item.placaTabulada && !!item.placaDetectada
-                    && item.placaTabulada !== item.placaDetectada
-                  return (
-                    <tr key={i}
-                      className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
-                      <td className="py-1.5 px-2.5 text-dim whitespace-nowrap">{item.fecha}</td>
-                      <td className="py-1.5 px-2.5">
-                        <span className="font-semibold" style={{ color: COLORS[item.unidad] ?? '#a09890' }}>
-                          {item.unidad}
-                        </span>
-                      </td>
-                      <td className="py-1.5 px-2.5 text-muted">{item.via}</td>
-                      <td className="py-1.5 px-2.5 text-dim">{item.ticket ?? '—'}</td>
-                      <td className="py-1.5 px-2.5">
-                        <span className="bg-warn/10 text-warn px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
-                          {abbrev(item.catTabulada)}
-                        </span>
-                      </td>
-                      <td className="py-1.5 px-2.5">
-                        <span className="bg-[#4A9EE0]/10 text-[#4A9EE0] px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
-                          {abbrev(item.catDetectada)}
-                        </span>
-                      </td>
-                      <td className="py-1.5 px-2.5 font-mono text-[0.78rem] text-[#eae7e4]">
-                        {item.placaTabulada || '—'}
-                      </td>
-                      <td className={`py-1.5 px-2.5 font-mono text-[0.78rem] ${
-                        placaDiff ? 'text-danger font-bold' : 'text-muted'
-                      }`}>
-                        {item.placaDetectada || '—'}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-dim">{item.cobrador}</td>
-                    </tr>
-                  )
-                })
-              )}
+              ) : (detalle?.items ?? []).map((item, i) => {
+                const placaDiff = !!item.placaTabulada && !!item.placaDetectada
+                  && item.placaTabulada !== item.placaDetectada
+                return (
+                  <tr key={i} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
+                    <td className="py-1.5 px-2.5 text-dim whitespace-nowrap">{item.fecha}</td>
+                    <td className="py-1.5 px-2.5">
+                      <span className="font-semibold" style={{ color: COLORS[item.unidad] ?? '#a09890' }}>
+                        {item.unidad}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-2.5 text-muted">{item.via}</td>
+                    <td className="py-1.5 px-2.5 text-dim">{item.ticket ?? '—'}</td>
+                    <td className="py-1.5 px-2.5">
+                      <span className="bg-warn/10 text-warn px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
+                        {abbrev(item.catTabulada)}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-2.5">
+                      <span className="bg-[#4A9EE0]/10 text-[#4A9EE0] px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
+                        {abbrev(item.catDetectada)}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-2.5 font-mono text-[0.78rem] text-[#eae7e4]">
+                      {item.placaTabulada || '—'}
+                    </td>
+                    <td className={`py-1.5 px-2.5 font-mono text-[0.78rem] ${
+                      placaDiff ? 'text-danger font-bold' : 'text-muted'}`}>
+                      {item.placaDetectada || '—'}
+                    </td>
+                    <td className="py-1.5 px-2.5 text-dim">{item.cobrador}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Paginación */}
         {detalle && totalPaginas > 1 && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}

@@ -6,14 +6,15 @@ public record TrendPuntoDto(string Bucket, string Estacion, int Total);
 public record ViaConteoDto(string Via, string Estacion, int Total);
 
 public record DiscrepanciasResumenDto(
-    int Total,
-    List<ConfusionParDto> TopPares,
+    int    Total,
+    int    TotalTransacciones,
+    double Efectividad,
+    List<ConfusionParDto>   TopPares,
     List<EstacionConteoDto> PorEstacion,
-    List<TrendPuntoDto> Trend,
-    List<ViaConteoDto> TopVias
+    List<TrendPuntoDto>     Trend,
+    List<ViaConteoDto>      TopVias
 );
 
-// Clase con get;set; — Dapper la mapea por propiedades sin necesidad de constructor
 public class DiscrepanciaItemDto
 {
     public string Fecha          { get; set; } = "";

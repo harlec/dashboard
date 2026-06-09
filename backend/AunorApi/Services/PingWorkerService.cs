@@ -154,16 +154,16 @@ public class PingWorkerService(
         db.PingLogs.Add(new PingLog
         {
             EquipoId   = equipoId,
-            Timestamp  = DateTime.UtcNow,
+            Timestamp  = DateTime.Now,
             Estado     = estado,
             LatenciaMs = latencia
         });
 
         if (estado == "DOWN")
         {
-            db.Incidentes.Add(new Incidente { EquipoId = equipoId, Inicio = DateTime.UtcNow });
+            db.Incidentes.Add(new Incidente { EquipoId = equipoId, Inicio = DateTime.Now });
             await db.SaveChangesAsync(ct);
-            await hub.Clients.All.SendAsync("IncidenteAbierto", equipoId, DateTime.UtcNow, ct);
+            await hub.Clients.All.SendAsync("IncidenteAbierto", equipoId, DateTime.Now, ct);
         }
         else
         {
@@ -172,7 +172,7 @@ public class PingWorkerService(
                 .FirstOrDefaultAsync(ct);
             if (inc != null)
             {
-                inc.Fin = DateTime.UtcNow;
+                inc.Fin = DateTime.Now;
                 inc.DuracionMin = (int)(inc.Fin.Value - inc.Inicio).TotalMinutes;
             }
             await db.SaveChangesAsync(ct);
@@ -182,7 +182,7 @@ public class PingWorkerService(
         }
 
         await hub.Clients.All.SendAsync("EquipoStatusChanged",
-            equipoId, estado, latencia, DateTime.UtcNow, ct);
+            equipoId, estado, latencia, DateTime.Now, ct);
 
         return true;
     }

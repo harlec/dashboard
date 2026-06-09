@@ -10,23 +10,23 @@ namespace AunorApi.Controllers;
 public class DiscrepanciasController(DiscrepanciasService svc) : ControllerBase
 {
     [HttpGet("resumen")]
-    public async Task<IActionResult> Resumen([FromQuery] int horas = 8)
+    public async Task<IActionResult> Resumen([FromQuery] string periodo = "12h")
     {
-        horas = horas is 1 or 4 or 8 or 12 ? horas : 8;
-        return Ok(await svc.GetResumenAsync(horas));
+        if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
+        return Ok(await svc.GetResumenAsync(periodo));
     }
 
     [HttpGet("detalle")]
     public async Task<IActionResult> Detalle(
-        [FromQuery] int    horas     = 8,
-        [FromQuery] string? estacion = null,
-        [FromQuery] string? placa    = null,
-        [FromQuery] int    pagina    = 1,
-        [FromQuery] int    porPagina = 50)
+        [FromQuery] string  periodo   = "12h",
+        [FromQuery] string? estacion  = null,
+        [FromQuery] string? placa     = null,
+        [FromQuery] int     pagina    = 1,
+        [FromQuery] int     porPagina = 50)
     {
-        horas     = horas is 1 or 4 or 8 or 12 ? horas : 8;
+        if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
         pagina    = Math.Max(1, pagina);
         porPagina = Math.Clamp(porPagina, 10, 100);
-        return Ok(await svc.GetDetalleAsync(horas, estacion, placa, pagina, porPagina));
+        return Ok(await svc.GetDetalleAsync(periodo, estacion, placa, pagina, porPagina));
     }
 }

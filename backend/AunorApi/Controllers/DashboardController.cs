@@ -54,7 +54,7 @@ public class DashboardController(AppDbContext db) : ControllerBase
 
                     int? incMin = null;
                     if (incActivo != null)
-                        incMin = (int)(DateTime.UtcNow - incActivo.Inicio).TotalMinutes;
+                        incMin = (int)(DateTime.Now - incActivo.Inicio).TotalMinutes;
 
                     if (eq.Monitorear)
                     {
@@ -117,7 +117,7 @@ public class DashboardController(AppDbContext db) : ControllerBase
             .FirstOrDefaultAsync();
 
         int? incMin = incActivo is null ? null
-            : (int)(DateTime.UtcNow - incActivo.Inicio).TotalMinutes;
+            : (int)(DateTime.Now - incActivo.Inicio).TotalMinutes;
 
         var hist = await db.PingLogs
             .Where(p => p.EquipoId == id)

@@ -17,8 +17,8 @@ public class ReporteController(AppDbContext db) : ControllerBase
         [FromQuery] DateTime? desde,
         [FromQuery] DateTime? hasta)
     {
-        var desdeDate = desde ?? DateTime.UtcNow.AddDays(-30);
-        var hastaDate = hasta ?? DateTime.UtcNow;
+        var desdeDate = desde ?? DateTime.Now.AddDays(-30);
+        var hastaDate = hasta ?? DateTime.Now;
         var totalMin  = (int)(hastaDate - desdeDate).TotalMinutes;
 
         var equipos = await db.Equipos

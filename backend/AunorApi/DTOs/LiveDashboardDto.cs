@@ -33,3 +33,13 @@ public record IncidenteDto(
 public record CamaraStatusDto(int Id, byte Camara, DateTime? UltimoEmail, int? MinDesdeEmail, bool Online);
 
 public record SlaEquipoDto(int EquipoId, string Nombre, string TipoNombre, string Via, decimal UptimePct, int TotalMin, int DownMin);
+
+public record EstacionIncDto(string Estacion, int Total);
+public record ViaIncDto(string Via, string Estacion, int Total);
+public record TendenciaIncDto(string Fecha, int Total);
+public record IncidenteResumenDto(
+    int Total, int Activos,
+    List<EstacionIncDto> PorEstacion,
+    List<ViaIncDto> TopVias,
+    List<TendenciaIncDto> Tendencia
+);

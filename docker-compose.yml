@@ -43,6 +43,7 @@ services:
       GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
       GRAPH_SENDER: ${GRAPH_SENDER}
       CONSOLIDADO_CONN: ${CONSOLIDADO_CONN}
+      TZ: America/Lima
     depends_on:
       sqlserver:
         condition: service_healthy

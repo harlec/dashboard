@@ -24,16 +24,20 @@ export const api = {
   me:             () => request<{ id: number; username: string; nombre: string; rol: string }>('/auth/me'),
   liveDashboard:  () => request<LiveDashboard>('/dashboard/live'),
   equipoDetail:   (id: number) => request<EquipoDetail>(`/dashboard/equipo/${id}`),
-  incidentes:     (p: IncidentesParams) =>
-    request<IncidentesPage>(`/incidentes?${new URLSearchParams(p as any)}`),
+  incidentes:        (p: IncidentesParams) =>
+    request<IncidentesPage>(`/incidentes?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
+  incidentesResumen: (dias: number) =>
+    request<IncidenteResumen>(`/incidentes/resumen?dias=${dias}`),
   camaras:        () => request<CamaraStatus[]>('/camaras'),
   sla:            (p: SlaParams) =>
     request<SlaEquipo[]>(`/reporte/sla?${new URLSearchParams(p as any)}`),
-  discrepanciasResumen: (horas: number) =>
-    request<DiscrepanciasResumen>(`/discrepancias/resumen?horas=${horas}`),
+  discrepanciasResumen: (periodo: string) =>
+    request<DiscrepanciasResumen>(`/discrepancias/resumen?periodo=${periodo}`),
   discrepanciasDetalle: (p: DiscrepanciasParams) =>
     request<DiscrepanciasDetalle>(`/discrepancias/detalle?${new URLSearchParams(
-      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null).map(([k,v]) => [k, String(v)]))
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
 }
 
@@ -78,7 +82,20 @@ export interface IncidenteItem {
   inicio: string; fin?: string; duracionMin?: number
 }
 export interface IncidentesPage { total: number; page: number; pageSize: number; items: IncidenteItem[] }
-export interface IncidentesParams { page?: number; pageSize?: number; soloAbiertos?: boolean; desde?: string; hasta?: string }
+export interface IncidentesParams {
+  page?: number; pageSize?: number; soloAbiertos?: boolean
+  desde?: string; hasta?: string; estacion?: string
+}
+
+export interface EstacionInc  { estacion: string; total: number }
+export interface ViaInc       { via: string; estacion: string; total: number }
+export interface TendenciaInc { fecha: string; total: number }
+export interface IncidenteResumen {
+  total: number; activos: number
+  porEstacion: EstacionInc[]
+  topVias: ViaInc[]
+  tendencia: TendenciaInc[]
+}
 
 export interface CamaraStatus { id: number; camara: number; ultimoEmail?: string; minDesdeEmail?: number; online: boolean }
 
@@ -92,6 +109,8 @@ export interface TrendPunto     { bucket: string; estacion: string; total: numbe
 export interface ViaConteo { via: string; estacion: string; total: number }
 export interface DiscrepanciasResumen {
   total: number
+  totalTransacciones: number
+  efectividad: number
   topPares: ConfusionPar[]
   porEstacion: EstacionConteo[]
   trend: TrendPunto[]
@@ -109,6 +128,6 @@ export interface DiscrepanciasDetalle {
   items: DiscrepanciaItem[]
 }
 export interface DiscrepanciasParams {
-  horas?: number; estacion?: string; placa?: string
+  periodo?: string; estacion?: string; placa?: string
   pagina?: number; porPagina?: number
 }
