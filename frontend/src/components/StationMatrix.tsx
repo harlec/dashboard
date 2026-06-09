@@ -26,10 +26,22 @@ export function StationMatrix({ estaciones, onEquipoClick }: Props) {
             {estaciones.map(est => {
               const pct = est.total > 0 ? Math.round(est.up / est.total * 100) : 0
               return (
-                <th key={est.id} className="bg-[#242120] rounded-lg p-0 align-bottom">
-                  <div className="flex flex-col items-center gap-0.5 px-3 pt-2.5 pb-2">
+                <th key={est.id} className={`rounded-lg p-0 align-bottom transition-colors ${
+                  est.enlace === 'STARLINK'
+                    ? 'bg-orange-500/15 ring-1 ring-orange-500/40'
+                    : 'bg-[#242120]'
+                }`}>
+                  <div className="relative flex flex-col items-center gap-0.5 px-3 pt-2.5 pb-2">
+                    {est.enlace === 'STARLINK' && (
+                      <div className="absolute top-1.5 right-2.5 flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-ping-pulse" />
+                        <span className="text-[0.58rem] font-bold text-orange-400 uppercase tracking-wide whitespace-nowrap">
+                          Respaldo Starlink
+                        </span>
+                      </div>
+                    )}
                     <span className="text-[1rem] font-bold text-[#eae7e4]">{est.nombre}</span>
-                    <StationGauge pct={pct} up={est.up} down={est.down} />
+                    <StationGauge pct={pct} up={est.up} down={est.down} enlace={est.enlace} />
                   </div>
                 </th>
               )
@@ -98,3 +110,4 @@ function StatCol({ num, label, color }: { num: number; label: string; color: str
     </div>
   )
 }
+

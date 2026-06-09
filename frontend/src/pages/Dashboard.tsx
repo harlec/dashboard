@@ -32,26 +32,42 @@ export function Dashboard() {
 
   // SignalR — actualizaciones en tiempo real
   useSignalR({
-    onEquipoStatusChanged: (equipoId, estado, latenciaMs, timestamp) => {
+    onEquipoStatusChanged: (equipoId, estado, latenciaMs, timestamp, alerta) => {
       setSignal('ok')
-      // Sonido de alerta
-      if (estado === 'DOWN') playDown()
-      else if (estado === 'UP') playUp()
+      if (alerta) {
+        if (estado === 'DOWN') playDown()
+        else if (estado === 'UP') playUp()
+      }
       setData(prev => {
         if (!prev) return prev
-        const estaciones = prev.estaciones.map(est => ({
-          ...est,
-          vias: est.vias.map(via => ({
+        const estaciones = prev.estaciones.map(est => {
+          const vias = est.vias.map(via => ({
             ...via,
             equipos: via.equipos.map(eq =>
               eq.id === equipoId
                 ? { ...eq, ultimoEstado: estado, latenciaMs: latenciaMs ?? undefined, ultimoPing: timestamp }
                 : eq)
           }))
-        }))
+          // Recalcular contadores UP/DN/sin para que el gauge se actualice
+          const monitoreados = vias.flatMap(v => v.equipos).filter(e => e.monitorear)
+          const up   = monitoreados.filter(e => e.ultimoEstado === 'UP').length
+          const down = monitoreados.filter(e => e.ultimoEstado === 'DOWN').length
+          const sin  = monitoreados.filter(e => !e.ultimoEstado).length
+          return { ...est, vias, up, down, sin }
+        })
         return { ...prev, estaciones }
       })
       setLastUpdate(new Date())
+    },
+    onEnlaceChanged: (estacionId, enlace) => {
+      setData(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          estaciones: prev.estaciones.map(est =>
+            est.id === estacionId ? { ...est, enlace } : est)
+        }
+      })
     },
     onKpiUpdated: (ups, downs, total, incActivos) => {
       setData(prev => {

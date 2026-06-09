@@ -101,11 +101,13 @@ builder.Services.AddSwaggerGen(c =>
 // ── Background services ───────────────────────────────────────
 builder.Services.AddHostedService<PingWorkerService>();
 builder.Services.AddHostedService<CamaraWorkerService>();
+builder.Services.AddHostedService<EnlaceMonitorService>();
 
 // ── Singletons para workers ───────────────────────────────────
 builder.Services.AddSingleton<IConnectionStringProvider>(
     new ConnectionStringProvider(connStr));
 builder.Services.AddSingleton<EmailAlertService>();
+builder.Services.AddSingleton<EnlaceEstadoCache>();
 
 // ── Consolidado (BD externa — discrepancias DAC) ──────────────
 builder.Services.AddSingleton<DiscrepanciasService>();

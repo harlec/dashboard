@@ -1,4 +1,4 @@
-interface Props { pct: number; up: number; down: number }
+interface Props { pct: number; up: number; down: number; enlace?: string }
 
 const R      = 42
 const CX     = 52
@@ -11,9 +11,9 @@ function arcColor(pct: number) {
   return '#F04545'
 }
 
-export function StationGauge({ pct, up, down }: Props) {
+export function StationGauge({ pct, up, down, enlace }: Props) {
   const filled = Math.max((pct / 100) * ARC, 0)
-  const color  = arcColor(pct)
+  const color  = enlace === 'STARLINK' ? '#F99B1C' : arcColor(pct)
 
   const d = `M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`
 

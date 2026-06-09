@@ -46,9 +46,9 @@ public class DiscrepanciasService(IConfiguration config)
         END";
 
     // Condiciones comunes (sin el filtro de periodo y sin tra_manua<>tra_dac)
+    // AB (abortadas) y RE (reinicio) ya quedan fuera por el filtro de tra_tipop
     private const string FiltroTipo = @"
         AND tra_tipop IN ('E','S','O','M','T')
-        AND tra_titra = 'TR'
         AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)";
 
     private const string DisjusJoin = @"

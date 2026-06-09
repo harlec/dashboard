@@ -12,6 +12,7 @@ namespace AunorApi.Services;
 public class PingWorkerService(
     IConnectionStringProvider cs,
     IHubContext<MonitorHub> hub,
+    EnlaceEstadoCache enlaceCache,
     IConfiguration config,
     ILogger<PingWorkerService> log) : BackgroundService
 {
@@ -54,7 +55,7 @@ public class PingWorkerService(
                 using var db = NewDb();
                 var equipos = await db.Equipos
                     .Where(e => e.Activo && e.Monitorear)
-                    .Select(e => new { e.Id, e.Ip, e.CheckPort })
+                    .Select(e => new { e.Id, e.Ip, e.CheckPort, EstacionId = e.Via.EstacionId })
                     .ToListAsync(ct);
 
                 // SemaphoreSlim limita la concurrencia máxima
@@ -64,7 +65,7 @@ public class PingWorkerService(
                 var pingTasks = equipos.Select(async eq =>
                 {
                     await sem.WaitAsync(ct);
-                    try   { return (eq.Id, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost)); }
+                    try   { return (eq.Id, eq.EstacionId, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost)); }
                     finally { sem.Release(); }
                 });
 
@@ -74,9 +75,9 @@ public class PingWorkerService(
                 using var db2 = NewDb();
                 var kpiChanged = false;
 
-                foreach (var (equipoId, (estado, latencia)) in results)
+                foreach (var (equipoId, estacionId, (estado, latencia)) in results)
                 {
-                    var changed = await ProcessResult(db2, equipoId, estado, latencia, ct);
+                    var changed = await ProcessResult(db2, equipoId, estacionId, estado, latencia, ct);
                     if (changed)
                     {
                         kpiChanged = true;
@@ -116,17 +117,17 @@ public class PingWorkerService(
                 using var db = NewDb();
                 var equipos = await db.Equipos
                     .Where(e => downIds.Contains(e.Id) && e.Activo)
-                    .Select(e => new { e.Id, e.Ip, e.CheckPort })
+                    .Select(e => new { e.Id, e.Ip, e.CheckPort, EstacionId = e.Via.EstacionId })
                     .ToListAsync(ct);
 
                 var pingTasks = equipos.Select(async eq =>
-                    (eq.Id, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost)));
+                    (eq.Id, eq.EstacionId, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost)));
                 var results = await Task.WhenAll(pingTasks);
 
                 using var db2 = NewDb();
-                foreach (var (equipoId, (estado, latencia)) in results)
+                foreach (var (equipoId, estacionId, (estado, latencia)) in results)
                 {
-                    var changed = await ProcessResult(db2, equipoId, estado, latencia, ct);
+                    var changed = await ProcessResult(db2, equipoId, estacionId, estado, latencia, ct);
                     // Si recuperó → sacarlo del conjunto DOWN
                     if (estado == "UP") downIds.Remove(equipoId);
                     if (changed) await EmitKpis(db2, ct);
@@ -142,7 +143,8 @@ public class PingWorkerService(
 
     // ── Procesar un resultado de ping ─────────────────────────────────────
     private async Task<bool> ProcessResult(
-        AppDbContext db, int equipoId, string estado, double? latencia, CancellationToken ct)
+        AppDbContext db, int equipoId, int estacionId,
+        string estado, double? latencia, CancellationToken ct)
     {
         var last = await db.PingLogs
             .Where(p => p.EquipoId == equipoId)
@@ -159,11 +161,18 @@ public class PingWorkerService(
             LatenciaMs = latencia
         });
 
+        bool esStarlink = enlaceCache.EsStarlink(estacionId);
+
         if (estado == "DOWN")
         {
-            db.Incidentes.Add(new Incidente { EquipoId = equipoId, Inicio = DateTime.Now });
+            // Durante failover Starlink no se crea incidente — es comportamiento esperado del enlace
+            if (!esStarlink)
+                db.Incidentes.Add(new Incidente { EquipoId = equipoId, Inicio = DateTime.Now });
+
             await db.SaveChangesAsync(ct);
-            await hub.Clients.All.SendAsync("IncidenteAbierto", equipoId, DateTime.Now, ct);
+
+            if (!esStarlink)
+                await hub.Clients.All.SendAsync("IncidenteAbierto", equipoId, DateTime.Now, ct);
         }
         else
         {
@@ -181,8 +190,10 @@ public class PingWorkerService(
                     equipoId, inc.Fin, inc.DuracionMin, ct);
         }
 
+        // alerta=false en Starlink para DOWN → frontend no reproduce sonido
+        bool alerta = estado != "DOWN" || !esStarlink;
         await hub.Clients.All.SendAsync("EquipoStatusChanged",
-            equipoId, estado, latencia, DateTime.Now, ct);
+            equipoId, estado, latencia, DateTime.Now, alerta, ct);
 
         return true;
     }

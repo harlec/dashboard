@@ -64,6 +64,7 @@ export interface EstacionLive {
   id: number; nombre: string; codigo: string
   total: number; up: number; down: number; sin: number
   vias: ViaLive[]
+  enlace?: string  // 'MPLS' | 'STARLINK' | 'SIN_CONEXION' | 'DESCONOCIDO' — actualizado por SignalR
 }
 
 export interface LiveDashboard { kpis: KpiData; estaciones: EstacionLive[] }
