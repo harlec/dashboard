@@ -1,25 +1,32 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
+import {
+  AreaChart, Area,
+  BarChart, Bar,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell,
+} from 'recharts'
 import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo } from '../api/client'
 
 // ── Períodos ──────────────────────────────────────────────────
 const PERIODOS = [
-  { key: '1h',   label: 'Última hora' },
-  { key: '4h',   label: 'Últimas 4h'  },
-  { key: '12h',  label: 'Últimas 12h' },
-  { key: '24h',  label: 'Últimas 24h' },
-  { key: 'ayer', label: 'Ayer'         },
-  { key: 'mes',  label: 'Mes actual'   },
+  { key: '1h',   label: '1h'   },
+  { key: '4h',   label: '4h'   },
+  { key: '12h',  label: '12h'  },
+  { key: '24h',  label: '24h'  },
+  { key: 'ayer', label: 'Ayer' },
+  { key: 'mes',  label: 'Mes'  },
 ] as const
 type Periodo = typeof PERIODOS[number]['key']
 
-// ── Constantes ────────────────────────────────────────────────
 const ESTACIONES = ['FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA'] as const
-const COLORS: Record<string, string> = {
-  FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
-  '402': '#4A9EE0', VIRU: '#E060A0', SANTA: '#9B6BE0',
+
+// Paleta Grafana — una por estación
+const EST_COLOR: Record<string, string> = {
+  FORTALEZA: '#73BF69',
+  HUARMEY:   '#5794F2',
+  '402':     '#FADE2A',
+  VIRU:      '#FF9830',
+  SANTA:     '#B877D9',
 }
-const RANK_COLORS = ['#F04545', '#F99B1C', '#FACC15', '#4A9EE0', '#a09890']
 
 function abbrev(cat: string): string {
   if (!cat) return '?'
@@ -29,67 +36,54 @@ function abbrev(cat: string): string {
   return cat.slice(0, 7)
 }
 
-function efectColor(pct: number) {
-  if (pct >= 95) return '#72BF44'
-  if (pct >= 90) return '#F99B1C'
-  return '#F04545'
+function efColor(pct: number) {
+  if (pct >= 99) return '#73BF69'
+  if (pct >= 95) return '#FF9830'
+  return '#F2495C'
 }
 
-// ── Gauge de efectividad (SVG) ────────────────────────────────
-function EfectGauge({ pct }: { pct: number }) {
-  const r = 38, cx = 52, cy = 48
-  const circ = Math.PI * r          // semicírculo
-  const arc  = Math.max(0, Math.min(1, pct / 100)) * circ
-  const color = efectColor(pct)
-
-  return (
-    <svg width="104" height="62" viewBox="0 0 104 62">
-      {/* track */}
-      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none" stroke="#252220" strokeWidth="12" strokeLinecap="round" />
-      {/* arc */}
-      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
-        strokeDasharray={`${arc} ${circ}`} />
-      <text x={cx} y={cy - 2} textAnchor="middle" fill={color}
-        fontSize="17" fontWeight="800" fontFamily="Segoe UI,sans-serif">
-        {pct.toFixed(1)}%
-      </text>
-      <text x={cx} y={cy + 13} textAnchor="middle" fill="#7a7470"
-        fontSize="9" fontFamily="Segoe UI,sans-serif">EFECTIVIDAD</text>
-    </svg>
-  )
-}
-
-// ── Tooltips ──────────────────────────────────────────────────
-function TrendTooltip({ active, payload, label }: any) {
+// ── Tooltip compartido ────────────────────────────────────────
+function GrafTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
-  const total = payload.reduce((s: number, p: any) => s + (p.value ?? 0), 0)
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
-      <div className="text-muted mb-1">{label}</div>
+    <div className="bg-[#1f2229] border border-white/10 rounded px-3 py-2 text-[0.78rem] shadow-lg">
+      <div className="text-[#8c8c8c] mb-1.5">{label}</div>
       {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-          <span className="text-[#eae7e4]">{p.dataKey}</span>
-          <span className="font-bold ml-auto pl-3" style={{ color: p.color }}>{p.value}</span>
+        <div key={p.dataKey} className="flex items-center gap-2 mb-0.5">
+          <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: p.color ?? p.fill }} />
+          <span className="text-[#c0c4cc]">{p.dataKey}</span>
+          <span className="font-bold ml-auto pl-4 text-[#e0e0e0]">{p.value}</span>
         </div>
       ))}
-      <div className="border-t border-border mt-1 pt-1 text-white/60">
-        Total: <b className="text-[#eae7e4]">{total}</b>
-      </div>
     </div>
   )
 }
 
-function ParTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null
-  const d = payload[0]?.payload
+// ── Panel genérico estilo Grafana ─────────────────────────────
+function Panel({ title, info, children, className = '' }:
+  { title: string; info?: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem] max-w-[260px]">
-      <div className="text-warn font-semibold mb-0.5">{d?.desde}</div>
-      <div className="text-[#4A9EE0] font-semibold mb-1">→ {d?.hasta}</div>
-      <div className="text-[#eae7e4] font-bold text-base">{d?.total} discrepancias</div>
+    <div className={`bg-[#181b1f] border border-white/[0.07] rounded-sm ${className}`}>
+      <div className="flex items-center justify-between px-3 pt-2.5 pb-1 border-b border-white/[0.05]">
+        <span className="text-[0.8rem] font-semibold text-[#c0c4cc]">{title}</span>
+        {info && <span className="text-[0.7rem] text-[#5c5c5c]">{info}</span>}
+      </div>
+      <div className="p-3">{children}</div>
+    </div>
+  )
+}
+
+// ── Stat tipo Grafana ─────────────────────────────────────────
+function StatPanel({ label, value, color, small }: {
+  label: string; value: string; color?: string; small?: boolean
+}) {
+  return (
+    <div className="bg-[#181b1f] border border-white/[0.07] rounded-sm px-4 py-3 flex flex-col justify-center">
+      <div className="text-[0.68rem] text-[#5c5c5c] uppercase tracking-widest mb-1">{label}</div>
+      <div className={`font-bold leading-none ${small ? 'text-[1.6rem]' : 'text-[2rem]'}`}
+        style={{ color: color ?? '#e0e0e0' }}>
+        {value}
+      </div>
     </div>
   )
 }
@@ -98,55 +92,51 @@ function ParTooltip({ active, payload }: any) {
 function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }) {
   const max = vias[0]?.total ?? 1
   return (
-    <div className="bg-surface rounded-xl p-4">
-      <div className="text-[0.85rem] font-bold text-[#eae7e4] mb-3">Top 5 vías</div>
+    <Panel title="Top 5 vías">
       {loading ? (
-        <div className="flex items-center justify-center h-24 text-muted text-sm">Cargando…</div>
+        <div className="h-[220px] flex items-center justify-center text-[#5c5c5c] text-sm">Cargando…</div>
       ) : vias.length === 0 ? (
-        <div className="flex items-center justify-center h-24 text-muted text-sm">Sin datos</div>
+        <div className="h-[220px] flex items-center justify-center text-[#5c5c5c] text-sm">Sin datos</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3 pt-1">
           {vias.map((v, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <span className="text-[0.78rem] font-extrabold w-4 text-right flex-shrink-0"
-                style={{ color: RANK_COLORS[i] }}>#{i + 1}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-[0.8rem] text-[#eae7e4] font-semibold truncate">{v.via}</span>
-                  <span className="text-[0.78rem] font-bold ml-2 flex-shrink-0"
-                    style={{ color: RANK_COLORS[i] }}>{v.total.toLocaleString('es-PE')}</span>
+            <div key={i}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[0.78rem] text-[#c0c4cc] truncate">{v.via}</span>
+                <span className="text-[0.78rem] font-bold text-[#e0e0e0] ml-2 flex-shrink-0">
+                  {v.total.toLocaleString('es-PE')}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-white/[0.05] rounded-none h-1">
+                  <div className="h-full" style={{
+                    width: `${Math.round(v.total / max * 100)}%`,
+                    background: EST_COLOR[v.estacion] ?? '#73BF69',
+                  }} />
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                    <div className="h-full rounded-full"
-                      style={{ width: `${Math.round(v.total / max * 100)}%`, background: COLORS[v.estacion] ?? RANK_COLORS[i] }} />
-                  </div>
-                  <span className="text-[0.7rem] text-dim flex-shrink-0"
-                    style={{ color: COLORS[v.estacion] ?? '#a09890' }}>{v.estacion}</span>
-                </div>
+                <span className="text-[0.65rem] text-[#5c5c5c] w-16 flex-shrink-0">{v.estacion}</span>
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   )
 }
 
-// ── Página principal ──────────────────────────────────────────
+// ── Página ────────────────────────────────────────────────────
 export function Discrepancias() {
-  const [periodo, setPeriodo]       = useState<Periodo>('12h')
-  const [resumen, setResumen]       = useState<DiscrepanciasResumen | null>(null)
-  const [detalle, setDetalle]       = useState<DiscrepanciasDetalle | null>(null)
+  const [periodo, setPeriodo]           = useState<Periodo>('12h')
+  const [resumen, setResumen]           = useState<DiscrepanciasResumen | null>(null)
+  const [detalle, setDetalle]           = useState<DiscrepanciasDetalle | null>(null)
   const [detalleError, setDetalleError] = useState(false)
-  const [estacion, setEstacion]     = useState('')
-  const [placaInput, setPlacaInput] = useState('')
-  const [placa, setPlaca]           = useState('')
-  const [pagina, setPagina]         = useState(1)
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
-  const [signal, setSignal]         = useState<'idle' | 'ok' | 'error'>('idle')
-  const [loadingR, setLoadingR]     = useState(false)
-  const [loadingD, setLoadingD]     = useState(false)
+  const [estacion, setEstacion]         = useState('')
+  const [placaInput, setPlacaInput]     = useState('')
+  const [placa, setPlaca]               = useState('')
+  const [pagina, setPagina]             = useState(1)
+  const [lastUpdate, setLastUpdate]     = useState<Date>(new Date())
+  const [loadingR, setLoadingR]         = useState(false)
+  const [loadingD, setLoadingD]         = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadResumen = useCallback(async () => {
@@ -154,8 +144,7 @@ export function Discrepancias() {
     try {
       setResumen(await api.discrepanciasResumen(periodo))
       setLastUpdate(new Date())
-      setSignal('ok')
-    } catch { setSignal('error') }
+    } catch { /* silencioso */ }
     finally { setLoadingR(false) }
   }, [periodo])
 
@@ -164,10 +153,8 @@ export function Discrepancias() {
     setDetalleError(false)
     try {
       setDetalle(await api.discrepanciasDetalle({
-        periodo,
-        estacion: estacion || undefined,
-        placa: placa || undefined,
-        pagina, porPagina: 50,
+        periodo, estacion: estacion || undefined,
+        placa: placa || undefined, pagina, porPagina: 50,
       }))
     } catch { setDetalleError(true) }
     finally { setLoadingD(false) }
@@ -192,259 +179,236 @@ export function Discrepancias() {
   const paresData = useMemo(() =>
     (resumen?.topPares ?? []).map(p => ({
       label: `${abbrev(p.desde)} → ${abbrev(p.hasta)}`,
-      total: p.total, desde: p.desde, hasta: p.hasta,
+      total: p.total,
     })).reverse(),
   [resumen?.topPares])
 
   const totalPaginas = detalle ? Math.ceil(detalle.total / detalle.porPagina) : 1
   const ef = resumen?.efectividad ?? null
 
-  return (
-    <div className="px-5 py-4 pb-10">
+  const bucketLabel = periodo === '1h' ? 'c/10 min' : periodo === '4h' ? 'c/20 min' :
+    periodo === '12h' ? 'c/30 min' : periodo === 'mes' ? 'por día' : 'por hora'
 
-      {/* ── Topbar ─────────────────────────────────────────── */}
-      <div className="bg-surface rounded-xl px-6 py-4 mb-3.5">
-        {/* Fila 1: título + signal */}
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-[1.05rem] font-extrabold text-[#eae7e4]">Discrepancias DAC</div>
-            <div className="text-[0.75rem] text-muted">
-              Actualizado: <b className="text-[#d4cec9]">{lastUpdate.toLocaleTimeString('es-PE')}</b>
-              {' · '}refresco cada 60s
-            </div>
-          </div>
-          <div className={`flex items-center gap-1.5 text-[0.75rem] text-white/70
-            bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              signal === 'ok' ? 'bg-brand animate-ping-pulse' :
-              signal === 'error' ? 'bg-danger' : 'bg-[#a09890]'}`} />
-            <span>{signal === 'ok' ? 'En vivo' : signal === 'error' ? 'Sin conexión' : 'En espera'}</span>
+  return (
+    <div className="px-4 py-3 pb-10 bg-[#111317] min-h-screen">
+
+      {/* ── Header ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-[0.95rem] font-semibold text-[#c0c4cc]">Discrepancias DAC</div>
+          <div className="text-[0.7rem] text-[#5c5c5c]">
+            {lastUpdate.toLocaleTimeString('es-PE')} · refresco 60s
           </div>
         </div>
 
-        {/* Fila 2: tabs + KPIs */}
-        <div className="flex items-center gap-6 flex-wrap">
-          {/* Tabs de período */}
-          <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 flex-wrap">
-            {PERIODOS.map(({ key, label }) => (
-              <button key={key} onClick={() => { setPeriodo(key); setPagina(1) }}
-                className={`px-3 py-1 rounded-md text-[0.78rem] font-semibold transition-all whitespace-nowrap ${
-                  periodo === key
-                    ? 'bg-warn text-[#0f0d0c]'
-                    : 'text-white/50 hover:text-white/80'
-                }`}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Separador */}
-          <div className="w-px h-10 bg-border hidden sm:block" />
-
-          {/* Gauge efectividad */}
-          <div className="flex flex-col items-center">
-            {ef !== null
-              ? <EfectGauge pct={ef} />
-              : <div className="text-muted text-sm">—</div>
-            }
-          </div>
-
-          {/* Separador */}
-          <div className="w-px h-10 bg-border hidden sm:block" />
-
-          {/* Totales */}
-          <div className="flex gap-5">
-            <div className="flex flex-col items-center">
-              <span className="text-[1.8rem] font-extrabold text-warn leading-none">
-                {resumen?.total?.toLocaleString('es-PE') ?? '—'}
-              </span>
-              <span className="text-[0.68rem] text-muted uppercase tracking-wide">discrepancias</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[1.8rem] font-extrabold text-[#d4cec9] leading-none">
-                {resumen?.totalTransacciones?.toLocaleString('es-PE') ?? '—'}
-              </span>
-              <span className="text-[0.68rem] text-muted uppercase tracking-wide">transacciones</span>
-            </div>
-          </div>
+        {/* Tabs de período estilo Grafana */}
+        <div className="flex border border-white/[0.1] rounded-sm overflow-hidden">
+          {PERIODOS.map(({ key, label }) => (
+            <button key={key} onClick={() => { setPeriodo(key); setPagina(1) }}
+              className={`px-3 py-1.5 text-[0.75rem] font-medium border-r border-white/[0.07] last:border-0
+                transition-colors ${
+                periodo === key
+                  ? 'bg-white/[0.12] text-[#e0e0e0]'
+                  : 'text-[#5c5c5c] hover:text-[#a0a0a0] hover:bg-white/[0.04]'
+              }`}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ── Pills por estación ─────────────────────────────── */}
-      {resumen && (
-        <div className="flex gap-2 mb-3.5 flex-wrap">
-          {resumen.porEstacion.map(e => (
-            <button key={e.estacion}
-              onClick={() => { setEstacion(est => est === e.estacion ? '' : e.estacion); setPagina(1) }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.82rem] font-semibold
-                border transition-all ${
-                estacion === e.estacion
-                  ? 'border-transparent text-[#0f0d0c]'
-                  : 'border-border text-[#eae7e4] bg-surface hover:bg-surface-2'}`}
-              style={estacion === e.estacion ? { background: COLORS[e.estacion] ?? '#72BF44' } : {}}>
-              <div className="w-2 h-2 rounded-full" style={{ background: COLORS[e.estacion] ?? '#888' }} />
-              {e.estacion}
-              <span className={`font-extrabold ${estacion === e.estacion ? 'text-[#0f0d0c]' : 'text-warn'}`}>
-                {e.total.toLocaleString('es-PE')}
-              </span>
-            </button>
-          ))}
-          {estacion && (
-            <button onClick={() => { setEstacion(''); setPagina(1) }}
-              className="px-2.5 py-1.5 rounded-lg text-[0.78rem] text-white/50 border border-border hover:text-white/80">
-              ✕ limpiar
-            </button>
-          )}
-        </div>
-      )}
+      {/* ── Stats row ─────────────────────────────────────── */}
+      <div className="grid grid-cols-4 gap-2 mb-3">
+        <StatPanel
+          label="Efectividad"
+          value={ef !== null ? `${ef.toFixed(2)}%` : '—'}
+          color={ef !== null ? efColor(ef) : '#5c5c5c'}
+        />
+        <StatPanel
+          label="Meta"
+          value="99.50%"
+          color="#5794F2"
+          small
+        />
+        <StatPanel
+          label="Discrepancias"
+          value={resumen?.total?.toLocaleString('es-PE') ?? '—'}
+          color="#F2495C"
+        />
+        <StatPanel
+          label="Transacciones"
+          value={resumen?.totalTransacciones?.toLocaleString('es-PE') ?? '—'}
+          color="#e0e0e0"
+        />
+      </div>
 
       {/* ── Gráficas ───────────────────────────────────────── */}
-      <div className="grid grid-cols-[2fr_3fr_1.6fr] gap-3.5 mb-3.5">
+      <div className="grid grid-cols-[2fr_3fr_1.5fr] gap-2 mb-3">
 
         {/* Top confusiones */}
-        <div className="bg-surface rounded-xl p-4">
-          <div className="text-[0.85rem] font-bold text-[#eae7e4] mb-3">Top confusiones</div>
+        <Panel title="Top confusiones" info="categoría manual → DAC">
           {loadingR ? (
-            <div className="h-[260px] flex items-center justify-center text-muted text-sm">Cargando…</div>
+            <div className="h-[240px] flex items-center justify-center text-[#5c5c5c] text-sm">Cargando…</div>
           ) : paresData.length === 0 ? (
-            <div className="h-[260px] flex items-center justify-center text-muted text-sm">Sin datos</div>
+            <div className="h-[240px] flex items-center justify-center text-[#5c5c5c] text-sm">Sin datos</div>
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(220, paresData.length * 26)}>
-              <BarChart data={paresData} layout="vertical" margin={{ left: 8, right: 36, top: 4, bottom: 4 }}>
-                <XAxis type="number" tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <YAxis type="category" dataKey="label" width={108}
-                  tick={{ fill: '#d4cec9', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <Tooltip content={<ParTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={18}>
-                  {paresData.map((_, i) => (
-                    <Cell key={i}
-                      fill={i >= paresData.length - 3 ? '#F04545' :
-                            i >= paresData.length - 6 ? '#F99B1C' : '#4A9EE0'} />
-                  ))}
+              <BarChart data={paresData} layout="vertical"
+                margin={{ left: 4, right: 32, top: 4, bottom: 4 }}>
+                <CartesianGrid horizontal={false} stroke="rgba(255,255,255,0.04)" />
+                <XAxis type="number" tick={{ fill: '#5c5c5c', fontSize: 10 }}
+                  tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="label" width={100}
+                  tick={{ fill: '#a0a4ad', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <Tooltip content={<GrafTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="total" maxBarSize={14} radius={1}>
+                  {paresData.map((_, i) => {
+                    const t = paresData.length
+                    const pct = (t - i) / t
+                    const r = Math.round(242 * (1 - pct) + 115 * pct)
+                    const g = Math.round(73  * (1 - pct) + 191 * pct)
+                    const b = Math.round(76  * (1 - pct) + 105 * pct)
+                    return <Cell key={i} fill={`rgb(${r},${g},${b})`} />
+                  })}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Panel>
 
         {/* Tendencia */}
-        <div className="bg-surface rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[0.85rem] font-bold text-[#eae7e4]">Tendencia por estación</div>
-            <div className="text-[0.72rem] text-muted">
-              {periodo === '1h' ? 'cada 10 min' : periodo === '4h' ? 'cada 20 min' :
-               periodo === '12h' ? 'cada 30 min' : periodo === 'mes' ? 'por día' : 'por hora'}
-            </div>
-          </div>
+        <Panel title="Tendencia por estación" info={bucketLabel}>
           {loadingR ? (
-            <div className="h-[260px] flex items-center justify-center text-muted text-sm">Cargando…</div>
+            <div className="h-[240px] flex items-center justify-center text-[#5c5c5c] text-sm">Cargando…</div>
           ) : trendPivot.length === 0 ? (
-            <div className="h-[260px] flex items-center justify-center text-muted text-sm">Sin datos</div>
+            <div className="h-[240px] flex items-center justify-center text-[#5c5c5c] text-sm">Sin datos</div>
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={trendPivot} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                <XAxis dataKey="bucket" tick={{ fill: '#a09890', fontSize: 10 }}
-                  tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
-                  formatter={v => <span style={{ color: '#d4cec9' }}>{v}</span>} />
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={trendPivot} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
+                <defs>
+                  {ESTACIONES.map(est => (
+                    <linearGradient key={est} id={`fill-${est}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor={EST_COLOR[est]} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={EST_COLOR[est]} stopOpacity={0.02} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="bucket" tick={{ fill: '#5c5c5c', fontSize: 9 }}
+                  tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
+                  interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#5c5c5c', fontSize: 10 }}
+                  tickLine={false} axisLine={false} />
+                <Tooltip content={<GrafTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }}
+                  formatter={v => <span style={{ color: EST_COLOR[v] ?? '#a0a4ad' }}>{v}</span>} />
                 {ESTACIONES.map(est => (
-                  <Bar key={est} dataKey={est} stackId="a" fill={COLORS[est]} maxBarSize={40} />
+                  <Area key={est}
+                    type="monotone"
+                    dataKey={est}
+                    stroke={EST_COLOR[est]}
+                    strokeWidth={1.5}
+                    fill={`url(#fill-${est})`}
+                    dot={false}
+                    activeDot={{ r: 3, strokeWidth: 0 }}
+                  />
                 ))}
-              </BarChart>
+              </AreaChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Panel>
 
         {/* Top 5 vías */}
         <TopViasPanel vias={resumen?.topVias ?? []} loading={loadingR} />
       </div>
 
-      {/* ── Tabla de detalle ───────────────────────────────── */}
-      <div className="bg-surface rounded-xl p-4">
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <div className="text-[0.85rem] font-bold text-[#eae7e4]">Detalle</div>
-          <span className="text-[0.78rem] text-muted">
+      {/* ── Filtros + tabla ────────────────────────────────── */}
+      <div className="bg-[#181b1f] border border-white/[0.07] rounded-sm">
+
+        {/* Barra de filtros */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05] flex-wrap">
+          <span className="text-[0.78rem] font-semibold text-[#c0c4cc]">Detalle</span>
+          <span className="text-[0.72rem] text-[#5c5c5c]">
             {detalle ? `${detalle.total.toLocaleString('es-PE')} registros` : ''}
           </span>
-          <div className="ml-auto flex gap-2 flex-wrap">
+          <div className="ml-auto flex gap-2 flex-wrap items-center">
             <select value={estacion} onChange={e => { setEstacion(e.target.value); setPagina(1) }}
-              className="bg-surface-2 border border-border text-[0.82rem] text-[#eae7e4] px-2.5 py-1.5
-                rounded-lg outline-none focus:border-warn/60">
+              className="bg-[#111317] border border-white/[0.1] text-[0.78rem] text-[#c0c4cc]
+                px-2 py-1 rounded-sm outline-none focus:border-white/30">
               <option value="">Todas las estaciones</option>
               {ESTACIONES.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
             <form onSubmit={e => { e.preventDefault(); setPlaca(placaInput.trim().toUpperCase()); setPagina(1) }}
               className="flex gap-1">
-              <input type="text" placeholder="Buscar placa…" value={placaInput}
+              <input type="text" placeholder="Placa…" value={placaInput}
                 onChange={e => setPlacaInput(e.target.value)}
                 onKeyDown={e => e.key === 'Escape' && (setPlacaInput(''), setPlaca(''))}
-                className="bg-surface-2 border border-border text-[0.82rem] text-[#eae7e4] px-2.5 py-1.5
-                  rounded-lg w-28 outline-none focus:border-warn/60 placeholder:text-dim" />
+                className="bg-[#111317] border border-white/[0.1] text-[0.78rem] text-[#c0c4cc]
+                  px-2 py-1 rounded-sm w-24 outline-none focus:border-white/30 placeholder:text-[#3c3c3c]" />
               <button type="submit"
-                className="px-2.5 py-1.5 bg-surface-2 border border-border rounded-lg text-[0.82rem]
-                  text-white/60 hover:text-white hover:bg-surface-3">🔍</button>
+                className="px-2 py-1 bg-[#111317] border border-white/[0.1] rounded-sm
+                  text-[0.75rem] text-[#5c5c5c] hover:text-[#c0c4cc]">
+                Buscar
+              </button>
               {placa && (
                 <button type="button" onClick={() => { setPlacaInput(''); setPlaca(''); setPagina(1) }}
-                  className="px-2 py-1.5 text-[0.78rem] text-white/40 hover:text-white/70">✕</button>
+                  className="px-1.5 text-[0.72rem] text-[#5c5c5c] hover:text-[#c0c4cc]">✕</button>
               )}
             </form>
           </div>
         </div>
 
         {detalleError && (
-          <div className="mb-3 px-3 py-2 bg-danger/10 border border-danger/30 rounded-lg text-[0.82rem] text-danger">
-            Error al cargar el detalle. Verifica la conexión con la BD consolidado.
+          <div className="mx-3 mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-sm
+            text-[0.78rem] text-red-400">
+            Error al conectar con la BD consolidado.
           </div>
         )}
 
+        {/* Tabla */}
         <div className="overflow-x-auto">
-          <table className="w-full text-[0.8rem] border-collapse">
+          <table className="w-full text-[0.76rem] border-collapse">
             <thead>
-              <tr className="border-b border-border">
-                {['Fecha', 'Estación', 'VIA', 'Ticket', 'Tabulada', 'Detectada',
+              <tr className="border-b border-white/[0.06]">
+                {['Fecha', 'Estación', 'Vía', 'Ticket', 'Tabulada', 'Detectada',
                   'Placa Tab.', 'Placa Det.', 'Cobrador'].map(h => (
-                  <th key={h} className="text-left py-2 px-2.5 text-muted font-semibold whitespace-nowrap">{h}</th>
+                  <th key={h}
+                    className="text-left py-2 px-2.5 text-[#5c5c5c] font-medium uppercase tracking-wide text-[0.68rem] whitespace-nowrap">
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loadingD ? (
-                <tr><td colSpan={9} className="py-8 text-center text-muted">Cargando…</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#5c5c5c]">Cargando…</td></tr>
               ) : (detalle?.items ?? []).length === 0 && !detalleError ? (
-                <tr><td colSpan={9} className="py-8 text-center text-muted">Sin discrepancias en el período</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#5c5c5c]">Sin discrepancias en este período</td></tr>
               ) : (detalle?.items ?? []).map((item, i) => {
                 const placaDiff = !!item.placaTabulada && !!item.placaDetectada
                   && item.placaTabulada !== item.placaDetectada
                 return (
-                  <tr key={i} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
-                    <td className="py-1.5 px-2.5 text-dim whitespace-nowrap">{item.fecha}</td>
+                  <tr key={i}
+                    className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
+                    <td className="py-1.5 px-2.5 text-[#5c5c5c] whitespace-nowrap font-mono">{item.fecha}</td>
                     <td className="py-1.5 px-2.5">
-                      <span className="font-semibold" style={{ color: COLORS[item.unidad] ?? '#a09890' }}>
+                      <span className="text-[0.72rem] font-medium" style={{ color: EST_COLOR[item.unidad] ?? '#a0a4ad' }}>
                         {item.unidad}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2.5 text-muted">{item.via}</td>
-                    <td className="py-1.5 px-2.5 text-dim">{item.ticket ?? '—'}</td>
+                    <td className="py-1.5 px-2.5 text-[#8c8c8c]">{item.via}</td>
+                    <td className="py-1.5 px-2.5 text-[#5c5c5c] font-mono">{item.ticket ?? '—'}</td>
                     <td className="py-1.5 px-2.5">
-                      <span className="bg-warn/10 text-warn px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
-                        {abbrev(item.catTabulada)}
-                      </span>
+                      <span className="font-mono text-[0.72rem] text-[#FF9830]">{abbrev(item.catTabulada)}</span>
                     </td>
                     <td className="py-1.5 px-2.5">
-                      <span className="bg-[#4A9EE0]/10 text-[#4A9EE0] px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
-                        {abbrev(item.catDetectada)}
-                      </span>
+                      <span className="font-mono text-[0.72rem] text-[#5794F2]">{abbrev(item.catDetectada)}</span>
                     </td>
-                    <td className="py-1.5 px-2.5 font-mono text-[0.78rem] text-[#eae7e4]">
-                      {item.placaTabulada || '—'}
-                    </td>
-                    <td className={`py-1.5 px-2.5 font-mono text-[0.78rem] ${
-                      placaDiff ? 'text-danger font-bold' : 'text-muted'}`}>
+                    <td className="py-1.5 px-2.5 font-mono text-[#a0a4ad]">{item.placaTabulada || '—'}</td>
+                    <td className={`py-1.5 px-2.5 font-mono ${placaDiff ? 'text-[#F2495C] font-bold' : 'text-[#5c5c5c]'}`}>
                       {item.placaDetectada || '—'}
                     </td>
-                    <td className="py-1.5 px-2.5 text-dim">{item.cobrador}</td>
+                    <td className="py-1.5 px-2.5 text-[#5c5c5c]">{item.cobrador}</td>
                   </tr>
                 )
               })}
@@ -452,19 +416,20 @@ export function Discrepancias() {
           </table>
         </div>
 
+        {/* Paginación */}
         {detalle && totalPaginas > 1 && (
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+          <div className="flex items-center justify-between px-3 py-2 border-t border-white/[0.05]">
             <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
-              className="px-3 py-1.5 text-[0.8rem] bg-surface-2 border border-border rounded-lg
-                text-white/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed">
+              className="px-2.5 py-1 text-[0.75rem] border border-white/[0.1] rounded-sm
+                text-[#5c5c5c] hover:text-[#c0c4cc] hover:border-white/20 disabled:opacity-30">
               ← Anterior
             </button>
-            <span className="text-[0.8rem] text-muted">
-              Página <b className="text-[#eae7e4]">{pagina}</b> de <b className="text-[#eae7e4]">{totalPaginas}</b>
+            <span className="text-[0.75rem] text-[#5c5c5c]">
+              {pagina} / {totalPaginas}
             </span>
             <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina >= totalPaginas}
-              className="px-3 py-1.5 text-[0.8rem] bg-surface-2 border border-border rounded-lg
-                text-white/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed">
+              className="px-2.5 py-1 text-[0.75rem] border border-white/[0.1] rounded-sm
+                text-[#5c5c5c] hover:text-[#c0c4cc] hover:border-white/20 disabled:opacity-30">
               Siguiente →
             </button>
           </div>

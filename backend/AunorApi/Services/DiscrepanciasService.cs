@@ -52,8 +52,8 @@ public class DiscrepanciasService(IConfiguration config)
         AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)";
 
     private const string DisjusJoin = @"
-        INNER JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
-                         AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
+        LEFT JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                        AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
 
     public async Task<DiscrepanciasResumenDto> GetResumenAsync(string periodo)
     {
