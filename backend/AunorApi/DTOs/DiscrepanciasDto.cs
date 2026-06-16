@@ -1,6 +1,29 @@
 namespace AunorApi.DTOs;
 
 public record ConfusionParDto(string Desde, string Hasta, int Total);
+
+// ── Análisis de sensores ──────────────────────────────────────
+public record ViaAnalisisDto(
+    string  Via,
+    string  Estacion,
+    decimal TasaSem1,
+    decimal TasaSem2,
+    decimal Delta,
+    int     TotalSem2,
+    string  Estado
+);
+
+public record HoraAnalisisDto(
+    int     Hora,
+    int     Transacciones,
+    int     Discrepancias,
+    decimal TasaError
+);
+
+public record DiscrepanciasAnalisisDto(
+    List<ViaAnalisisDto>  PrioridadMantenimiento,
+    List<HoraAnalisisDto> PorHora
+);
 public record EstacionConteoDto(string Estacion, int Total);
 public record TrendPuntoDto(string Bucket, string Estacion, int Total);
 public record ViaConteoDto(string Via, string Estacion, int Total);

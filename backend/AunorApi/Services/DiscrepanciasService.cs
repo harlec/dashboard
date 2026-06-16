@@ -140,6 +140,84 @@ public class DiscrepanciasService(IConfiguration config)
             topPares, porEstacion, trend, topVias);
     }
 
+    public async Task<DiscrepanciasAnalisisDto> GetAnalisisAsync()
+    {
+        await using var conn = new SqlConnection(_connStr);
+        await conn.OpenAsync();
+        // Lectura sin bloqueos para evitar deadlocks con transacciones OLTP concurrentes
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+
+        const int timeout = 120;
+        const string coestCase = @"CASE COALESCE(s2.tra_coest, s1.tra_coest)
+            WHEN 1 THEN 'FORTALEZA' WHEN 2 THEN 'HUARMEY'
+            WHEN 3 THEN '402' WHEN 4 THEN 'VIRU' WHEN 5 THEN 'SANTA'
+            ELSE 'DESCONOCIDA' END";
+
+        // ── 1. Prioridad de mantenimiento: semana anterior vs semana actual por vía ──
+        var prioridad = (await conn.QueryAsync<ViaAnalisisDto>($@"
+            WITH sem1 AS (
+                SELECT t.tra_coest, t.tra_nuvia, vd.via_nombr,
+                    COUNT(*) AS Tx1,
+                    SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Disc1
+                FROM transitos t {DisjusJoin}
+                LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+                WHERE tra_fecha >= DATEADD(DAY,-14,GETDATE())
+                  AND tra_fecha <  DATEADD(DAY,-7, GETDATE())
+                  {FiltroTipo}
+                GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr
+            ),
+            sem2 AS (
+                SELECT t.tra_coest, t.tra_nuvia, vd.via_nombr,
+                    COUNT(*) AS Tx2,
+                    SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Disc2
+                FROM transitos t {DisjusJoin}
+                LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+                WHERE tra_fecha >= DATEADD(DAY,-7,GETDATE())
+                  {FiltroTipo}
+                GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr
+            )
+            SELECT
+                COALESCE(s2.via_nombr, s1.via_nombr,
+                    'Via ' + CAST(COALESCE(s2.tra_nuvia, s1.tra_nuvia) AS VARCHAR(5))) AS Via,
+                {coestCase}                                                              AS Estacion,
+                ROUND(ISNULL(100.0*s1.Disc1/NULLIF(s1.Tx1,0), 0), 1)                  AS TasaSem1,
+                ROUND(ISNULL(100.0*s2.Disc2/NULLIF(s2.Tx2,0), 0), 1)                  AS TasaSem2,
+                ROUND(ISNULL(100.0*s2.Disc2/NULLIF(s2.Tx2,0),0)
+                    - ISNULL(100.0*s1.Disc1/NULLIF(s1.Tx1,0),0), 1)                   AS Delta,
+                ISNULL(s2.Disc2, 0)                                                    AS TotalSem2,
+                CASE
+                    WHEN (ISNULL(100.0*s2.Disc2/NULLIF(s2.Tx2,0),0)
+                         -ISNULL(100.0*s1.Disc1/NULLIF(s1.Tx1,0),0)) > 5
+                         OR ISNULL(100.0*s2.Disc2/NULLIF(s2.Tx2,0),0) > 20 THEN 'URGENTE'
+                    WHEN (ISNULL(100.0*s2.Disc2/NULLIF(s2.Tx2,0),0)
+                         -ISNULL(100.0*s1.Disc1/NULLIF(s1.Tx1,0),0)) > 2
+                         OR ISNULL(100.0*s2.Disc2/NULLIF(s2.Tx2,0),0) > 15 THEN 'ALERTA'
+                    ELSE 'OK'
+                END                                                                    AS Estado
+            FROM sem1 s1
+            FULL OUTER JOIN sem2 s2 ON s1.tra_coest=s2.tra_coest AND s1.tra_nuvia=s2.tra_nuvia
+            WHERE ISNULL(s1.Tx1,0) + ISNULL(s2.Tx2,0) >= 100
+            ORDER BY Delta DESC, TasaSem2 DESC",
+            commandTimeout: timeout)).ToList();
+
+        // ── 2. Tasa de error por hora del día (últimos 7 días) ──
+        var porHora = (await conn.QueryAsync<HoraAnalisisDto>($@"
+            SELECT
+                DATEPART(HOUR, tra_fecha)                                       AS Hora,
+                COUNT(*)                                                        AS Transacciones,
+                SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END)          AS Discrepancias,
+                ROUND(100.0 * SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END)
+                    / NULLIF(COUNT(*), 0), 1)                                   AS TasaError
+            FROM transitos t {DisjusJoin}
+            WHERE tra_fecha >= DATEADD(DAY, -7, GETDATE())
+              {FiltroTipo}
+            GROUP BY DATEPART(HOUR, tra_fecha)
+            ORDER BY Hora",
+            commandTimeout: timeout)).ToList();
+
+        return new DiscrepanciasAnalisisDto(prioridad, porHora);
+    }
+
     public async Task<DiscrepanciasDetalleDto> GetDetalleAsync(
         string periodo, string? estacion, string? placa, int pagina, int porPagina)
     {

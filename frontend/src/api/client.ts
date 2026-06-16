@@ -39,6 +39,8 @@ export const api = {
     request<DiscrepanciasDetalle>(`/discrepancias/detalle?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
+  discrepanciasAnalisis: () =>
+    request<DiscrepanciasAnalisis>('/discrepancias/analisis'),
 }
 
 // ── Tipos ─────────────────────────────────────────────────────
@@ -104,6 +106,18 @@ export interface SlaEquipo { equipoId: number; nombre: string; tipoNombre: strin
 export interface SlaParams { estacionId?: number; desde?: string; hasta?: string }
 
 // ── Discrepancias DAC ─────────────────────────────────────────
+export interface ViaAnalisis {
+  via: string; estacion: string
+  tasaSem1: number; tasaSem2: number; delta: number
+  totalSem2: number; estado: 'URGENTE' | 'ALERTA' | 'OK'
+}
+export interface HoraAnalisis {
+  hora: number; transacciones: number; discrepancias: number; tasaError: number
+}
+export interface DiscrepanciasAnalisis {
+  prioridadMantenimiento: ViaAnalisis[]
+  porHora: HoraAnalisis[]
+}
 export interface ConfusionPar   { desde: string; hasta: string; total: number }
 export interface EstacionConteo { estacion: string; total: number }
 export interface TrendPunto     { bucket: string; estacion: string; total: number }

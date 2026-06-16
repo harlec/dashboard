@@ -16,6 +16,10 @@ public class DiscrepanciasController(DiscrepanciasService svc) : ControllerBase
         return Ok(await svc.GetResumenAsync(periodo));
     }
 
+    [HttpGet("analisis")]
+    public async Task<IActionResult> Analisis() =>
+        Ok(await svc.GetAnalisisAsync());
+
     [HttpGet("detalle")]
     public async Task<IActionResult> Detalle(
         [FromQuery] string  periodo   = "12h",

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
-import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo } from '../api/client'
+import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo, type DiscrepanciasAnalisis, type ViaAnalisis } from '../api/client'
 
 // ── Períodos ──────────────────────────────────────────────────
 const PERIODOS = [
@@ -133,6 +133,284 @@ function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }
   )
 }
 
+// ── Helpers análisis ──────────────────────────────────────────
+function tasaColor(t: number): string {
+  if (t > 20) return '#F04545'
+  if (t > 15) return '#F99B1C'
+  if (t > 10) return '#FACC15'
+  return '#a09890'
+}
+
+// ── Badge estado sensor ───────────────────────────────────────
+function EstadoBadge({ estado }: { estado: ViaAnalisis['estado'] }) {
+  const cfg = {
+    URGENTE: { bg: 'bg-danger/15',  text: 'text-danger',  dot: '#F04545' },
+    ALERTA:  { bg: 'bg-warn/15',    text: 'text-warn',    dot: '#F99B1C' },
+    OK:      { bg: 'bg-brand/15',   text: 'text-brand',   dot: '#72BF44' },
+  }[estado]
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[0.72rem] font-bold ${cfg.bg} ${cfg.text}`}>
+      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
+      {estado}
+    </span>
+  )
+}
+
+// ── Tooltip hora ──────────────────────────────────────────────
+function HoraTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  const d = payload[0]?.payload
+  return (
+    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
+      <div className="text-muted mb-1">{String(label).padStart(2,'0')}:00 – {String(label).padStart(2,'0')}:59</div>
+      <div className="flex flex-col gap-0.5">
+        <div className="text-[#eae7e4]">Transacciones: <b>{d?.transacciones?.toLocaleString('es-PE')}</b></div>
+        <div className="text-warn">Discrepancias: <b>{d?.discrepancias?.toLocaleString('es-PE')}</b></div>
+        <div className="text-danger font-bold">Tasa error: {d?.tasaError}%</div>
+      </div>
+    </div>
+  )
+}
+
+// ── Panel Análisis de Sensores ────────────────────────────────
+function AnalisisSensores({ analisis, loading, error }: { analisis: DiscrepanciasAnalisis | null; loading: boolean; error: string | null }) {
+  if (loading) return (
+    <div className="flex items-center justify-center h-40 text-muted text-sm">Calculando análisis…</div>
+  )
+  if (error) return (
+    <div className="px-4 py-3 bg-danger/10 border border-danger/30 rounded-xl text-[0.82rem] text-danger">
+      Error al cargar análisis: <b>{error}</b>
+    </div>
+  )
+  if (!analisis) return null
+
+  const maxTasa = analisis.porHora.length
+    ? Math.max(...analisis.porHora.map(h => h.tasaError))
+    : 1
+
+  const urgentes = analisis.prioridadMantenimiento.filter(v => v.estado === 'URGENTE').length
+  const alertas  = analisis.prioridadMantenimiento.filter(v => v.estado === 'ALERTA').length
+  const okCount  = analisis.prioridadMantenimiento.filter(v => v.estado === 'OK').length
+
+  function exportarPDF() {
+    if (!analisis) return
+    const fecha = new Date().toLocaleDateString('es-PE', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    })
+    const peakHora = analisis.porHora.length
+      ? analisis.porHora.reduce((a, b) => a.tasaError > b.tasaError ? a : b)
+      : { hora: 0, tasaError: 0 }
+    const avgTasa = analisis.porHora.length
+      ? (analisis.porHora.reduce((s, h) => s + h.tasaError, 0) / analisis.porHora.length).toFixed(1)
+      : '0'
+
+    const tc = (t: number) => t > 20 ? '#dc2626' : t > 15 ? '#d97706' : t > 10 ? '#854d0e' : '#374151'
+
+    const filas = analisis.prioridadMantenimiento.map(v => {
+      const estadoColor = v.estado === 'URGENTE' ? '#dc2626' : v.estado === 'ALERTA' ? '#d97706' : '#16a34a'
+      const estadoBg   = v.estado === 'URGENTE' ? '#fee2e2' : v.estado === 'ALERTA' ? '#fef3c7' : '#dcfce7'
+      const deltaColor = v.delta > 0 ? '#dc2626' : v.delta < 0 ? '#16a34a' : '#6b7280'
+      return `
+        <tr style="border-bottom:1px solid #e5e7eb;${v.estado === 'URGENTE' ? 'background:#fff5f5' : v.estado === 'ALERTA' ? 'background:#fffbeb' : ''}">
+          <td style="padding:7px 10px;font-weight:600">${v.via}</td>
+          <td style="padding:7px 10px;font-weight:600">${v.estacion}</td>
+          <td style="padding:7px 10px;font-family:monospace;text-align:center;color:${tc(v.tasaSem1)}">${v.tasaSem1.toFixed(1)}%</td>
+          <td style="padding:7px 10px;font-family:monospace;font-weight:700;text-align:center;color:${tc(v.tasaSem2)}">${v.tasaSem2.toFixed(1)}%</td>
+          <td style="padding:7px 10px;font-family:monospace;font-weight:700;text-align:center;color:${deltaColor}">${v.delta > 0 ? '+' : ''}${v.delta.toFixed(1)}%</td>
+          <td style="padding:7px 10px;text-align:center">${v.totalSem2.toLocaleString('es-PE')}</td>
+          <td style="padding:7px 10px"><span style="background:${estadoBg};color:${estadoColor};padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700">${v.estado}</span></td>
+        </tr>`
+    }).join('')
+
+    const horasCells = analisis.porHora.map(h => {
+      const ratio = maxTasa > 0 ? h.tasaError / maxTasa : 0
+      const bg    = ratio >= 0.85 ? '#fee2e2' : ratio >= 0.65 ? '#fef3c7' : '#eff6ff'
+      const col   = ratio >= 0.85 ? '#dc2626' : ratio >= 0.65 ? '#d97706' : '#1d4ed8'
+      return `<div style="display:inline-block;margin:3px;padding:6px 8px;background:${bg};border-radius:6px;text-align:center;min-width:46px">
+        <div style="font-size:10px;color:#6b7280">${String(h.hora).padStart(2, '0')}h</div>
+        <div style="font-size:13px;font-weight:700;color:${col}">${h.tasaError}%</div>
+      </div>`
+    }).join('')
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Análisis Sensores AUNOR — ${fecha}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#111827;background:#fff;padding:32px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #F99B1C;padding-bottom:16px;margin-bottom:24px}
+.logo{font-size:32px;font-weight:900;color:#F99B1C;letter-spacing:-1px;line-height:1}
+.logo small{display:block;font-size:10px;color:#9ca3af;letter-spacing:3px;font-weight:400;margin-top:2px}
+h1{font-size:20px;font-weight:800;color:#111827}
+.sub{font-size:12px;color:#6b7280;margin-top:4px}
+.kpis{display:flex;gap:12px;margin-bottom:24px}
+.kpi{flex:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px;text-align:center}
+.kpi .val{font-size:26px;font-weight:800}
+.kpi .lbl{font-size:10px;color:#6b7280;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+.sec{font-size:14px;font-weight:700;color:#111827;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #f3f4f6}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:28px}
+thead tr{background:#f9fafb}
+th{padding:8px 10px;text-align:left;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb}
+th.c{text-align:center}
+.footer{margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between}
+@media print{body{padding:16px}@page{margin:1.5cm}}
+</style></head><body>
+<div class="header">
+  <div>
+    <h1>Informe de Análisis de Sensores DAC</h1>
+    <div class="sub">Red de Peajes AUNOR &mdash; ${fecha}</div>
+  </div>
+  <div style="text-align:right">
+    <div class="logo">AUNOR<small>SISTEMA DE MONITOREO</small></div>
+  </div>
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="val" style="color:#dc2626">${urgentes}</div><div class="lbl">Urgentes</div></div>
+  <div class="kpi"><div class="val" style="color:#d97706">${alertas}</div><div class="lbl">Alertas</div></div>
+  <div class="kpi"><div class="val" style="color:#16a34a">${okCount}</div><div class="lbl">OK</div></div>
+  <div class="kpi"><div class="val" style="color:#374151">${avgTasa}%</div><div class="lbl">Error promedio / hora</div></div>
+  <div class="kpi"><div class="val" style="color:#1d4ed8">${String(peakHora.hora).padStart(2,'0')}:00</div><div class="lbl">Hora pico</div></div>
+</div>
+<div class="sec">Prioridad de Mantenimiento &mdash; comparativa últimas 2 semanas por vía</div>
+<table>
+  <thead><tr>
+    <th>Vía</th><th>Estación</th>
+    <th class="c">Sem. anterior</th><th class="c">Sem. actual</th>
+    <th class="c">Δ variación</th><th class="c">Discr. 7d</th><th>Estado</th>
+  </tr></thead>
+  <tbody>${filas}</tbody>
+</table>
+<div class="sec">Tasa de Error por Hora del Día &mdash; últimos 7 días</div>
+<div style="font-size:12px;color:#6b7280;margin-bottom:10px">
+  Pico: <strong>${String(peakHora.hora).padStart(2,'0')}:00</strong> con <strong>${peakHora.tasaError}%</strong>
+  ${peakHora.hora >= 20 || peakHora.hora <= 6 ? '&mdash; Revisar iluminación y sensores OCR nocturnos' : '&mdash; Revisar calibración por volumen de tráfico'}
+</div>
+<div style="margin-bottom:24px">${horasCells}</div>
+<div class="footer">
+  <span>Dashboard AUNOR v2 &mdash; Módulo Discrepancias DAC</span>
+  <span>Generado: ${new Date().toLocaleString('es-PE')}</span>
+</div>
+<script>window.onload=function(){window.print()}</script>
+</body></html>`
+
+    const win = window.open('', '_blank')
+    if (win) { win.document.write(html); win.document.close() }
+  }
+
+  return (
+    <div className="grid grid-cols-[1.6fr_1fr] gap-3.5">
+
+      {/* ── Tabla prioridad mantenimiento ── */}
+      <div className="bg-surface rounded-xl p-4">
+        <div className="flex items-center gap-3 mb-3 flex-wrap">
+          <div className="text-[0.85rem] font-bold text-[#eae7e4]">Prioridad de mantenimiento</div>
+          <span className="text-[0.72rem] text-muted">últimas 2 semanas por vía</span>
+          <div className="ml-auto flex gap-2 items-center">
+            {urgentes > 0 && (
+              <span className="bg-danger/15 text-danger text-[0.72rem] font-bold px-2 py-0.5 rounded-full">
+                {urgentes} URGENTE{urgentes > 1 ? 'S' : ''}
+              </span>
+            )}
+            {alertas > 0 && (
+              <span className="bg-warn/15 text-warn text-[0.72rem] font-bold px-2 py-0.5 rounded-full">
+                {alertas} ALERTA{alertas > 1 ? 'S' : ''}
+              </span>
+            )}
+            <button onClick={exportarPDF}
+              className="flex items-center gap-1.5 px-3 py-1 bg-[#4A9EE0]/10 hover:bg-[#4A9EE0]/20
+                border border-[#4A9EE0]/30 text-[#4A9EE0] text-[0.75rem] font-semibold
+                rounded-lg transition-all whitespace-nowrap">
+              ⬇ Exportar PDF
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[0.79rem] border-collapse">
+            <thead>
+              <tr className="border-b border-border">
+                {['Vía', 'Estación', 'Sem. anterior', 'Sem. actual', 'Δ variación', 'Discr. 7d', 'Estado'].map(h => (
+                  <th key={h} className="text-left py-2 px-2 text-muted font-semibold whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {analisis.prioridadMantenimiento.length === 0 ? (
+                <tr><td colSpan={7} className="py-6 text-center text-muted">Sin datos suficientes</td></tr>
+              ) : analisis.prioridadMantenimiento.map((v, i) => (
+                <tr key={i} className={`border-b border-border/40 hover:bg-white/[0.02] transition-colors ${
+                  v.estado === 'URGENTE' ? 'bg-danger/[0.04]' :
+                  v.estado === 'ALERTA'  ? 'bg-warn/[0.03]' : ''}`}>
+                  <td className="py-1.5 px-2 text-[#eae7e4] font-semibold whitespace-nowrap">{v.via}</td>
+                  <td className="py-1.5 px-2">
+                    <span className="font-semibold" style={{ color: COLORS[v.estacion] ?? '#a09890' }}>
+                      {v.estacion}
+                    </span>
+                  </td>
+                  <td className="py-1.5 px-2 text-muted font-mono">{v.tasaSem1.toFixed(1)}%</td>
+                  <td className="py-1.5 px-2 font-mono font-bold" style={{
+                    color: v.tasaSem2 > 20 ? '#F04545' : v.tasaSem2 > 15 ? '#F99B1C' : '#d4cec9'
+                  }}>
+                    {v.tasaSem2.toFixed(1)}%
+                  </td>
+                  <td className="py-1.5 px-2 font-mono font-bold">
+                    <span className={v.delta > 0 ? 'text-danger' : v.delta < 0 ? 'text-brand' : 'text-muted'}>
+                      {v.delta > 0 ? '+' : ''}{v.delta.toFixed(1)}%
+                    </span>
+                  </td>
+                  <td className="py-1.5 px-2 text-dim">{v.totalSem2.toLocaleString('es-PE')}</td>
+                  <td className="py-1.5 px-2"><EstadoBadge estado={v.estado} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Tasa de error por hora ── */}
+      <div className="bg-surface rounded-xl p-4">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="text-[0.85rem] font-bold text-[#eae7e4]">Tasa error por hora del día</div>
+          <span className="text-[0.72rem] text-muted">últimos 7 días</span>
+        </div>
+        <div className="text-[0.72rem] text-muted mb-3">
+          Picos nocturnos → falla OCR por iluminación · Picos diurnos → volumen o calibración
+        </div>
+        {analisis.porHora.length === 0 ? (
+          <div className="flex items-center justify-center h-40 text-muted text-sm">Sin datos</div>
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={analisis.porHora} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+              <XAxis dataKey="hora" tick={{ fill: '#a09890', fontSize: 10 }}
+                tickLine={false} axisLine={false}
+                tickFormatter={h => `${String(h).padStart(2,'0')}h`} />
+              <YAxis tick={{ fill: '#a09890', fontSize: 10 }} tickLine={false} axisLine={false}
+                tickFormatter={v => `${v}%`} domain={[0, Math.ceil(maxTasa * 1.15)]} />
+              <Tooltip content={<HoraTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+              <Bar dataKey="tasaError" radius={[3, 3, 0, 0]} maxBarSize={28}>
+                {analisis.porHora.map((h, i) => (
+                  <Cell key={i}
+                    fill={h.tasaError >= maxTasa * 0.85 ? '#F04545' :
+                          h.tasaError >= maxTasa * 0.65 ? '#F99B1C' : '#4A9EE0'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+        {analisis.porHora.length > 0 && (() => {
+          const peakHora = analisis.porHora.reduce((a, b) => a.tasaError > b.tasaError ? a : b)
+          const isNocturno = peakHora.hora >= 20 || peakHora.hora <= 6
+          return (
+            <div className={`mt-2 px-3 py-2 rounded-lg text-[0.75rem] ${
+              isNocturno ? 'bg-warn/10 text-warn' : 'bg-[#4A9EE0]/10 text-[#4A9EE0]'}`}>
+              Pico máximo: <b>{String(peakHora.hora).padStart(2,'0')}:00</b> con <b>{peakHora.tasaError}%</b> de error
+              {isNocturno ? ' — revisar iluminación y sensores OCR nocturnos' : ' — revisar calibración por volumen de tráfico'}
+            </div>
+          )
+        })()}
+      </div>
+    </div>
+  )
+}
+
 // ── Página principal ──────────────────────────────────────────
 export function Discrepancias() {
   const [periodo, setPeriodo]       = useState<Periodo>('12h')
@@ -147,6 +425,10 @@ export function Discrepancias() {
   const [signal, setSignal]         = useState<'idle' | 'ok' | 'error'>('idle')
   const [loadingR, setLoadingR]     = useState(false)
   const [loadingD, setLoadingD]     = useState(false)
+  const [analisis, setAnalisis]     = useState<DiscrepanciasAnalisis | null>(null)
+  const [loadingA, setLoadingA]     = useState(false)
+  const [errorA, setErrorA]         = useState<string | null>(null)
+  const [showAnalisis, setShowAnalisis] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadResumen = useCallback(async () => {
@@ -195,6 +477,20 @@ export function Discrepancias() {
       total: p.total, desde: p.desde, hasta: p.hasta,
     })).reverse(),
   [resumen?.topPares])
+
+  const loadAnalisis = useCallback(async () => {
+    setLoadingA(true)
+    setErrorA(null)
+    try { setAnalisis(await api.discrepanciasAnalisis()) }
+    catch (e: any) { setErrorA(e?.message ?? 'Error al cargar análisis') }
+    finally { setLoadingA(false) }
+  }, [])
+
+  const toggleAnalisis = () => {
+    const next = !showAnalisis
+    setShowAnalisis(next)
+    if (next) loadAnalisis()
+  }
 
   const totalPaginas = detalle ? Math.ceil(detalle.total / detalle.porPagina) : 1
   const ef = resumen?.efectividad ?? null
@@ -359,6 +655,33 @@ export function Discrepancias() {
 
         {/* Top 5 vías */}
         <TopViasPanel vias={resumen?.topVias ?? []} loading={loadingR} />
+      </div>
+
+      {/* ── Análisis de sensores ───────────────────────────── */}
+      <div className="mb-3.5">
+        <button onClick={toggleAnalisis}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[0.82rem] font-semibold
+            border transition-all ${showAnalisis
+              ? 'bg-[#4A9EE0]/15 border-[#4A9EE0]/40 text-[#4A9EE0]'
+              : 'bg-surface border-border text-white/60 hover:text-white hover:border-white/20'}`}>
+          <span>{showAnalisis ? '▼' : '▶'}</span>
+          Análisis de sensores
+          {analisis && (() => {
+            const urgentes = analisis.prioridadMantenimiento.filter(v => v.estado === 'URGENTE').length
+            const alertas  = analisis.prioridadMantenimiento.filter(v => v.estado === 'ALERTA').length
+            return urgentes + alertas > 0 ? (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[0.68rem] font-bold bg-danger/20 text-danger">
+                {urgentes + alertas} vías
+              </span>
+            ) : null
+          })()}
+          <span className="text-[0.72rem] text-muted ml-1">últimas 2 semanas · 7 días</span>
+        </button>
+        {showAnalisis && (
+          <div className="mt-3">
+            <AnalisisSensores analisis={analisis} loading={loadingA} error={errorA} />
+          </div>
+        )}
       </div>
 
       {/* ── Tabla de detalle ───────────────────────────────── */}
