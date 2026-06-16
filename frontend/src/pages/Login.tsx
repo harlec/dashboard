@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import logo from '../assets/logo.png'
 
 export function Login() {
   const [username, setUsername] = useState('')
@@ -29,8 +30,7 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-[#0f0d0c] px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">📡</div>
-          <h1 className="text-xl font-extrabold text-[#eae7e4]">Dashboard de Monitoreo</h1>
+          <img src={logo} alt="Pulso Vial" className="h-14 mx-auto mb-3" />
           <p className="text-sm text-muted mt-1">AUNOR — Red de Peajes</p>
         </div>
 

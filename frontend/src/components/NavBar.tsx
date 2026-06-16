@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import logo from '../assets/logo.png'
 
 interface Props { signalStatus: 'idle' | 'ok' | 'error' }
 
@@ -17,8 +18,8 @@ export function NavBar({ signalStatus }: Props) {
 
   return (
     <nav className="bg-[#0a0908] flex items-center justify-between px-6 h-[50px] sticky top-0 z-50 border-b border-border">
-      <div className="font-extrabold text-sm text-brand flex items-center gap-2 tracking-wide">
-        📡 Dashboard de Monitoreo
+      <div className="flex items-center gap-2 tracking-wide">
+        <img src={logo} alt="Pulso Vial" className="h-6" />
       </div>
 
       <div className="flex gap-1">

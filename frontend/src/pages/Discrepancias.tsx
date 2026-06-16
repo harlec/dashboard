@@ -260,7 +260,7 @@ th.c{text-align:center}
     <div class="sub">Red de Peajes AUNOR &mdash; ${fecha}</div>
   </div>
   <div style="text-align:right">
-    <div class="logo">AUNOR<small>SISTEMA DE MONITOREO</small></div>
+    <div class="logo">PULSO VIAL<small>SISTEMA DE MONITOREO</small></div>
   </div>
 </div>
 <div class="kpis">
@@ -286,7 +286,7 @@ th.c{text-align:center}
 </div>
 <div style="margin-bottom:24px">${horasCells}</div>
 <div class="footer">
-  <span>Dashboard AUNOR v2 &mdash; Módulo Discrepancias DAC</span>
+  <span>Pulso Vial &mdash; Módulo Discrepancias DAC</span>
   <span>Generado: ${new Date().toLocaleString('es-PE')}</span>
 </div>
 <script>window.onload=function(){window.print()}</script>
