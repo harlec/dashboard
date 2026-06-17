@@ -19,7 +19,7 @@ export function AdminLayout() {
   )
 
   return (
-    <div className="flex min-h-[calc(100vh-50px)]">
+    <div className="flex min-h-[calc(100vh-60px)]">
       {/* Sidebar */}
       <aside className="w-52 bg-surface border-r border-border flex-shrink-0 pt-4">
         <div className="px-4 pb-3 text-[0.7rem] text-muted font-bold uppercase tracking-widest">

@@ -4,8 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta de AUNOR — misma que el diseño actual
-        brand:   '#72BF44',
+        // Paleta Pulso Vial — tomada del logo
+        brand:        '#0F6F5A',
+        'brand-light': '#4CAF75',
         danger:  '#F04545',
         warn:    '#F99B1C',
         surface: '#141210',
@@ -19,6 +20,7 @@ export default {
         sans: ['Segoe UI', 'Arial', 'sans-serif'],
       },
       keyframes: {
+        'flow-dash': { to: { strokeDashoffset: '-48' } },
         'ping-pulse': {
           '0%,100%': { opacity: '1', transform: 'scale(1)' },
           '50%':     { opacity: '0.5', transform: 'scale(1.4)' },
@@ -31,6 +33,7 @@ export default {
       animation: {
         'ping-pulse': 'ping-pulse 0.6s ease-in-out infinite',
         'blink-down': 'blink-down 2s infinite',
+        'flow-dash':  'flow-dash 1.2s linear infinite',
       },
     },
   },

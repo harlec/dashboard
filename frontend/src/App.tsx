@@ -13,6 +13,7 @@ import { AdminVias }         from './pages/admin/Vias'
 import { AdminEquipos }      from './pages/admin/Equipos'
 import { AdminUsuarios }     from './pages/admin/Usuarios'
 import { AdminConfiguracion } from './pages/admin/Configuracion'
+import { NocDashboard }       from './pages/NocDashboard'
 
 function AppLayout() {
   return (
@@ -20,6 +21,7 @@ function AppLayout() {
       <NavBar signalStatus="ok" />
       <Routes>
         <Route path="/"           element={<Dashboard />} />
+        <Route path="/noc"        element={<NocDashboard />} />
         <Route path="/incidentes" element={<Incidentes />} />
         <Route path="/reporte"         element={<ReporteSLA />} />
         <Route path="/discrepancias"   element={<Discrepancias />} />

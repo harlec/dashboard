@@ -10,21 +10,22 @@ export function NavBar({ signalStatus }: Props) {
 
   const dotColor = {
     idle:  'bg-[#a09890]',
-    ok:    'bg-brand animate-ping-pulse',
+    ok:    'bg-brand-light animate-ping-pulse',
     error: 'bg-danger',
   }[signalStatus]
 
   const dotLabel = { idle: 'En espera', ok: 'En vivo', error: 'Sin conexión' }[signalStatus]
 
   return (
-    <nav className="bg-[#0a0908] flex items-center justify-between px-6 h-[50px] sticky top-0 z-50 border-b border-border">
+    <nav className="bg-[#0a0908] flex items-center justify-between px-6 h-[60px] sticky top-0 z-50 border-b border-border">
       <div className="flex items-center gap-2 tracking-wide">
-        <img src={logo} alt="Pulso Vial" className="h-6" />
+        <img src={logo} alt="Pulso Vial" className="h-9" />
       </div>
 
       <div className="flex gap-1">
         {[
           { to: '/',                label: 'Dashboard' },
+          { to: '/noc',             label: 'NOC' },
           { to: '/incidentes',      label: 'Incidentes' },
           { to: '/reporte',         label: 'Reporte SLA' },
           { to: '/discrepancias',   label: 'Discrepancias' },
