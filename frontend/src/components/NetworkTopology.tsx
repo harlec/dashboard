@@ -4,11 +4,11 @@ import type { EstacionLive } from '../api/client'
 interface Props { estaciones: EstacionLive[] }
 
 const W        = 900
-const H        = 400
-const HUB      = { x: 450, y: 198 }
-const R_RING   = 138
-const R_NODE   = 11
-const R_HUB    = 22
+const H        = 600
+const HUB      = { x: 450, y: 298 }
+const R_RING   = 182
+const R_NODE   = 13
+const R_HUB    = 26
 const PACK_DUR = 2000
 const STAGGER  = 400
 
@@ -36,7 +36,7 @@ function staPos(i: number, total: number) {
 
 function labelPos(deg: number) {
   const rad = (deg * Math.PI) / 180
-  const d   = R_RING + R_NODE + 22   // más espacio para evitar que el texto se monte al nodo
+  const d   = R_RING + R_NODE + 24
   return {
     x:      HUB.x + d * Math.cos(rad),
     y:      HUB.y + d * Math.sin(rad),
@@ -122,8 +122,8 @@ export function NetworkTopology({ estaciones }: Props) {
   }, [])
 
   return (
-    <div className="bg-[#070d12] rounded-xl border border-[#0F6F5A]/30 overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#0F6F5A]/20">
+    <div className="bg-[#070d12] rounded-xl border border-[#0F6F5A]/30 overflow-hidden h-full flex flex-col">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#0F6F5A]/20 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4CAF75] opacity-70" />
@@ -138,7 +138,7 @@ export function NetworkTopology({ estaciones }: Props) {
         </span>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: 'block' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full flex-1 min-h-0" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <pattern id="nt-g" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0F6F5A" strokeWidth="0.35" opacity="0.15" />
