@@ -41,6 +41,16 @@ export const api = {
     )}`),
   discrepanciasAnalisis: () =>
     request<DiscrepanciasAnalisis>('/discrepancias/analisis'),
+
+  // ── OCR Placas ──────────────────────────────────────────────
+  ocrResumen: (periodo: string) =>
+    request<OcrResumen>(`/ocr/resumen?periodo=${periodo}`),
+  ocrAnalisis: () =>
+    request<OcrAnalisis>('/ocr/analisis'),
+  ocrDetalle: (p: OcrDetalleParams) =>
+    request<OcrDetalle>(`/ocr/detalle?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
 }
 
 // ── Tipos ─────────────────────────────────────────────────────
@@ -145,4 +155,47 @@ export interface DiscrepanciasDetalle {
 export interface DiscrepanciasParams {
   periodo?: string; estacion?: string; placa?: string
   pagina?: number; porPagina?: number
+}
+
+// ── OCR Placas ────────────────────────────────────────────────
+export interface OcrEstacion {
+  estacion: string; total: number
+  aciertos: number; sinDetectar: number; errores: number
+  efectividad: number
+}
+export interface OcrTipoError { tipoError: string; total: number }
+export interface OcrVia {
+  estacion: string; via: string; total: number
+  aciertos: number; noReconocidas: number; confusiones: number
+  efectividad: number
+}
+export interface OcrResumen {
+  totalConPlaca: number; aciertos: number; sinDetectar: number; errores: number
+  tasaEfectividad: number; tasaSinDetectar: number; tasaError: number
+  porEstacion: OcrEstacion[]
+  porTipoError: OcrTipoError[]
+  porVia: OcrVia[]
+}
+export interface OcrConfusionCaracter {
+  posicion: number; esperado: string; ocrLeyo: string; casos: number
+}
+export interface OcrPorHora {
+  hora: number; total: number; aciertos: number; errores: number; efectividad: number
+}
+export interface OcrPar {
+  placaCajero: string; placaOcr: string; tipoError: string; casos: number
+}
+export interface OcrAnalisis {
+  topConfusiones: OcrConfusionCaracter[]
+  porHora: OcrPorHora[]
+  topPares: OcrPar[]
+}
+export interface OcrItem {
+  fecha: string; estacion: string; via: string; ticket: string
+  placaCajero: string; placaOcr: string; tipoError: string
+}
+export interface OcrDetalle { total: number; pagina: number; porPagina: number; items: OcrItem[] }
+export interface OcrDetalleParams {
+  periodo?: string; estacion?: string; placa?: string
+  tipoError?: string; pagina?: number; porPagina?: number
 }

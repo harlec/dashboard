@@ -111,6 +111,7 @@ builder.Services.AddSingleton<EnlaceEstadoCache>();
 
 // ── Consolidado (BD externa — discrepancias DAC) ──────────────
 builder.Services.AddSingleton<DiscrepanciasService>();
+builder.Services.AddSingleton<OcrPlacasService>();
 
 var app = builder.Build();
 

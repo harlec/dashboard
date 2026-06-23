@@ -46,14 +46,18 @@ public class DiscrepanciasService(IConfiguration config)
         END";
 
     // Condiciones comunes (sin el filtro de periodo y sin tra_manua<>tra_dac)
-    // AB (abortadas) y RE (reinicio) ya quedan fuera por el filtro de tra_tipop
+    // Alineado con la consulta validada por consultoría (Power BI):
+    //   - INNER JOIN disjus garantiza tránsitos en el universo válido
+    //   - tra_titra = 'TR' excluye violaciones, cierres, abortadas, etc.
+    //     (esos tipos tienen discrepancia manual/DAC por diseño, no por error del cobrador)
     private const string FiltroTipo = @"
         AND tra_tipop IN ('E','S','O','M','T')
+        AND tra_titra = 'TR'
         AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)";
 
     private const string DisjusJoin = @"
-        LEFT JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
-                        AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
+        INNER JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                         AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
 
     public async Task<DiscrepanciasResumenDto> GetResumenAsync(string periodo)
     {
@@ -69,10 +73,14 @@ public class DiscrepanciasService(IConfiguration config)
               AND t.tra_manua <> t.tra_dac
               {FiltroTipo}");
 
-        // 2. Total transacciones (sin filtro de discrepancia)
+        // 2. Total transacciones — denominador real (sin restricción disjus).
+        // El numerador usa INNER JOIN disjus para validar cada discrepancia,
+        // pero el denominador debe ser el universo completo de tránsitos normales,
+        // igual que lo hace el Power BI de la consultoría. De lo contrario el
+        // denominador queda artificialmente pequeño y la tasa se infla.
         var totalTx = await conn.ExecuteScalarAsync<int>($@"
             SELECT COUNT(*)
-            FROM transitos t {DisjusJoin}
+            FROM transitos t
             WHERE {pw}
               {FiltroTipo}");
 
@@ -153,13 +161,21 @@ public class DiscrepanciasService(IConfiguration config)
             WHEN 3 THEN '402' WHEN 4 THEN 'VIRU' WHEN 5 THEN 'SANTA'
             ELSE 'DESCONOCIDA' END";
 
+        // LEFT JOIN disjus en los CTEs de análisis:
+        // COUNT(*)  → denominador real (todos los tránsitos normales del período)
+        // SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua<>tra_dac ...) → solo discrepancias validadas
+        // Esto alinea la tasa con el criterio del Power BI de la consultoría.
+        const string disjusLeft = @"
+            LEFT JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                             AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
+
         // ── 1. Prioridad de mantenimiento: semana anterior vs semana actual por vía ──
         var prioridad = (await conn.QueryAsync<ViaAnalisisDto>($@"
             WITH sem1 AS (
                 SELECT t.tra_coest, t.tra_nuvia, vd.via_nombr,
                     COUNT(*) AS Tx1,
-                    SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Disc1
-                FROM transitos t {DisjusJoin}
+                    SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Disc1
+                FROM transitos t {disjusLeft}
                 LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
                 WHERE tra_fecha >= DATEADD(DAY,-14,GETDATE())
                   AND tra_fecha <  DATEADD(DAY,-7, GETDATE())
@@ -169,8 +185,8 @@ public class DiscrepanciasService(IConfiguration config)
             sem2 AS (
                 SELECT t.tra_coest, t.tra_nuvia, vd.via_nombr,
                     COUNT(*) AS Tx2,
-                    SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Disc2
-                FROM transitos t {DisjusJoin}
+                    SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Disc2
+                FROM transitos t {disjusLeft}
                 LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
                 WHERE tra_fecha >= DATEADD(DAY,-7,GETDATE())
                   {FiltroTipo}
@@ -203,12 +219,12 @@ public class DiscrepanciasService(IConfiguration config)
         // ── 2. Tasa de error por hora del día (últimos 7 días) ──
         var porHora = (await conn.QueryAsync<HoraAnalisisDto>($@"
             SELECT
-                DATEPART(HOUR, tra_fecha)                                       AS Hora,
-                COUNT(*)                                                        AS Transacciones,
-                SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END)          AS Discrepancias,
-                ROUND(100.0 * SUM(CASE WHEN tra_manua <> tra_dac THEN 1 ELSE 0 END)
-                    / NULLIF(COUNT(*), 0), 1)                                   AS TasaError
-            FROM transitos t {DisjusJoin}
+                DATEPART(HOUR, tra_fecha)                                                           AS Hora,
+                COUNT(*)                                                                            AS Transacciones,
+                SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END)    AS Discrepancias,
+                ROUND(100.0 * SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END)
+                    / NULLIF(COUNT(*), 0), 1)                                                       AS TasaError
+            FROM transitos t {disjusLeft}
             WHERE tra_fecha >= DATEADD(DAY, -7, GETDATE())
               {FiltroTipo}
             GROUP BY DATEPART(HOUR, tra_fecha)

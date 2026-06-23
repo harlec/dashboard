@@ -29,6 +29,7 @@ export function NavBar({ signalStatus }: Props) {
           { to: '/incidentes',      label: 'Incidentes' },
           { to: '/reporte',         label: 'Reporte SLA' },
           { to: '/discrepancias',   label: 'Discrepancias' },
+          { to: '/ocr',             label: 'OCR Placas' },
           { to: '/admin',           label: '⚙ Admin' },
         ].map(({ to, label }) => (
           <Link

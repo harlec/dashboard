@@ -14,6 +14,7 @@ import { AdminEquipos }      from './pages/admin/Equipos'
 import { AdminUsuarios }     from './pages/admin/Usuarios'
 import { AdminConfiguracion } from './pages/admin/Configuracion'
 import { NocDashboard }       from './pages/NocDashboard'
+import { OcrDashboard }       from './pages/OcrDashboard'
 
 function AppLayout() {
   return (
@@ -25,6 +26,7 @@ function AppLayout() {
         <Route path="/incidentes" element={<Incidentes />} />
         <Route path="/reporte"         element={<ReporteSLA />} />
         <Route path="/discrepancias"   element={<Discrepancias />} />
+        <Route path="/ocr"             element={<OcrDashboard />} />
         <Route path="/admin"      element={<AdminLayout />}>
           <Route index              element={<AdminDashboard />} />
           <Route path="estaciones"  element={<AdminEstaciones />} />
