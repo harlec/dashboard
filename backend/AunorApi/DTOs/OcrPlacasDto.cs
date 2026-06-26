@@ -68,6 +68,38 @@ public record OcrParDto(
     int    Casos
 );
 
+// ── Tendencias (últimos 30 días, ventana fija) ────────────────
+public record OcrTendenciasDto(
+    List<OcrHeatmapRowDto>   Heatmap,
+    List<OcrDiaTendenciaDto> TendenciaDiaria,
+    List<OcrMejorViaDto>     MejoresVias
+);
+
+// Una celda del heatmap: la hora + volumen + tasa de error
+public record OcrCeldaDto(int Hora, int Total, decimal TasaError);
+
+// Una fila del heatmap: una vía con sus 24 celdas (solo las que tienen datos)
+public record OcrHeatmapRowDto(
+    string Estacion, string Via,
+    int Total, decimal TasaVia,
+    List<OcrCeldaDto> Horas
+);
+
+// Punto de la tendencia diaria: tasa de toda la red + tasa de las mejores vías ese día
+public record OcrDiaTendenciaDto(
+    string  Fecha,
+    int     Total,
+    decimal TasaRed,
+    decimal TasaMejores
+);
+
+// Una de las mejores vías de referencia + su perfil horario
+public record OcrMejorViaDto(
+    string Estacion, string Via,
+    int Total, decimal TasaVia,
+    List<OcrCeldaDto> PorHora
+);
+
 // ── Detalle paginado ──────────────────────────────────────────
 public record OcrDetalleDto(
     int               Total,

@@ -47,6 +47,8 @@ export const api = {
     request<OcrResumen>(`/ocr/resumen?periodo=${periodo}`),
   ocrAnalisis: () =>
     request<OcrAnalisis>('/ocr/analisis'),
+  ocrTendencias: () =>
+    request<OcrTendencias>('/ocr/tendencias'),
   ocrDetalle: (p: OcrDetalleParams) =>
     request<OcrDetalle>(`/ocr/detalle?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
@@ -190,6 +192,16 @@ export interface OcrAnalisis {
   porHora: OcrPorHora[]
   topPares: OcrPar[]
 }
+export interface OcrCelda { hora: number; total: number; tasaError: number }
+export interface OcrHeatmapRow { estacion: string; via: string; total: number; tasaVia: number; horas: OcrCelda[] }
+export interface OcrDiaTendencia { fecha: string; total: number; tasaRed: number; tasaMejores: number }
+export interface OcrMejorViaTendencia { estacion: string; via: string; total: number; tasaVia: number; porHora: OcrCelda[] }
+export interface OcrTendencias {
+  heatmap: OcrHeatmapRow[]
+  tendenciaDiaria: OcrDiaTendencia[]
+  mejoresVias: OcrMejorViaTendencia[]
+}
+
 export interface OcrItem {
   fecha: string; estacion: string; via: string; ticket: string
   placaCajero: string; placaOcr: string; tipoError: string

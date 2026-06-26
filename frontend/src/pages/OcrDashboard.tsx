@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../api/client'
-import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia } from '../api/client'
+import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow } from '../api/client'
 
 const PERIODOS = ['1h', '4h', '12h', '24h', 'ayer', 'mes'] as const
 const ESTACIONES = ['', 'FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA']
@@ -17,6 +17,164 @@ function colorError(tipo: string) {
   if (tipo === 'CARÁCTER EXTRA')  return '#a78bfa'
   if (tipo === 'CARÁCTER PERDIDO') return '#60a5fa'
   return '#6b7a8c'
+}
+
+// ── Colores heatmap ───────────────────────────────────────────
+function heatBg(tasa: number | null): string {
+  if (tasa === null) return 'rgba(255,255,255,.02)'
+  if (tasa === 0)    return 'rgba(63,185,120,.18)'
+  if (tasa < 10)     return 'rgba(63,185,120,.55)'
+  if (tasa < 20)     return 'rgba(224,153,31,.6)'
+  if (tasa < 35)     return 'rgba(239,75,84,.55)'
+  return 'rgba(239,75,84,.88)'
+}
+function heatFg(tasa: number | null): string {
+  if (tasa === null) return '#1e2530'
+  if (tasa < 10) return '#2a5a3a'
+  if (tasa < 20) return '#5a3a10'
+  return '#6a1a1a'
+}
+
+// ── Heatmap vía × hora ────────────────────────────────────────
+function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
+  const HORAS = Array.from({ length: 24 }, (_, i) => i)
+  if (!rows.length) return (
+    <div style={{ padding: 32, textAlign: 'center', color: '#3a4a50', fontFamily: 'monospace', fontSize: 12 }}>
+      Sin datos suficientes para el heatmap
+    </div>
+  )
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'monospace' }}>
+        <thead>
+          <tr>
+            <th style={{ padding: '4px 10px 4px 0', textAlign: 'left', color: '#3a4a50', fontWeight: 600, whiteSpace: 'nowrap', minWidth: 110 }}>Vía</th>
+            <th style={{ padding: '4px 4px', color: '#3a4a50', fontWeight: 400, fontSize: 10, whiteSpace: 'nowrap', minWidth: 48 }}>% err</th>
+            {HORAS.map(h => (
+              <th key={h} style={{ padding: '2px 1px', color: '#2a3a50', fontWeight: 400, fontSize: 9, textAlign: 'center', width: 26 }}>
+                {h % 3 === 0 ? `${String(h).padStart(2,'0')}h` : ''}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => {
+            const horaMap = new Map(row.horas.map(h => [h.hora, h]))
+            return (
+              <tr key={ri}>
+                <td style={{ padding: '2px 8px 2px 0', whiteSpace: 'nowrap' }}>
+                  <span style={{ color: ESTACION_COLOR[row.estacion] ?? '#a09890', fontSize: 9, marginRight: 4 }}>●</span>
+                  <span style={{ color: '#ccd0d8' }}>{row.via}</span>
+                </td>
+                <td style={{ padding: '2px 4px', textAlign: 'right', color: row.tasaVia >= 30 ? '#ef4b54' : row.tasaVia >= 15 ? '#e0991f' : '#3fb978', fontWeight: 700 }}>
+                  {Number(row.tasaVia).toFixed(1)}%
+                </td>
+                {HORAS.map(h => {
+                  const c = horaMap.get(h) ?? null
+                  const tasa = c ? Number(c.tasaError) : null
+                  return (
+                    <td key={h} title={c ? `${String(h).padStart(2,'0')}h — ${tasa?.toFixed(1)}% error (${c.total} tráns.)` : `${String(h).padStart(2,'0')}h — sin datos`}
+                      style={{ padding: '1px', cursor: 'default' }}>
+                      <div style={{ width: 24, height: 18, borderRadius: 3, background: heatBg(tasa), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {tasa !== null && tasa >= 20 && (
+                          <span style={{ fontSize: 7, color: heatFg(tasa), fontWeight: 700 }}>{tasa.toFixed(0)}</span>
+                        )}
+                      </div>
+                    </td>
+                  )
+                })}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ── Perfil horario mejores vías ───────────────────────────────
+const LINEA_COLORS = ['#3fb978', '#4A9EE0', '#a78bfa', '#2dd4a7', '#F99B1C']
+
+function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
+  if (!vias.length) return null
+  const W = 420, H = 130, pL = 28, pR = 8, pT = 8, pB = 22
+  const cW = W - pL - pR, cH = H - pT - pB
+  const allTasas = vias.flatMap(v => v.porHora.map(h => h.tasaError))
+  const maxT = Math.max(...allTasas, 15)
+  const xOf = (h: number) => pL + (h / 23) * cW
+  const yOf = (t: number) => pT + cH - Math.min(t / maxT, 1) * cH
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }}>
+      {/* Grid horizontales */}
+      {[0, maxT * 0.5, maxT].map((t, i) => (
+        <g key={i}>
+          <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
+          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="monospace">{t.toFixed(0)}%</text>
+        </g>
+      ))}
+      {/* Líneas por vía */}
+      {vias.map((v, i) => {
+        const pts = v.porHora.map((h: OcrCelda) => `${xOf(h.hora).toFixed(1)},${yOf(Number(h.tasaError)).toFixed(1)}`).join(' ')
+        return pts ? (
+          <polyline key={i} points={pts} fill="none"
+            stroke={LINEA_COLORS[i]} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
+        ) : null
+      })}
+      {/* Eje X */}
+      {[0, 6, 12, 18, 23].map(h => (
+        <text key={h} x={xOf(h)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="monospace">{String(h).padStart(2,'0')}h</text>
+      ))}
+    </svg>
+  )
+}
+
+// ── Tendencia diaria 30d ──────────────────────────────────────
+function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria'] }) {
+  if (!datos.length) return null
+  const W = 420, H = 130, pL = 28, pR = 8, pT = 8, pB = 22
+  const cW = W - pL - pR, cH = H - pT - pB
+  const maxT = Math.max(...datos.map(d => Math.max(Number(d.tasaRed), Number(d.tasaMejores))), 10)
+  const n = datos.length
+  const xOf = (i: number) => pL + (i / Math.max(n - 1, 1)) * cW
+  const yOf = (t: number) => pT + cH - Math.min(Number(t) / maxT, 1) * cH
+
+  const ptsRed = datos.map((d, i) => `${xOf(i).toFixed(1)},${yOf(Number(d.tasaRed)).toFixed(1)}`).join(' ')
+  const ptsMej = datos.filter(d => Number(d.tasaMejores) > 0)
+    .map((d, _, arr) => {
+      const i = datos.indexOf(d)
+      return `${xOf(i).toFixed(1)},${yOf(Number(d.tasaMejores)).toFixed(1)}`
+    }).join(' ')
+
+  // Área bajo la línea roja
+  const areaRed = `${pL},${yOf(0)} ${ptsRed} ${xOf(n-1)},${yOf(0)}`
+
+  // Labels X: mostrar cada 7 días aproximadamente
+  const step = Math.max(1, Math.floor(n / 6))
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }}>
+      {/* Grid */}
+      {[0, maxT * 0.5, maxT].map((t, i) => (
+        <g key={i}>
+          <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
+          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="monospace">{t.toFixed(0)}%</text>
+        </g>
+      ))}
+      {/* Área red semitransparente */}
+      <polygon points={areaRed} fill="rgba(239,75,84,.07)" />
+      {/* Línea red (todos) */}
+      <polyline points={ptsRed} fill="none" stroke="#ef4b54" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
+      {/* Línea mejores vías */}
+      {ptsMej && <polyline points={ptsMej} fill="none" stroke="#3fb978" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />}
+      {/* Eje X (fechas) */}
+      {datos.map((d, i) => i % step === 0 ? (
+        <text key={i} x={xOf(i)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="7" fontFamily="monospace">
+          {d.fecha.slice(5)}
+        </text>
+      ) : null)}
+    </svg>
+  )
 }
 
 const ESTACION_COLOR: Record<string, string> = {
@@ -112,13 +270,15 @@ function PlacaDiff({ cajero, ocr }: { cajero: string; ocr: string }) {
 }
 
 export function OcrDashboard() {
-  const [periodo,   setPeriodo]   = useState('24h')
-  const [resumen,   setResumen]   = useState<OcrResumen | null>(null)
-  const [analisis,  setAnalisis]  = useState<OcrAnalisis | null>(null)
-  const [detalle,   setDetalle]   = useState<OcrDetalle | null>(null)
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState<string | null>(null)
-  const [tab,       setTab]       = useState<'confusion' | 'detalle'>('confusion')
+  const [periodo,    setPeriodo]    = useState('24h')
+  const [resumen,    setResumen]    = useState<OcrResumen | null>(null)
+  const [analisis,   setAnalisis]   = useState<OcrAnalisis | null>(null)
+  const [tendencias, setTendencias] = useState<OcrTendencias | null>(null)
+  const [loadingT,   setLoadingT]   = useState(false)
+  const [detalle,    setDetalle]    = useState<OcrDetalle | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState<string | null>(null)
+  const [tab,        setTab]        = useState<'confusion' | 'tendencias' | 'detalle'>('confusion')
 
   // Filtros detalle
   const [estacion,  setEstacion]  = useState('')
@@ -137,10 +297,18 @@ export function OcrDashboard() {
     } finally { setLoading(false) }
   }, [periodo])
 
-  // Análisis: ventanas fijas en SQL (30d/7d), independiente del período — carga una vez
+  // Análisis y tendencias: ventanas fijas (30d/7d), independientes del período — cargan una vez
   useEffect(() => {
     api.ocrAnalisis().then(setAnalisis).catch(() => {})
   }, [])
+
+  const loadTendencias = useCallback(async () => {
+    if (tendencias) return  // ya cargadas
+    setLoadingT(true)
+    try { setTendencias(await api.ocrTendencias()) }
+    catch { /* mostrar vacío */ }
+    finally { setLoadingT(false) }
+  }, [tendencias])
 
   const loadDetalle = useCallback(async () => {
     const d = await api.ocrDetalle({ periodo, estacion: estacion||undefined, placa: placa||undefined, tipoError: tipoError||undefined, pagina, porPagina: 50 })
@@ -204,8 +372,12 @@ export function OcrDashboard() {
 
           {/* ── Tabs ── */}
           <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(255,255,255,.07)', paddingBottom: 0 }}>
-            {([['confusion', 'Análisis de Caracteres'], ['detalle', 'Detalle de Registros']] as const).map(([t, label]) => (
-              <button key={t} onClick={() => setTab(t)}
+            {([
+              ['confusion',  'Análisis de Caracteres'],
+              ['tendencias', 'Tendencias 30d'],
+              ['detalle',    'Detalle de Registros'],
+            ] as const).map(([t, label]) => (
+              <button key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }}
                 style={{ padding: '8px 20px', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', borderBottom: `2px solid ${tab === t ? '#2dd4a7' : 'transparent'}`, color: tab === t ? '#2dd4a7' : '#5f7186', marginBottom: -1 }}>
                 {label}
               </button>
@@ -359,6 +531,109 @@ export function OcrDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {tab === 'tendencias' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {loadingT ? (
+                <div style={{ padding: 48, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 13 }}>
+                  Calculando tendencias de 30 días…
+                </div>
+              ) : !tendencias ? (
+                <div style={{ padding: 32, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 12 }}>Sin datos</div>
+              ) : (
+                <>
+                  {/* ── Heatmap vía × hora ── */}
+                  <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                        HEATMAP ERROR OCR · VÍA × HORA DEL DÍA · ÚLTIMOS 30 DÍAS
+                      </span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040' }}>peor a mejor de arriba a abajo · hover para detalle</span>
+                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontFamily: 'monospace', fontSize: 10 }}>
+                        {[['<10%','rgba(63,185,120,.55)'],['10-20%','rgba(224,153,31,.6)'],['20-35%','rgba(239,75,84,.55)'],['>35%','rgba(239,75,84,.88)']].map(([l,c]) => (
+                          <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#3a4a50' }}>
+                            <span style={{ width: 14, height: 10, borderRadius: 2, background: c as string, display: 'inline-block' }} />{l}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ padding: '12px 18px' }}>
+                      <HeatmapPanel rows={tendencias.heatmap} />
+                    </div>
+                  </div>
+
+                  {/* ── Perfil horario mejores vías + Tendencia diaria ── */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+                    {/* Perfil horario de las mejores vías */}
+                    <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(63,185,120,.15)', borderRadius: 12, overflow: 'hidden' }}>
+                      <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(63,185,120,.08)' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#3a6a4a', fontWeight: 700 }}>
+                          PERFIL HORARIO · MEJORES VÍAS (REFERENCIA)
+                        </span>
+                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
+                          vías con menor tasa de error — {tendencias.mejoresVias.length} vías · mín. 100 tránsitos
+                        </div>
+                      </div>
+                      <div style={{ padding: '12px 18px 8px' }}>
+                        <PerfilHorarioChart vias={tendencias.mejoresVias} />
+                      </div>
+                      {/* Leyenda */}
+                      <div style={{ padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {tendencias.mejoresVias.map((v, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 20, height: 2.5, background: LINEA_COLORS[i], borderRadius: 2, flexShrink: 0 }} />
+                            <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#ccd0d8' }}>{v.via}</span>
+                            <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? '#a09890', marginLeft: 2 }}>{v.estacion}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#3fb978', marginLeft: 'auto' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
+                          </div>
+                        ))}
+                      </div>
+                      {tendencias.mejoresVias.length === 0 && (
+                        <div style={{ padding: '12px 18px', color: '#3a4a50', fontFamily: 'monospace', fontSize: 12 }}>
+                          Insuficientes vías con ≥100 tránsitos en 30d
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tendencia diaria 30d */}
+                    <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
+                      <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
+                          TENDENCIA DIARIA · % ERROR RED VS REFERENCIA
+                        </span>
+                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
+                          ¿el sistema mejora o empeora? · caídas bruscas = incidente
+                        </div>
+                      </div>
+                      <div style={{ padding: '12px 18px 8px' }}>
+                        <TendenciaDiariaChart datos={tendencias.tendenciaDiaria} />
+                      </div>
+                      <div style={{ padding: '0 18px 14px', display: 'flex', gap: 18 }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 20, height: 2, background: '#ef4b54', borderRadius: 2 }} /> Red completa
+                        </span>
+                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#3fb978', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 20, height: 2, background: '#3fb978', borderRadius: 2 }} /> Mejores vías
+                        </span>
+                        {tendencias.tendenciaDiaria.length > 1 && (() => {
+                          const first = Number(tendencias.tendenciaDiaria[0].tasaRed)
+                          const last  = Number(tendencias.tendenciaDiaria[tendencias.tendenciaDiaria.length - 1].tasaRed)
+                          const delta = last - first
+                          return (
+                            <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 11,
+                              color: delta > 2 ? '#ef4b54' : delta < -2 ? '#3fb978' : '#5f7186' }}>
+                              {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(1)}% vs hace 30d
+                            </span>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

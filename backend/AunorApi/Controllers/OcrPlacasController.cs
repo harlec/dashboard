@@ -21,6 +21,10 @@ public class OcrPlacasController(OcrPlacasService svc) : ControllerBase
     public async Task<IActionResult> Analisis()
         => Ok(await svc.GetAnalisisAsync());
 
+    [HttpGet("tendencias")]
+    public async Task<IActionResult> Tendencias()
+        => Ok(await svc.GetTendenciasAsync());
+
     [HttpGet("detalle")]
     public async Task<IActionResult> Detalle(
         [FromQuery] string  periodo    = "24h",

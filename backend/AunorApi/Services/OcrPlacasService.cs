@@ -51,6 +51,8 @@ public class OcrPlacasService(IConfiguration config)
     public async Task<OcrResumenDto> GetResumenAsync(string periodo)
     {
         await using var conn = new SqlConnection(_connStr);
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
         string pw = PeriodWhere(periodo);
 
         // Totales en una sola pasada
@@ -220,6 +222,8 @@ public class OcrPlacasService(IConfiguration config)
         int pagina, int porPagina)
     {
         await using var conn = new SqlConnection(_connStr);
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
         string pw = PeriodWhere(periodo);
 
         int? coest = estacion switch {
@@ -265,5 +269,111 @@ public class OcrPlacasService(IConfiguration config)
             new { coest, placa = placaFiltro, offset, porPagina })).ToList();
 
         return new OcrDetalleDto(totalCount, pagina, porPagina, items);
+    }
+
+    // ── Tendencias: heatmap vía×hora + tendencia diaria + mejores vías ──
+    public async Task<OcrTendenciasDto> GetTendenciasAsync()
+    {
+        await using var conn = new SqlConnection(_connStr);
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+        const int timeout = 120;
+
+        const string filtro30d = @"
+            tra_fecha >= DATEADD(DAY, -30, GETDATE())
+            AND tra_tipop IN ('E','S','O','M','T')
+            AND tra_titra = 'TR'
+            AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
+            AND tra_paten IS NOT NULL AND tra_paten <> ''";
+
+        const string errSum = @"
+            SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = ''
+                          OR tra_paten <> tra_patocr THEN 1 ELSE 0 END)";
+
+        // 1. Heatmap: vía × hora (30 días, mín. 5 transacciones por celda)
+        var heatRaw = (await conn.QueryAsync<(string Estacion, string Via, int Hora, int Total, int Errores)>($@"
+            SELECT {EstacionCase}                                                     AS Estacion,
+                   ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR))       AS Via,
+                   DATEPART(HOUR, tra_fecha)                                          AS Hora,
+                   COUNT(*)                                                           AS Total,
+                   {errSum}                                                           AS Errores
+            FROM transitos t
+            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+            WHERE {filtro30d}
+            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr, DATEPART(HOUR, tra_fecha)
+            HAVING COUNT(*) >= 5
+            ORDER BY Estacion, Via, Hora",
+            commandTimeout: timeout)).ToList();
+
+        // 2. Tendencia: vía × día (30 días)
+        var diaRaw = (await conn.QueryAsync<(string Fecha, string Estacion, string Via, int Total, int Errores)>($@"
+            SELECT CONVERT(varchar(10), CAST(tra_fecha AS DATE), 23)                 AS Fecha,
+                   {EstacionCase}                                                     AS Estacion,
+                   ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR))       AS Via,
+                   COUNT(*)                                                           AS Total,
+                   {errSum}                                                           AS Errores
+            FROM transitos t
+            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+            WHERE {filtro30d}
+            GROUP BY CAST(tra_fecha AS DATE), t.tra_coest, t.tra_nuvia, vd.via_nombr
+            ORDER BY Fecha, Estacion, Via",
+            commandTimeout: timeout)).ToList();
+
+        // ── Agregar heatmap por vía ──────────────────────────────────────
+        var viaAgg = heatRaw
+            .GroupBy(r => (r.Estacion, r.Via))
+            .Select(g => {
+                int tot = g.Sum(r => r.Total);
+                int err = g.Sum(r => r.Errores);
+                var horas = g.OrderBy(r => r.Hora)
+                             .Select(r => new OcrCeldaDto(r.Hora, r.Total,
+                                 r.Total > 0 ? Math.Round((decimal)r.Errores * 100 / r.Total, 1) : 0m))
+                             .ToList();
+                return (
+                    Estacion: g.Key.Estacion,
+                    Via: g.Key.Via,
+                    Total: tot,
+                    TasaVia: tot > 0 ? Math.Round((decimal)err * 100 / tot, 1) : 0m,
+                    Horas: horas
+                );
+            })
+            .ToList();
+
+        // Heatmap: vías con ≥50 transacciones, ordenadas peor→mejor (para ver problemas arriba)
+        var heatmap = viaAgg
+            .Where(v => v.Total >= 50)
+            .OrderByDescending(v => v.TasaVia)
+            .Select(v => new OcrHeatmapRowDto(v.Estacion, v.Via, v.Total, v.TasaVia, v.Horas))
+            .ToList();
+
+        // Mejores vías de referencia: top 5 con ≥100 transacciones y menor tasa de error
+        var mejoresVias = viaAgg
+            .Where(v => v.Total >= 100)
+            .OrderBy(v => v.TasaVia)
+            .Take(5)
+            .Select(v => new OcrMejorViaDto(v.Estacion, v.Via, v.Total, v.TasaVia, v.Horas))
+            .ToList();
+
+        var mejoresKey = new HashSet<string>(mejoresVias.Select(m => $"{m.Estacion}|{m.Via}"));
+
+        // Tendencia diaria: red completa + promedio ponderado de mejores vías
+        var tendenciaDiaria = diaRaw
+            .GroupBy(r => r.Fecha)
+            .OrderBy(g => g.Key)
+            .Select(g => {
+                int tot = g.Sum(r => r.Total);
+                int err = g.Sum(r => r.Errores);
+                decimal tasaRed = tot > 0 ? Math.Round((decimal)err * 100 / tot, 1) : 0m;
+
+                var mej   = g.Where(r => mejoresKey.Contains($"{r.Estacion}|{r.Via}")).ToList();
+                int totM  = mej.Sum(r => r.Total);
+                int errM  = mej.Sum(r => r.Errores);
+                decimal tasaMej = totM > 0 ? Math.Round((decimal)errM * 100 / totM, 1) : 0m;
+
+                return new OcrDiaTendenciaDto(g.Key, tot, tasaRed, tasaMej);
+            })
+            .ToList();
+
+        return new OcrTendenciasDto(heatmap, tendenciaDiaria, mejoresVias);
     }
 }
