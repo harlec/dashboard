@@ -107,7 +107,9 @@ builder.Services.AddHostedService<EnlaceMonitorService>();
 builder.Services.AddSingleton<IConnectionStringProvider>(
     new ConnectionStringProvider(connStr));
 builder.Services.AddSingleton<EmailAlertService>();
+builder.Services.AddSingleton<TelegramAlertService>();
 builder.Services.AddSingleton<EnlaceEstadoCache>();
+builder.Services.AddHttpClient();
 
 // ── Consolidado (BD externa — discrepancias DAC) ──────────────
 builder.Services.AddSingleton<DiscrepanciasService>();

@@ -1,5 +1,6 @@
 using AunorApi.Data;
 using AunorApi.Models;
+using AunorApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ namespace AunorApi.Controllers;
 [ApiController]
 [Route("api/config")]
 [Authorize]
-public class ConfiguracionController(AppDbContext db) : ControllerBase
+public class ConfiguracionController(AppDbContext db, TelegramAlertService telegramAlert) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List() =>
@@ -30,6 +31,14 @@ public class ConfiguracionController(AppDbContext db) : ControllerBase
         }
         await db.SaveChangesAsync();
         return Ok(new { clave, valor = req.Valor });
+    }
+
+    [HttpPost("telegram/test")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> TestTelegram()
+    {
+        var (ok, message) = await telegramAlert.SendTestAsync();
+        return ok ? Ok(new { ok, message }) : BadRequest(new { ok, message });
     }
 }
 

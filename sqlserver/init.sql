@@ -257,6 +257,14 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'telegram_bot_token')
+BEGIN
+    INSERT INTO configuracion (clave, valor) VALUES
+    ('telegram_bot_token', ''),
+    ('telegram_chat_id',   '');
+END
+GO
+
 -- Tipos de equipo
 IF NOT EXISTS (SELECT 1 FROM tipos_equipo WHERE id = 1)
 BEGIN

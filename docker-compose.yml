@@ -60,7 +60,6 @@ services:
 volumes:
   sqlserver_data:
 
-# NOTA PRODUCCIÓN LINUX:
-# Para que los pings a IPs internas (10.15.x.x) funcionen en un servidor Linux real,
-# cambia backend y frontend a:  network_mode: host
-# Y la conexión SQL Server vuelve a:  Server=localhost,1433
+# NOTA: no se usa network_mode: host — la subred del bridge de Docker (172.18.0.0/16)
+# no choca con la red interna (10.15.x.x / 10.18.x.x), así que el ping sale igual
+# vía NAT del bridge normal, siempre que el host (Windows/WSL2) tenga ruta a esa red.

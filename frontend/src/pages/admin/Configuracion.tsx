@@ -13,6 +13,8 @@ const LABELS: Record<string, { label: string; desc: string; type?: string }> = {
   smtp_puerto:      { label: 'SMTP Puerto',        desc: 'Puerto SMTP (587 para TLS)' },
   smtp_usuario:     { label: 'SMTP Usuario',       desc: 'Email de envío' },
   smtp_password:    { label: 'SMTP Contraseña',    desc: 'Contraseña del email', type: 'password' },
+  telegram_bot_token: { label: 'Telegram Bot Token', desc: 'Token del bot de Telegram para alertas', type: 'password' },
+  telegram_chat_id:   { label: 'Telegram Chat ID',   desc: 'ID del grupo/chat de Telegram donde se envían las alertas' },
 }
 
 export function AdminConfiguracion() {
@@ -21,6 +23,8 @@ export function AdminConfiguracion() {
   const [saving,  setSaving]  = useState<string | null>(null)
   const [values,  setValues]  = useState<Record<string, string>>({})
   const [saved,   setSaved]   = useState<Record<string, boolean>>({})
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/config', { credentials: 'include' })
@@ -44,6 +48,20 @@ export function AdminConfiguracion() {
     setTimeout(() => setSaved(p => ({ ...p, [clave]: false })), 2000)
   }
 
+  const testTelegram = async () => {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const r = await fetch('/api/config/telegram/test', { method: 'POST', credentials: 'include' })
+      const data = await r.json()
+      setTestResult({ ok: r.ok, message: data.message ?? (r.ok ? 'Enviado.' : 'Error al enviar.') })
+    } catch {
+      setTestResult({ ok: false, message: 'No se pudo contactar al servidor.' })
+    } finally {
+      setTesting(false)
+    }
+  }
+
   if (loading) return <div className="text-center py-12 text-muted">Cargando…</div>
 
   return (
@@ -51,7 +69,7 @@ export function AdminConfiguracion() {
       <h1 className="text-xl font-extrabold text-[#eae7e4] mb-2">Configuración</h1>
       <p className="text-sm text-muted mb-6">
         Los cambios de intervalo/pings se aplican en el próximo ciclo del worker.
-        Los cambios SMTP se aplican inmediatamente a la siguiente alerta.
+        Los cambios de SMTP y Telegram se aplican inmediatamente a la siguiente alerta.
       </p>
 
       <div className="flex flex-col gap-3 max-w-xl">
@@ -80,6 +98,28 @@ export function AdminConfiguracion() {
             </div>
           )
         })}
+
+        {rows.some(r => r.clave === 'telegram_bot_token') && (
+          <div className="bg-surface rounded-xl p-4 border border-border">
+            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar Telegram</div>
+            <div className="text-xs text-muted mb-2">
+              Guarda el token y el chat ID primero, luego envía un mensaje de prueba al grupo.
+            </div>
+            <button
+              onClick={testTelegram}
+              disabled={testing}
+              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
+                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
+            >
+              {testing ? 'Enviando…' : 'Enviar mensaje de prueba'}
+            </button>
+            {testResult && (
+              <div className={`text-xs mt-2 ${testResult.ok ? 'text-green-500' : 'text-red-500'}`}>
+                {testResult.ok ? '✓ ' : '✗ '}{testResult.message}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

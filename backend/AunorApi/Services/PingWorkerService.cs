@@ -13,6 +13,8 @@ public class PingWorkerService(
     IConnectionStringProvider cs,
     IHubContext<MonitorHub> hub,
     EnlaceEstadoCache enlaceCache,
+    EmailAlertService emailAlert,
+    TelegramAlertService telegramAlert,
     IConfiguration config,
     ILogger<PingWorkerService> log) : BackgroundService
 {
@@ -172,7 +174,10 @@ public class PingWorkerService(
             await db.SaveChangesAsync(ct);
 
             if (!esStarlink)
+            {
                 await hub.Clients.All.SendAsync("IncidenteAbierto", equipoId, DateTime.Now, ct);
+                await SendAlertsAsync(db, equipoId, down: true, duracionMin: 0);
+            }
         }
         else
         {
@@ -186,8 +191,11 @@ public class PingWorkerService(
             }
             await db.SaveChangesAsync(ct);
             if (inc != null)
+            {
                 await hub.Clients.All.SendAsync("IncidenteCerrado",
                     equipoId, inc.Fin, inc.DuracionMin, ct);
+                await SendAlertsAsync(db, equipoId, down: false, duracionMin: inc.DuracionMin ?? 0);
+            }
         }
 
         // alerta=false en Starlink para DOWN → frontend no reproduce sonido
@@ -196,6 +204,38 @@ public class PingWorkerService(
             equipoId, estado, latencia, DateTime.Now, alerta, ct);
 
         return true;
+    }
+
+    // ── Notificar email + Telegram cuando un equipo cae o se recupera ─────
+    private async Task SendAlertsAsync(AppDbContext db, int equipoId, bool down, int duracionMin)
+    {
+        var alertasActivas = await db.Configuraciones
+            .Where(c => c.Clave == "alertas_activas")
+            .Select(c => c.Valor)
+            .FirstOrDefaultAsync();
+        if (alertasActivas != "1") return;
+
+        var equipo = await db.Equipos
+            .Where(e => e.Id == equipoId)
+            .Select(e => new { e.Nombre, e.Ip, Estacion = e.Via.Estacion.Nombre })
+            .FirstOrDefaultAsync();
+        if (equipo is null) return;
+
+        try
+        {
+            if (down)
+                await Task.WhenAll(
+                    emailAlert.SendDownAlertAsync(equipo.Nombre, equipo.Estacion, equipo.Ip),
+                    telegramAlert.SendDownAlertAsync(equipo.Nombre, equipo.Estacion, equipo.Ip));
+            else
+                await Task.WhenAll(
+                    emailAlert.SendUpAlertAsync(equipo.Nombre, equipo.Estacion, equipo.Ip, duracionMin),
+                    telegramAlert.SendUpAlertAsync(equipo.Nombre, equipo.Estacion, equipo.Ip, duracionMin));
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error enviando alertas para equipo {id}", equipoId);
+        }
     }
 
     private async Task EmitKpis(AppDbContext db, CancellationToken ct)
