@@ -34,6 +34,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Descripcion).HasColumnName("descripcion");
             e.Property(x => x.CheckPort).HasColumnName("check_port");
             e.Property(x => x.Monitorear).HasColumnName("monitorear");
+            e.Property(x => x.AgenteInstalado).HasColumnName("agente_instalado");
             e.Property(x => x.Activo).HasColumnName("activo");
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
             e.HasOne(x => x.Via).WithMany(x => x.Equipos).HasForeignKey(x => x.ViaId);

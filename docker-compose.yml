@@ -30,6 +30,7 @@ services:
       # "sqlserver" = nombre del servicio en la red interna de Docker
       ConnectionStrings__Default: "Server=sqlserver,1433;Database=red;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True"
       JWT_SECRET: ${JWT_SECRET}
+      AGENT_API_KEY: ${AGENT_API_KEY}
       CAM_EMAIL: ${CAM_EMAIL}
       CAM_PASSWORD: ${CAM_PASSWORD}
       CAM_EMAIL2: ${CAM_EMAIL2}

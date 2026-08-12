@@ -100,6 +100,7 @@ CREATE TABLE equipos (
     descripcion    NVARCHAR(255) NULL,
     check_port     INT           NULL,       -- NULL = ICMP ping, número = TCP port check
     monitorear     BIT           NOT NULL DEFAULT 1,
+    agente_instalado BIT         NOT NULL DEFAULT 0,  -- tiene PulsovialAgent instalado (reinicio remoto de servicios)
     activo         BIT           NOT NULL DEFAULT 1,
     creado_en      DATETIME2     NOT NULL DEFAULT GETDATE(),
     CONSTRAINT PK_equipos PRIMARY KEY (id),
@@ -262,6 +263,14 @@ BEGIN
     INSERT INTO configuracion (clave, valor) VALUES
     ('telegram_bot_token', ''),
     ('telegram_chat_id',   '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'agente_servicios_permitidos')
+BEGIN
+    INSERT INTO configuracion (clave, valor) VALUES
+    ('agente_servicios_permitidos', ''),
+    ('agente_puerto',               '6060');
 END
 GO
 

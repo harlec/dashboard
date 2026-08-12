@@ -15,6 +15,8 @@ const LABELS: Record<string, { label: string; desc: string; type?: string }> = {
   smtp_password:    { label: 'SMTP Contraseña',    desc: 'Contraseña del email', type: 'password' },
   telegram_bot_token: { label: 'Telegram Bot Token', desc: 'Token del bot de Telegram para alertas', type: 'password' },
   telegram_chat_id:   { label: 'Telegram Chat ID',   desc: 'ID del grupo/chat de Telegram donde se envían las alertas' },
+  agente_servicios_permitidos: { label: 'Servicios reiniciables', desc: 'Nombres de servicio Windows separados por coma, permitidos para reinicio remoto' },
+  agente_puerto:      { label: 'Puerto del agente',  desc: 'Puerto TCP donde escucha PulsovialAgent en cada vía' },
 }
 
 export function AdminConfiguracion() {

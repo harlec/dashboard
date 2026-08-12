@@ -19,6 +19,9 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(connStr));
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
     ?? throw new InvalidOperationException("JWT_SECRET no configurado");
 
+var agentApiKey = Environment.GetEnvironmentVariable("AGENT_API_KEY")
+    ?? throw new InvalidOperationException("AGENT_API_KEY no configurado");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
@@ -109,6 +112,11 @@ builder.Services.AddSingleton<IConnectionStringProvider>(
 builder.Services.AddSingleton<EmailAlertService>();
 builder.Services.AddSingleton<TelegramAlertService>();
 builder.Services.AddSingleton<EnlaceEstadoCache>();
+builder.Services.AddSingleton<AgentClient>(sp => new AgentClient(
+    agentApiKey,
+    sp.GetRequiredService<IConnectionStringProvider>(),
+    sp.GetRequiredService<IHttpClientFactory>(),
+    sp.GetRequiredService<ILogger<AgentClient>>()));
 builder.Services.AddHttpClient();
 
 // ── Consolidado (BD externa — discrepancias DAC) ──────────────

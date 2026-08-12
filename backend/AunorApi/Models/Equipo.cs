@@ -10,6 +10,7 @@ public class Equipo
     public string? Descripcion { get; set; }
     public string? CheckPort { get; set; }  // null = ICMP, "445" = un puerto, "8080,80" = varios en paralelo
     public bool Monitorear { get; set; } = true;
+    public bool AgenteInstalado { get; set; } = false;
     public bool Activo { get; set; } = true;
     public DateTime CreadoEn { get; set; }
     public Via Via { get; set; } = null!;

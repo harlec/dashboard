@@ -4,8 +4,8 @@ import { FormModal, Field, Input, Select } from '../../components/admin/FormModa
 
 interface TipoEquipo { id: number; nombre: string }
 interface Via { id: number; numero: string; estacion?: { nombre: string } }
-interface Equipo { id: number; viaId: number; tipoEquipoId: number; nombre: string; ip: string; descripcion?: string; checkPort?: string | null; monitorear: boolean; activo: boolean; via?: Via; tipoEquipo?: TipoEquipo }
-const empty = (): Partial<Equipo> => ({ viaId: 0, tipoEquipoId: 0, nombre: '', ip: '', descripcion: '', checkPort: null, monitorear: true })
+interface Equipo { id: number; viaId: number; tipoEquipoId: number; nombre: string; ip: string; descripcion?: string; checkPort?: string | null; monitorear: boolean; agenteInstalado: boolean; activo: boolean; via?: Via; tipoEquipo?: TipoEquipo }
+const empty = (): Partial<Equipo> => ({ viaId: 0, tipoEquipoId: 0, nombre: '', ip: '', descripcion: '', checkPort: null, monitorear: true, agenteInstalado: false })
 
 const PORT_HINTS: Record<string, string> = {
   'PC Via': '445', 'PC OCR': '445',
@@ -22,6 +22,12 @@ export function AdminEquipos() {
   const [saving,  setSaving]  = useState(false)
   const [search,  setSearch]  = useState('')
 
+  const [servicios, setServicios] = useState<string[]>([])
+  const [restartTarget, setRestartTarget] = useState<Equipo | null>(null)
+  const [selectedServicio, setSelectedServicio] = useState('')
+  const [restarting, setRestarting] = useState(false)
+  const [restartResult, setRestartResult] = useState<{ ok: boolean; message: string } | null>(null)
+
   const load = () => {
     setLoading(true)
     Promise.all([
@@ -33,6 +39,42 @@ export function AdminEquipos() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    fetch('/api/config', { credentials: 'include' })
+      .then(r => r.json())
+      .then((data: { clave: string; valor: string }[]) => {
+        const valor = data.find(c => c.clave === 'agente_servicios_permitidos')?.valor ?? ''
+        setServicios(valor.split(',').map(s => s.trim()).filter(Boolean))
+      })
+  }, [])
+
+  const openRestart = (r: Equipo) => {
+    setRestartTarget(r)
+    setSelectedServicio(servicios[0] ?? '')
+    setRestartResult(null)
+  }
+
+  const restart = async () => {
+    if (!restartTarget || !selectedServicio) return
+    if (!confirm(`¿Reiniciar "${selectedServicio}" en "${restartTarget.nombre}"? Esto puede interrumpir la vía brevemente.`)) return
+
+    setRestarting(true)
+    setRestartResult(null)
+    try {
+      const r = await fetch(`/api/equipos/${restartTarget.id}/restart-servicio`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ servicio: selectedServicio })
+      })
+      const data = await r.json()
+      setRestartResult({ ok: r.ok, message: data.message ?? (r.ok ? 'Reiniciado.' : 'Error.') })
+    } catch {
+      setRestartResult({ ok: false, message: 'No se pudo contactar al servidor.' })
+    } finally {
+      setRestarting(false)
+    }
+  }
 
   const filtered = rows.filter(r =>
     r.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,7 +102,8 @@ export function AdminEquipos() {
         nombre: editing.nombre, ip: editing.ip,
         descripcion: editing.descripcion,
         checkPort: editing.checkPort ?? null,
-        monitorear: editing.monitorear
+        monitorear: editing.monitorear,
+        agenteInstalado: editing.agenteInstalado ?? false
       })
     })
     setSaving(false); setModal(false); load()
@@ -95,6 +138,12 @@ export function AdminEquipos() {
             { key: 'tipo',       label: 'Tipo', render: r => (r as any).tipoEquipo?.nombre ?? '—' },
             { key: 'via',        label: 'Vía', render: r => (r as any).via ? `${(r as any).via.estacion?.nombre} — ${(r as any).via.numero}` : '—' },
             { key: 'monitorear', label: 'Monitorear', render: r => r.monitorear ? '✅' : '⏸' },
+            { key: 'agente', label: 'Agente', render: r => r.agenteInstalado
+                ? <button onClick={() => openRestart(r)}
+                    className="px-3 py-1 rounded-md bg-[#1a2a1a] text-brand text-xs font-bold hover:brightness-110 transition-all">
+                    Reiniciar servicio
+                  </button>
+                : '—' },
           ]}
           data={filtered} keyField="id" loading={loading}
           onEdit={openEdit} onDelete={remove}
@@ -143,6 +192,32 @@ export function AdminEquipos() {
             className="accent-brand w-4 h-4" />
           Monitorear este equipo
         </label>
+        <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
+          <input type="checkbox" checked={editing.agenteInstalado ?? false}
+            onChange={e => setEditing(p => ({ ...p, agenteInstalado: e.target.checked }))}
+            className="accent-brand w-4 h-4" />
+          Agente instalado (permite reiniciar servicios remotamente)
+        </label>
+      </FormModal>
+
+      <FormModal title={`Reiniciar servicio — ${restartTarget?.nombre ?? ''}`}
+        open={restartTarget !== null} onClose={() => setRestartTarget(null)}
+        onSubmit={restart} loading={restarting} submitLabel="Reiniciar">
+        <Field label="Servicio">
+          <Select value={selectedServicio} onChange={e => setSelectedServicio(e.target.value)}>
+            {servicios.map(s => <option key={s} value={s}>{s}</option>)}
+          </Select>
+        </Field>
+        {servicios.length === 0 && (
+          <div className="text-xs text-muted">
+            No hay servicios configurados. Agrega alguno en Configuración → Servicios reiniciables.
+          </div>
+        )}
+        {restartResult && (
+          <div className={`text-xs ${restartResult.ok ? 'text-green-500' : 'text-red-500'}`}>
+            {restartResult.ok ? '✓ ' : '✗ '}{restartResult.message}
+          </div>
+        )}
       </FormModal>
     </div>
   )
