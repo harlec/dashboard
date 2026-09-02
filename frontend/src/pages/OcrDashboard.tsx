@@ -186,29 +186,48 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
   const n = datos.length
   const xOf = (i: number) => pL + (i / Math.max(n - 1, 1)) * cW
   const yOf = (t: number) => pT + cH - Math.min(Number(t) / maxT, 1) * cH
-  const pts = datos.map((d, i) => `${xOf(i).toFixed(1)},${yOf(Number(d.tasaError)).toFixed(1)}`).join(' ')
-  const area = `${pL},${yOf(0)} ${pts} ${xOf(n - 1)},${yOf(0)}`
+  const ptsOf = (key: 'tasaError' | 'tasaNoDetectada' | 'tasaReconocidaError') =>
+    datos.map((d, i) => `${xOf(i).toFixed(1)},${yOf(Number(d[key])).toFixed(1)}`).join(' ')
+  const ptsTotal = ptsOf('tasaError')
+  const ptsNoDet = ptsOf('tasaNoDetectada')
+  const ptsErrRec = ptsOf('tasaReconocidaError')
+  const area = `${pL},${yOf(0)} ${ptsTotal} ${xOf(n - 1)},${yOf(0)}`
   const step = Math.max(1, Math.floor(n / 8))
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }}>
-      {[0, maxT * 0.5, maxT].map((t, i) => (
-        <g key={i}>
-          <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-          <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="8" fontFamily="monospace">{t.toFixed(0)}%</text>
-        </g>
-      ))}
-      <polygon points={area} fill="rgba(239,75,84,.08)" />
-      <polyline points={pts} fill="none" stroke="#ef4b54" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      {datos.map((d, i) => i % step === 0 ? (
-        <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="monospace">{d.fecha.slice(5)}</text>
-      ) : null)}
-    </svg>
+    <>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }}>
+        {[0, maxT * 0.5, maxT].map((t, i) => (
+          <g key={i}>
+            <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
+            <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="8" fontFamily="monospace">{t.toFixed(0)}%</text>
+          </g>
+        ))}
+        <polygon points={area} fill="rgba(239,75,84,.08)" />
+        <polyline points={ptsTotal}  fill="none" stroke="#ef4b54" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={ptsNoDet}  fill="none" stroke="#e0991f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
+        <polyline points={ptsErrRec} fill="none" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
+        {datos.map((d, i) => i % step === 0 ? (
+          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="monospace">{d.fecha.slice(5)}</text>
+        ) : null)}
+      </svg>
+      <div style={{ display: 'flex', gap: 16, padding: '0 4px 4px', fontFamily: 'monospace', fontSize: 10 }}>
+        <span style={{ color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 14, height: 2, background: '#ef4b54', display: 'inline-block' }} /> Error total
+        </span>
+        <span style={{ color: '#e0991f', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 14, height: 2, background: '#e0991f', display: 'inline-block' }} /> No detectada
+        </span>
+        <span style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 14, height: 2, background: '#a78bfa', display: 'inline-block' }} /> Reconocida con error
+        </span>
+      </div>
+    </>
   )
 }
 
 function EvolucionHoraChart({ datos }: { datos: OcrViaEvolucion['porHora'] }) {
-  if (!datos.length) return <div style={{ color: '#5f7186', fontSize: 12, textAlign: 'center' }}>Sin datos suficientes</div>
+  if (!datos.length) return <div style={{ color: '#9aa7b6', fontSize: 12, textAlign: 'center' }}>Sin datos suficientes</div>
   const byHora = new Map(datos.map(d => [d.hora, d]))
   const horas = Array.from({ length: 24 }, (_, h) => byHora.get(h) ?? null)
   return (
@@ -423,7 +442,7 @@ export function OcrDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#e6edf3' }}>OCR · Efectividad de Lectura de Placas</h1>
-          <p style={{ fontSize: 12, color: '#5f7186', marginTop: 4, fontFamily: 'monospace' }}>
+          <p style={{ fontSize: 12, color: '#9aa7b6', marginTop: 4, fontFamily: 'monospace' }}>
             Comparación placa cajero vs. placa detectada por cámara · últimos 30 días para análisis de caracteres
           </p>
         </div>
@@ -444,7 +463,7 @@ export function OcrDashboard() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#5f7186' }}>Cargando datos OCR…</div>
+        <div style={{ textAlign: 'center', padding: 80, color: '#9aa7b6' }}>Cargando datos OCR…</div>
       ) : error ? (
         <div style={{ background: 'rgba(239,75,84,.08)', border: '1px solid rgba(239,75,84,.3)', borderRadius: 12, padding: '24px 28px' }}>
           <div style={{ color: '#ff9ba0', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Error al cargar datos OCR</div>
@@ -466,7 +485,7 @@ export function OcrDashboard() {
             ].map(({ label, val, color, border }) => (
               <div key={label} style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: `1px solid ${border}`, borderRadius: 12, padding: '16px 20px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'monospace', fontSize: 28, fontWeight: 700, color }}>{val}</div>
-                <div style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.14em', color: '#5f7186', marginTop: 6 }}>{label}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.14em', color: '#9aa7b6', marginTop: 6 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -483,7 +502,7 @@ export function OcrDashboard() {
               ['detalle',    'Detalle de Registros'],
             ] as const).map(([t, label]) => (
               <button key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }}
-                style={{ padding: '8px 20px', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', borderBottom: `2px solid ${tab === t ? '#2dd4a7' : 'transparent'}`, color: tab === t ? '#2dd4a7' : '#5f7186', marginBottom: -1 }}>
+                style={{ padding: '8px 20px', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', borderBottom: `2px solid ${tab === t ? '#2dd4a7' : 'transparent'}`, color: tab === t ? '#2dd4a7' : '#9aa7b6', marginBottom: -1 }}>
                 {label}
               </button>
             ))}
@@ -514,7 +533,7 @@ export function OcrDashboard() {
                         <thead>
                           <tr style={{ background: 'rgba(255,255,255,.03)' }}>
                             {['Pos.', 'Cajero escribió', 'OCR leyó', 'Veces', 'Visualización'].map(h => (
-                              <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', color: '#5f7186', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.05)' }}>{h}</th>
+                              <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', color: '#9aa7b6', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.05)' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -523,7 +542,7 @@ export function OcrDashboard() {
                             <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(224,153,31,.05)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                              <td style={{ padding: '9px 16px', fontFamily: 'monospace', color: '#5f7186' }}>{c.posicion}</td>
+                              <td style={{ padding: '9px 16px', fontFamily: 'monospace', color: '#9aa7b6' }}>{c.posicion}</td>
                               <td style={{ padding: '9px 16px' }}>
                                 <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 700, color: '#3fb978', background: 'rgba(63,185,120,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.esperado}</span>
                               </td>
@@ -533,7 +552,7 @@ export function OcrDashboard() {
                               <td style={{ padding: '9px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#e0991f' }}>{c.casos}</td>
                               <td style={{ padding: '9px 16px', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6' }}>
                                 <span style={{ color: '#3fb978' }}>{c.esperado}</span>
-                                <span style={{ color: '#5f7186', margin: '0 8px' }}>→</span>
+                                <span style={{ color: '#9aa7b6', margin: '0 8px' }}>→</span>
                                 <span style={{ color: '#ef4b54' }}>{c.ocrLeyo}</span>
                                 <span style={{ color: '#3a4a50', marginLeft: 8, fontSize: 10 }}>en pos.{c.posicion}</span>
                               </td>
@@ -642,11 +661,11 @@ export function OcrDashboard() {
           {tab === 'tendencias' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {loadingT ? (
-                <div style={{ padding: 48, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 13 }}>
+                <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 13 }}>
                   Calculando tendencias de 30 días…
                 </div>
               ) : !tendencias ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 12 }}>Sin datos</div>
+                <div style={{ padding: 32, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12 }}>Sin datos</div>
               ) : (
                 <>
                   {/* ── Heatmap vía × hora ── */}
@@ -729,7 +748,7 @@ export function OcrDashboard() {
                           const delta = last - first
                           return (
                             <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 11,
-                              color: delta > 2 ? '#ef4b54' : delta < -2 ? '#3fb978' : '#5f7186' }}>
+                              color: delta > 2 ? '#ef4b54' : delta < -2 ? '#3fb978' : '#9aa7b6' }}>
                               {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(1)}% vs hace 30d
                             </span>
                           )
@@ -767,9 +786,9 @@ export function OcrDashboard() {
               </div>
 
               {loadingT || loadingVia ? (
-                <div style={{ padding: 48, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 13 }}>Cargando…</div>
+                <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 13 }}>Cargando…</div>
               ) : !viaEvolucion || viaEvolucion.diaria.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 12 }}>
+                <div style={{ padding: 32, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12 }}>
                   Sin datos suficientes para esta vía en el período
                 </div>
               ) : (
@@ -818,7 +837,7 @@ export function OcrDashboard() {
                   style={{ padding: '6px 18px', background: 'rgba(45,212,167,.12)', border: '1px solid rgba(45,212,167,.3)', borderRadius: 8, color: '#2dd4a7', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Buscar
                 </button>
-                {detalle && <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 12, color: '#5f7186', alignSelf: 'center' }}>{detalle.total.toLocaleString()} registros</span>}
+                {detalle && <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6', alignSelf: 'center' }}>{detalle.total.toLocaleString()} registros</span>}
               </div>
 
               {/* Tabla */}
@@ -828,7 +847,7 @@ export function OcrDashboard() {
                     <thead>
                       <tr style={{ background: 'rgba(255,255,255,.03)' }}>
                         {['Fecha', 'Estación', 'Vía', 'Ticket', 'Placa Cajero', 'Placa OCR', 'Diferencia', 'Tipo Error'].map(h => (
-                          <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', color: '#5f7186', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.06)', whiteSpace: 'nowrap' }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', color: '#9aa7b6', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.06)', whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -837,10 +856,10 @@ export function OcrDashboard() {
                         <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.02)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 12, color: '#5f7186', whiteSpace: 'nowrap' }}>{item.fecha}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6', whiteSpace: 'nowrap' }}>{item.fecha}</td>
                           <td style={{ padding: '9px 14px', fontSize: 12, color: '#9aa7b6' }}>{item.estacion}</td>
-                          <td style={{ padding: '9px 14px', fontSize: 12, color: '#5f7186' }}>{item.via}</td>
-                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 11, color: '#5f7186' }}>{item.ticket}</td>
+                          <td style={{ padding: '9px 14px', fontSize: 12, color: '#9aa7b6' }}>{item.via}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 11, color: '#9aa7b6' }}>{item.ticket}</td>
                           <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 14, color: '#3fb978', letterSpacing: '.06em' }}>{item.placaCajero}</td>
                           <td style={{ padding: '9px 14px' }}><PlacaDiff cajero={item.placaCajero} ocr={item.placaOcr} /></td>
                           <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6' }}>
@@ -883,7 +902,7 @@ export function OcrDashboard() {
 
 // Gráfico de barras efectividad por hora
 function HoraChart({ data }: { data: { hora: number; total: number; efectividad: number }[] }) {
-  if (!data.length) return <div style={{ color: '#5f7186', fontSize: 12, textAlign: 'center' }}>Sin datos</div>
+  if (!data.length) return <div style={{ color: '#9aa7b6', fontSize: 12, textAlign: 'center' }}>Sin datos</div>
   const allHours = Array.from({ length: 24 }, (_, h) => {
     const d = data.find(x => x.hora === h)
     return { hora: h, efectividad: d?.efectividad ?? null, total: d?.total ?? 0 }

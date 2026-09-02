@@ -129,6 +129,12 @@ builder.Services.AddSingleton<ConsolidadoConnectionProvider>();
 builder.Services.AddSingleton<DiscrepanciasService>();
 builder.Services.AddSingleton<OcrPlacasService>();
 
+// ── Reportes PDF ────────────────────────────────────────────
+PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new PdfFontResolver();
+MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes.ImageSource.ImageSourceImpl =
+    new PdfSharpCore.Utils.ImageSharpImageSource<SixLabors.ImageSharp.PixelFormats.Rgba32>();
+builder.Services.AddScoped<ReportePdfService>();
+
 var app = builder.Build();
 
 // ── Migrate / init DB ─────────────────────────────────────────

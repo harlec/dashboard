@@ -3,7 +3,6 @@ import { api, type LiveDashboard, type EquipoLive, type CamaraStatus, type Mante
 import { DonutChart }     from '../components/DonutChart'
 import { StationMatrix }  from '../components/StationMatrix'
 import { EquipoModal }    from '../components/EquipoModal'
-import { CamarasSection } from '../components/CamarasSection'
 import { useSignalR }     from '../hooks/useSignalR'
 import { useAlertSound }  from '../hooks/useAlertSound'
 import { computarIncidentesAgrupados, type ExclusionMantenimiento } from '../lib/incidentesAgrupados'
@@ -206,11 +205,6 @@ export function Dashboard() {
 
       {/* Matriz de equipos */}
       <StationMatrix estaciones={estaciones} onEquipoClick={setSelected} estacionesEnMtto={exclusionMtto.estaciones} />
-
-      {/* Sección inferior */}
-      <div className="mt-3.5 flex flex-col gap-3">
-        {camaras.length > 0 && <CamarasSection camaras={camaras} />}
-      </div>
 
       {/* Modal */}
       <EquipoModal equipo={selectedEquipo} onClose={() => setSelected(null)} />

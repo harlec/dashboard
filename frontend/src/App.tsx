@@ -5,6 +5,7 @@ import { Login }           from './pages/Login'
 import { Dashboard }       from './pages/Dashboard'
 import { Incidentes }      from './pages/Incidentes'
 import { ReporteSLA }      from './pages/ReporteSLA'
+import { Reportes }        from './pages/Reportes'
 import { Discrepancias }   from './pages/Discrepancias'
 import { AdminLayout }       from './pages/admin/AdminLayout'
 import { AdminDashboard }    from './pages/admin/AdminDashboard'
@@ -27,6 +28,7 @@ function AppLayout() {
         <Route path="/noc"        element={<NocDashboard />} />
         <Route path="/incidentes" element={<Incidentes />} />
         <Route path="/reporte"         element={<ReporteSLA />} />
+        <Route path="/reportes"        element={<Reportes />} />
         <Route path="/discrepancias"   element={<Discrepancias />} />
         <Route path="/ocr"             element={<OcrDashboard />} />
         <Route path="/admin"      element={<AdminLayout />}>

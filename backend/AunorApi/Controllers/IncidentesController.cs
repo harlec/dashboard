@@ -1,5 +1,6 @@
 using AunorApi.Data;
 using AunorApi.DTOs;
+using AunorApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ namespace AunorApi.Controllers;
 [ApiController]
 [Route("api/incidentes")]
 [Authorize]
-public class IncidentesController(AppDbContext db) : ControllerBase
+public class IncidentesController(AppDbContext db, ReportePdfService pdf) : ControllerBase
 {
     [HttpGet("resumen")]
     public async Task<IActionResult> Resumen([FromQuery] int dias = 7)
@@ -98,6 +99,59 @@ public class IncidentesController(AppDbContext db) : ControllerBase
             .ToListAsync();
 
         return Ok(new { total, page, pageSize, items });
+    }
+
+    [HttpGet("csv")]
+    public async Task<IActionResult> Csv(
+        [FromQuery] int?      equipoId     = null,
+        [FromQuery] string?   estacion     = null,
+        [FromQuery] DateTime? desde        = null,
+        [FromQuery] DateTime? hasta        = null,
+        [FromQuery] bool      soloAbiertos = false)
+    {
+        var q = db.Incidentes
+            .Include(i => i.Equipo).ThenInclude(e => e.Via).ThenInclude(v => v.Estacion)
+            .AsQueryable();
+
+        if (equipoId.HasValue)              q = q.Where(i => i.EquipoId == equipoId);
+        if (!string.IsNullOrEmpty(estacion)) q = q.Where(i => i.Equipo.Via.Estacion.Nombre == estacion);
+        if (soloAbiertos)                   q = q.Where(i => i.Fin == null);
+        if (desde.HasValue)                 q = q.Where(i => i.Inicio >= desde);
+        if (hasta.HasValue)                 q = q.Where(i => i.Inicio <= hasta);
+
+        var items = await q
+            .OrderByDescending(i => i.Inicio)
+            .Take(100_000)
+            .Select(i => new {
+                i.Equipo.Nombre,
+                Estacion = i.Equipo.Via.Estacion.Nombre,
+                Via      = i.Equipo.Via.Numero,
+                i.Inicio, i.Fin, i.DuracionMin, i.Tipo, i.Motivo
+            })
+            .ToListAsync();
+
+        var csv = CsvExport.Build(
+            ["Equipo", "Estacion", "Via", "Inicio", "Fin", "Duracion Min", "Tipo", "Motivo"],
+            items.Select(i => new object?[] { i.Nombre, i.Estacion, i.Via, i.Inicio, i.Fin, i.DuracionMin, i.Tipo, i.Motivo }));
+
+        var desdeDate = desde ?? items.LastOrDefault()?.Inicio ?? DateTime.Now;
+        var hastaDate = hasta ?? DateTime.Now;
+        var nombre = $"incidentes_{desdeDate:yyyyMMdd}_{hastaDate:yyyyMMdd}.csv";
+        return File(csv, "text/csv", nombre);
+    }
+
+    [HttpGet("pdf")]
+    public async Task<IActionResult> Pdf(
+        [FromQuery] string?   estacion     = null,
+        [FromQuery] DateTime? desde        = null,
+        [FromQuery] DateTime? hasta        = null,
+        [FromQuery] bool      soloAbiertos = false)
+    {
+        var desdeDate = desde ?? DateTime.Now.AddDays(-30);
+        var hastaDate = hasta ?? DateTime.Now;
+        var bytes = await pdf.GenerarIncidentesAsync(desdeDate, hastaDate, estacion, soloAbiertos);
+        var nombre = $"incidentes_{desdeDate:yyyyMMdd}_{hastaDate:yyyyMMdd}.pdf";
+        return File(bytes, "application/pdf", nombre);
     }
 
     private static readonly string[] TiposValidos = ["Real", "Mantenimiento", "ReinicioForzado", "Otro"];

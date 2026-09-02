@@ -107,7 +107,9 @@ public record OcrViaEvolucionDto(
     List<OcrCeldaDto>  PorHora
 );
 
-public record OcrDiaViaDto(string Fecha, int Total, decimal TasaError);
+public record OcrDiaViaDto(
+    string Fecha, int Total, decimal TasaError,
+    decimal TasaNoDetectada, decimal TasaReconocidaError);
 
 // ── Detalle paginado ──────────────────────────────────────────
 public record OcrDetalleDto(

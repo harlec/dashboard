@@ -251,7 +251,10 @@ export interface OcrDetalleParams {
   soloPrepago?: boolean
 }
 
-export interface OcrDiaVia { fecha: string; total: number; tasaError: number }
+export interface OcrDiaVia {
+  fecha: string; total: number; tasaError: number
+  tasaNoDetectada: number; tasaReconocidaError: number
+}
 export interface OcrViaEvolucion {
   estacion: string; via: string; dias: number
   diaria: OcrDiaVia[]

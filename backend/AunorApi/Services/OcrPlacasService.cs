@@ -414,6 +414,13 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             AND t.tra_coest = @coest
             AND {viaMatch}";
 
+        // "No detectada": el OCR no leyó nada. "Reconocida con error": el OCR leyó
+        // algo, pero no coincide con la placa del cajero (sustitución/carácter extra/perdido).
+        const string noDetSum = @"
+            SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = '' THEN 1 ELSE 0 END)";
+        const string errRecSum = @"
+            SUM(CASE WHEN tra_patocr IS NOT NULL AND tra_patocr <> ''
+                          AND tra_paten <> tra_patocr THEN 1 ELSE 0 END)";
         const string errSum = @"
             SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = ''
                           OR tra_paten <> tra_patocr THEN 1 ELSE 0 END)";
@@ -423,7 +430,9 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
         var diaria = (await conn.QueryAsync<OcrDiaViaDto>($@"
             SELECT CONVERT(varchar(10), CAST(tra_fecha AS DATE), 23) AS Fecha,
                    COUNT(*) AS Total,
-                   ROUND(100.0 * {errSum} / NULLIF(COUNT(*), 0), 1) AS TasaError
+                   ROUND(100.0 * {errSum}    / NULLIF(COUNT(*), 0), 1) AS TasaError,
+                   ROUND(100.0 * {noDetSum}  / NULLIF(COUNT(*), 0), 1) AS TasaNoDetectada,
+                   ROUND(100.0 * {errRecSum} / NULLIF(COUNT(*), 0), 1) AS TasaReconocidaError
             FROM transitos t
             LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
             WHERE {filtroBase}
