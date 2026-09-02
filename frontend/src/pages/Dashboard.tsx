@@ -1,15 +1,17 @@
 import { useEffect, useState, useCallback } from 'react'
-import { api, type LiveDashboard, type EquipoLive, type CamaraStatus } from '../api/client'
+import { api, type LiveDashboard, type EquipoLive, type CamaraStatus, type Mantenimiento } from '../api/client'
 import { DonutChart }     from '../components/DonutChart'
 import { StationMatrix }  from '../components/StationMatrix'
 import { EquipoModal }    from '../components/EquipoModal'
 import { CamarasSection } from '../components/CamarasSection'
 import { useSignalR }     from '../hooks/useSignalR'
 import { useAlertSound }  from '../hooks/useAlertSound'
+import { computarIncidentesAgrupados, type ExclusionMantenimiento } from '../lib/incidentesAgrupados'
 
 export function Dashboard() {
   const [data,          setData]     = useState<LiveDashboard | null>(null)
   const [camaras,       setCamaras]  = useState<CamaraStatus[]>([])
+  const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([])
   const [selectedEquipo, setSelected] = useState<EquipoLive | null>(null)
   const [signalStatus,  setSignal]   = useState<'idle'|'ok'|'error'>('idle')
   const [lastUpdate,    setLastUpdate] = useState<Date>(new Date())
@@ -29,6 +31,14 @@ export function Dashboard() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Mantenimientos activos — se refresca cada minuto, no necesita tiempo real
+  useEffect(() => {
+    const loadMtto = () => api.mantenimientos(true).then(setMantenimientos).catch(() => {})
+    loadMtto()
+    const id = setInterval(loadMtto, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   // SignalR — actualizaciones en tiempo real
   useSignalR({
@@ -91,9 +101,48 @@ export function Dashboard() {
 
   const { kpis, estaciones } = data
   const sinD = Math.max(kpis.total - kpis.ups - kpis.downs - kpis.incActivos, 0)
+  const exclusionMtto: ExclusionMantenimiento = {
+    estaciones: new Set(mantenimientos.filter(m => m.estacionId).map(m => m.estacionId!)),
+    vias:       new Set(mantenimientos.filter(m => m.viaId).map(m => m.viaId!)),
+  }
+  const grupos = computarIncidentesAgrupados(estaciones, undefined, exclusionMtto)
 
   return (
     <div className="px-5 py-4 pb-10">
+      {/* Mantenimiento activo */}
+      {mantenimientos.length > 0 && (
+        <div className="flex flex-col gap-1.5 mb-3.5">
+          {mantenimientos.map(m => (
+            <div key={m.id} className="flex items-center gap-2.5 bg-blue-500/10 border border-blue-500/40 rounded-xl px-4 py-2.5">
+              <span className="text-[0.9rem]">🔧</span>
+              <span className="font-extrabold text-blue-400 text-[0.85rem] uppercase tracking-wide">Mantenimiento</span>
+              <span className="text-[#eae7e4] text-[0.85rem]">
+                {m.estacion ?? m.via ?? m.equipo} — {m.motivo} (hasta {new Date(m.hasta).toLocaleTimeString('es-PE', { hour12: false })})
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Incidentes agrupados (vía/peaje) */}
+      {grupos.length > 0 && (
+        <div className="flex flex-col gap-1.5 mb-3.5">
+          {grupos.map((g, i) => (
+            <div key={i} className="flex items-center gap-2.5 bg-danger/10 border border-danger/40 rounded-xl px-4 py-2.5">
+              <span className="w-2 h-2 rounded-full bg-danger flex-shrink-0 animate-blink-down" />
+              <span className="font-extrabold text-danger text-[0.85rem] uppercase tracking-wide">
+                {g.tipo === 'peaje' ? 'Incidente de peaje' : 'Incidente de vía'}
+              </span>
+              <span className="text-[#eae7e4] text-[0.85rem]">
+                {g.tipo === 'peaje'
+                  ? <>{g.estacion} — {g.pct}% caído ({g.caidos}/{g.total} equipos)</>
+                  : <>Vía {g.via} ({g.estacion}) sin conexión — {g.caidos}/{g.total} equipos</>}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Topbar */}
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 bg-surface rounded-xl px-7 py-4 mb-3.5">
         {/* Left */}
@@ -156,7 +205,7 @@ export function Dashboard() {
       </div>
 
       {/* Matriz de equipos */}
-      <StationMatrix estaciones={estaciones} onEquipoClick={setSelected} />
+      <StationMatrix estaciones={estaciones} onEquipoClick={setSelected} estacionesEnMtto={exclusionMtto.estaciones} />
 
       {/* Sección inferior */}
       <div className="mt-3.5 flex flex-col gap-3">

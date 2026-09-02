@@ -12,8 +12,10 @@ function chipClasses(eq: EquipoLive): string {
 
 function tooltip(eq: EquipoLive): string {
   const estado = eq.ultimoEstado ?? 'Sin datos'
-  const lat    = eq.latenciaMs  != null ? ` · ${Math.round(eq.latenciaMs)}ms` : ''
-  const inc    = eq.incMin      != null ? ` · Inc: ${formatDur(eq.incMin)}`   : ''
+  const lat = eq.latenciaMs == null ? '' : eq.ultimoEstado === 'DOWN'
+    ? ` · ${Math.round(eq.latenciaMs)}ms (previo a caer)`
+    : ` · ${Math.round(eq.latenciaMs)}ms`
+  const inc = eq.incMin != null ? ` · Inc: ${formatDur(eq.incMin)}` : ''
   return `${eq.nombre} — ${estado}${lat}${inc}`
 }
 

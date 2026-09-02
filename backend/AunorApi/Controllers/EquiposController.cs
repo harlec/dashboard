@@ -25,7 +25,7 @@ public class EquiposController(AppDbContext db, AgentClient agentClient) : Contr
             .Select(e => new {
                 e.Id, e.ViaId, e.TipoEquipoId,
                 e.Nombre, e.Ip, e.Descripcion,
-                e.Monitorear, e.AgenteInstalado, e.Activo,
+                e.Monitorear, e.AgenteInstalado, e.Activo, e.EsCritico,
                 tipoEquipo = new { e.TipoEquipo.Id, e.TipoEquipo.Nombre },
                 via = new {
                     e.Via.Id, e.Via.Numero,
@@ -50,7 +50,8 @@ public class EquiposController(AppDbContext db, AgentClient agentClient) : Contr
             Descripcion     = req.Descripcion,
             CheckPort       = req.CheckPort,
             Monitorear      = req.Monitorear,
-            AgenteInstalado = req.AgenteInstalado
+            AgenteInstalado = req.AgenteInstalado,
+            EsCritico       = req.EsCritico
         };
         db.Equipos.Add(eq);
         await db.SaveChangesAsync();
@@ -67,6 +68,7 @@ public class EquiposController(AppDbContext db, AgentClient agentClient) : Contr
         eq.Nombre = req.Nombre; eq.Ip = req.Ip;
         eq.Descripcion = req.Descripcion; eq.CheckPort = req.CheckPort;
         eq.Monitorear = req.Monitorear; eq.AgenteInstalado = req.AgenteInstalado;
+        eq.EsCritico = req.EsCritico;
         await db.SaveChangesAsync();
         return Ok(eq);
     }
@@ -101,6 +103,7 @@ public class EquiposController(AppDbContext db, AgentClient agentClient) : Contr
 
 public record EquipoRequest(
     int ViaId, int TipoEquipoId, string Nombre,
-    string Ip, string? Descripcion, string? CheckPort, bool Monitorear, bool AgenteInstalado);
+    string Ip, string? Descripcion, string? CheckPort, bool Monitorear, bool AgenteInstalado,
+    bool EsCritico = false);
 
 public record RestartServicioRequest(string Servicio);

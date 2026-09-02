@@ -4,6 +4,7 @@ using AunorApi.Hubs;
 using AunorApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -105,12 +106,16 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddHostedService<PingWorkerService>();
 builder.Services.AddHostedService<CamaraWorkerService>();
 builder.Services.AddHostedService<EnlaceMonitorService>();
+builder.Services.AddHostedService<TelegramQueueWorker>();
+builder.Services.AddSingleton<ReporteSemanalService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteSemanalService>());
 
 // ── Singletons para workers ───────────────────────────────────
 builder.Services.AddSingleton<IConnectionStringProvider>(
     new ConnectionStringProvider(connStr));
 builder.Services.AddSingleton<EmailAlertService>();
 builder.Services.AddSingleton<TelegramAlertService>();
+builder.Services.AddSingleton<ReporteService>();
 builder.Services.AddSingleton<EnlaceEstadoCache>();
 builder.Services.AddSingleton<AgentClient>(sp => new AgentClient(
     agentApiKey,
@@ -120,6 +125,7 @@ builder.Services.AddSingleton<AgentClient>(sp => new AgentClient(
 builder.Services.AddHttpClient();
 
 // ── Consolidado (BD externa — discrepancias DAC) ──────────────
+builder.Services.AddSingleton<ConsolidadoConnectionProvider>();
 builder.Services.AddSingleton<DiscrepanciasService>();
 builder.Services.AddSingleton<OcrPlacasService>();
 
@@ -143,6 +149,16 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors();
+
+// ── Tonos de alerta (mp3 subidos por Admin) — estático, sin auth ──
+var audioPath = Path.Combine(app.Environment.ContentRootPath, "audio");
+Directory.CreateDirectory(audioPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(audioPath),
+    RequestPath  = "/api/audio"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

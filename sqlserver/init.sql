@@ -100,12 +100,58 @@ CREATE TABLE equipos (
     descripcion    NVARCHAR(255) NULL,
     check_port     INT           NULL,       -- NULL = ICMP ping, número = TCP port check
     monitorear     BIT           NOT NULL DEFAULT 1,
+    es_critico     BIT           NOT NULL DEFAULT 0,  -- incluido en el reporte semanal de disponibilidad
+    ultima_latencia_ms FLOAT     NULL,  -- se actualiza cada ciclo (a diferencia de ping_log)
+    ultimo_ping_en DATETIME2     NULL,
     agente_instalado BIT         NOT NULL DEFAULT 0,  -- tiene PulsovialAgent instalado (reinicio remoto de servicios)
     activo         BIT           NOT NULL DEFAULT 1,
     creado_en      DATETIME2     NOT NULL DEFAULT GETDATE(),
     CONSTRAINT PK_equipos PRIMARY KEY (id),
     CONSTRAINT FK_equipos_vias  FOREIGN KEY (via_id)         REFERENCES vias(id),
     CONSTRAINT FK_equipos_tipos FOREIGN KEY (tipo_equipo_id) REFERENCES tipos_equipo(id)
+);
+GO
+
+-- ── mantenimientos ───────────────────────────────────────────
+-- Exactamente uno de estacion_id/via_id/equipo_id define el alcance. Mientras
+-- desde<=ahora<=hasta, los incidentes de ese alcance se auto-etiquetan
+-- "Mantenimiento" y no disparan alertas Telegram/Email/sonido.
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='mantenimientos' AND xtype='U')
+CREATE TABLE mantenimientos (
+    id          INT           NOT NULL IDENTITY(1,1),
+    estacion_id INT           NULL,
+    via_id      INT           NULL,
+    equipo_id   INT           NULL,
+    desde       DATETIME2     NOT NULL,
+    hasta       DATETIME2     NOT NULL,
+    motivo      NVARCHAR(300) NOT NULL,
+    creado_por  NVARCHAR(80)  NOT NULL,
+    creado_en   DATETIME2     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT PK_mantenimientos PRIMARY KEY (id),
+    CONSTRAINT FK_mantenimientos_estaciones FOREIGN KEY (estacion_id) REFERENCES estaciones(id),
+    CONSTRAINT FK_mantenimientos_vias       FOREIGN KEY (via_id)      REFERENCES vias(id),
+    CONSTRAINT FK_mantenimientos_equipos    FOREIGN KEY (equipo_id)   REFERENCES equipos(id)
+);
+GO
+
+-- ── incidente_grupos ─────────────────────────────────────────
+-- Incidente de vía/peaje que agrupa varias caídas simultáneas en un solo
+-- mensaje de Telegram editable en vez de uno por equipo.
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='incidente_grupos' AND xtype='U')
+CREATE TABLE incidente_grupos (
+    id                   INT           NOT NULL IDENTITY(1,1),
+    tipo                 NVARCHAR(10)  NOT NULL,  -- Via | Peaje
+    estacion_id          INT           NOT NULL,
+    via_id               INT           NULL,
+    inicio               DATETIME2     NOT NULL,
+    fin                  DATETIME2     NULL,
+    telegram_chat_id     NVARCHAR(40)  NULL,
+    telegram_message_id  NVARCHAR(40)  NULL,
+    equipos_afectados    INT           NOT NULL DEFAULT 0,
+    equipos_total        INT           NOT NULL DEFAULT 0,
+    CONSTRAINT PK_incidente_grupos PRIMARY KEY (id),
+    CONSTRAINT FK_incidente_grupos_estaciones FOREIGN KEY (estacion_id) REFERENCES estaciones(id),
+    CONSTRAINT FK_incidente_grupos_vias       FOREIGN KEY (via_id)      REFERENCES vias(id)
 );
 GO
 
@@ -117,6 +163,7 @@ CREATE TABLE ping_log (
     timestamp  DATETIME2 NOT NULL DEFAULT GETDATE(),
     estado     NVARCHAR(4) NOT NULL,
     latencia_ms FLOAT    NULL,
+    detalle_estado NVARCHAR(60) NULL,  -- IPStatus crudo o error de socket/TCP, para diagnóstico
     CONSTRAINT PK_ping_log PRIMARY KEY (id),
     CONSTRAINT FK_ping_log_equipos FOREIGN KEY (equipo_id) REFERENCES equipos(id),
     CONSTRAINT CK_ping_log_estado CHECK (estado IN ('UP','DOWN'))
@@ -134,6 +181,8 @@ CREATE TABLE incidentes (
     inicio      DATETIME2 NOT NULL,
     fin         DATETIME2 NULL,
     duracion_min INT      NULL,
+    tipo         NVARCHAR(30) NOT NULL DEFAULT 'Real',  -- Real | Mantenimiento | ReinicioForzado | Otro
+    motivo       NVARCHAR(500) NULL,
     CONSTRAINT PK_incidentes PRIMARY KEY (id),
     CONSTRAINT FK_incidentes_equipos FOREIGN KEY (equipo_id) REFERENCES equipos(id)
 );
@@ -266,6 +315,20 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'email_reporte_semanal')
+BEGIN
+    INSERT INTO configuracion (clave, valor) VALUES
+    ('email_reporte_semanal', '');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'consolidado_conn')
+BEGIN
+    INSERT INTO configuracion (clave, valor) VALUES
+    ('consolidado_conn', '');
+END
+GO
+
 IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'agente_servicios_permitidos')
 BEGIN
     INSERT INTO configuracion (clave, valor) VALUES
@@ -283,7 +346,7 @@ BEGIN
     (2, 'PC OCR',           '[OCR]',  'Computadora del sistema de reconocimiento optico'),
     (3, 'Display Tarifario','[DISP]', 'Pantalla de visualizacion de tarifas'),
     (4, 'Camara OCR',       '[CAM]',  'Camara de captura para OCR de placas'),
-    (5, 'PMV',              '[PMV]',  'Panel de Mensaje Variable'),       -- TCP 80
+    (5, 'PMV',              '[PMV]',  'Media converter de fibra óptica — su caída puede indicar corte de fibra en la vía'),       -- TCP 80
     (6, 'Antena/Router',    '[RED]',  'Equipo de red y conectividad'),   -- ICMP
     (7, 'UPS',              '[UPS]',  'Sistema de alimentacion ininterrumpida'), -- ICMP
     (8, 'Switch',           '[SW]',   'Switch de red de la via');         -- TCP 22/23

@@ -100,6 +100,15 @@ public record OcrMejorViaDto(
     List<OcrCeldaDto> PorHora
 );
 
+// ── Evolución de una vía específica en el tiempo ──────────────
+public record OcrViaEvolucionDto(
+    string Estacion, string Via, int Dias,
+    List<OcrDiaViaDto> Diaria,
+    List<OcrCeldaDto>  PorHora
+);
+
+public record OcrDiaViaDto(string Fecha, int Total, decimal TasaError);
+
 // ── Detalle paginado ──────────────────────────────────────────
 public record OcrDetalleDto(
     int               Total,

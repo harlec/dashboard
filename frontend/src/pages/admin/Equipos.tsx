@@ -4,12 +4,12 @@ import { FormModal, Field, Input, Select } from '../../components/admin/FormModa
 
 interface TipoEquipo { id: number; nombre: string }
 interface Via { id: number; numero: string; estacion?: { nombre: string } }
-interface Equipo { id: number; viaId: number; tipoEquipoId: number; nombre: string; ip: string; descripcion?: string; checkPort?: string | null; monitorear: boolean; agenteInstalado: boolean; activo: boolean; via?: Via; tipoEquipo?: TipoEquipo }
-const empty = (): Partial<Equipo> => ({ viaId: 0, tipoEquipoId: 0, nombre: '', ip: '', descripcion: '', checkPort: null, monitorear: true, agenteInstalado: false })
+interface Equipo { id: number; viaId: number; tipoEquipoId: number; nombre: string; ip: string; descripcion?: string; checkPort?: string | null; monitorear: boolean; agenteInstalado: boolean; esCritico: boolean; activo: boolean; via?: Via; tipoEquipo?: TipoEquipo }
+const empty = (): Partial<Equipo> => ({ viaId: 0, tipoEquipoId: 0, nombre: '', ip: '', descripcion: '', checkPort: null, monitorear: true, agenteInstalado: false, esCritico: false })
 
 const PORT_HINTS: Record<string, string> = {
   'PC Via': '445', 'PC OCR': '445',
-  'Display Tarifario': '8080,80', 'Camara OCR': '554', 'PMV': '502'
+  'Display Tarifario': '8080,80', 'Camara OCR': '554', 'Cam Validacion': '554', 'PMV': '502'
 }
 
 export function AdminEquipos() {
@@ -103,7 +103,8 @@ export function AdminEquipos() {
         descripcion: editing.descripcion,
         checkPort: editing.checkPort ?? null,
         monitorear: editing.monitorear,
-        agenteInstalado: editing.agenteInstalado ?? false
+        agenteInstalado: editing.agenteInstalado ?? false,
+        esCritico: editing.esCritico ?? false
       })
     })
     setSaving(false); setModal(false); load()
@@ -138,6 +139,7 @@ export function AdminEquipos() {
             { key: 'tipo',       label: 'Tipo', render: r => (r as any).tipoEquipo?.nombre ?? '—' },
             { key: 'via',        label: 'Vía', render: r => (r as any).via ? `${(r as any).via.estacion?.nombre} — ${(r as any).via.numero}` : '—' },
             { key: 'monitorear', label: 'Monitorear', render: r => r.monitorear ? '✅' : '⏸' },
+            { key: 'esCritico',  label: 'Crítico', render: r => r.esCritico ? '⚠️' : '—' },
             { key: 'agente', label: 'Agente', render: r => r.agenteInstalado
                 ? <button onClick={() => openRestart(r)}
                     className="px-3 py-1 rounded-md bg-[#1a2a1a] text-brand text-xs font-bold hover:brightness-110 transition-all">
@@ -197,6 +199,12 @@ export function AdminEquipos() {
             onChange={e => setEditing(p => ({ ...p, agenteInstalado: e.target.checked }))}
             className="accent-brand w-4 h-4" />
           Agente instalado (permite reiniciar servicios remotamente)
+        </label>
+        <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
+          <input type="checkbox" checked={editing.esCritico ?? false}
+            onChange={e => setEditing(p => ({ ...p, esCritico: e.target.checked }))}
+            className="accent-brand w-4 h-4" />
+          Equipo crítico (incluido en el reporte semanal de disponibilidad)
         </label>
       </FormModal>
 

@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts'
-import { api, type IncidenteItem, type IncidenteResumen } from '../api/client'
+import { api, type IncidenteItem, type IncidenteResumen, type IncidenteTipo } from '../api/client'
+import { useAuth } from '../hooks/useAuth'
+import { FormModal, Field, Select, Input } from '../components/admin/FormModal'
+import { TIPO_LABELS, TIPO_COLORS } from '../lib/incidentes'
 
 // ── Helpers ───────────────────────────────────────────────────
 function fmt(s?: string) {
@@ -79,6 +82,7 @@ function TopViasInc({ vias }: { vias: IncidenteResumen['topVias'] }) {
 
 // ── Página ────────────────────────────────────────────────────
 export function Incidentes() {
+  const { user } = useAuth()
   const [dias,     setDias]     = useState(7)
   const [resumen,  setResumen]  = useState<IncidenteResumen | null>(null)
   const [items,    setItems]    = useState<IncidenteItem[]>([])
@@ -89,6 +93,30 @@ export function Incidentes() {
   const [loadingR, setLoadingR] = useState(false)
   const [loadingL, setLoadingL] = useState(false)
   const pageSize = 50
+
+  const [selected,  setSelected]  = useState<Set<number>>(new Set())
+  const [tagModal,  setTagModal]  = useState(false)
+  const [tagTipo,   setTagTipo]   = useState<IncidenteTipo>('Mantenimiento')
+  const [tagMotivo, setTagMotivo] = useState('')
+  const [tagging,   setTagging]   = useState(false)
+
+  const toggleSel = (id: number) => setSelected(s => {
+    const next = new Set(s)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+  const toggleSelAll = () => setSelected(s =>
+    s.size === items.length ? new Set() : new Set(items.map(i => i.id)))
+
+  const guardarEtiqueta = async () => {
+    setTagging(true)
+    try {
+      await api.etiquetarIncidentes(Array.from(selected), tagTipo, tagMotivo || undefined)
+      setSelected(new Set()); setTagModal(false); setTagMotivo('')
+      await loadLista()
+    } catch (e) { console.error(e) }
+    finally { setTagging(false) }
+  }
 
   const loadResumen = useCallback(async () => {
     setLoadingR(true)
@@ -263,6 +291,13 @@ export function Incidentes() {
                 className="accent-danger" />
               Solo activos
             </label>
+
+            {user?.rol === 'admin' && selected.size > 0 && (
+              <button onClick={() => setTagModal(true)}
+                className="px-3 py-1.5 bg-brand text-white text-[0.8rem] font-bold rounded-lg hover:brightness-110 transition-all">
+                Etiquetar seleccionados ({selected.size})
+              </button>
+            )}
           </div>
         </div>
 
@@ -270,18 +305,30 @@ export function Incidentes() {
           <table className="w-full text-[0.8rem] border-collapse">
             <thead>
               <tr className="border-b border-border">
-                {['Equipo', 'Estación', 'Vía', 'Inicio', 'Fin', 'Duración'].map(h => (
+                {user?.rol === 'admin' && (
+                  <th className="text-left py-2 px-3 w-8">
+                    <input type="checkbox" checked={items.length > 0 && selected.size === items.length}
+                      onChange={toggleSelAll} className="accent-brand" />
+                  </th>
+                )}
+                {['Equipo', 'Estación', 'Vía', 'Inicio', 'Fin', 'Duración', 'Tipo'].map(h => (
                   <th key={h} className="text-left py-2 px-3 text-[0.75rem] text-muted font-semibold uppercase">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loadingL ? (
-                <tr><td colSpan={6} className="py-8 text-center text-muted">Cargando…</td></tr>
+                <tr><td colSpan={user?.rol === 'admin' ? 8 : 7} className="py-8 text-center text-muted">Cargando…</td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={6} className="py-8 text-center text-muted">No hay incidentes en el período</td></tr>
+                <tr><td colSpan={user?.rol === 'admin' ? 8 : 7} className="py-8 text-center text-muted">No hay incidentes en el período</td></tr>
               ) : items.map(inc => (
                 <tr key={inc.id} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
+                  {user?.rol === 'admin' && (
+                    <td className="px-3 py-2">
+                      <input type="checkbox" checked={selected.has(inc.id)}
+                        onChange={() => toggleSel(inc.id)} className="accent-brand" />
+                    </td>
+                  )}
                   <td className="px-3 py-2 text-[#d4cec9] font-medium">{inc.equipoNombre}</td>
                   <td className="px-3 py-2">
                     <span style={{ color: estColor(inc.estacion) }} className="font-semibold">
@@ -297,6 +344,10 @@ export function Incidentes() {
                   </td>
                   <td className="px-3 py-2">
                     <span className={inc.fin ? 'text-muted' : 'text-warn font-bold'}>{dur(inc.duracionMin)}</span>
+                  </td>
+                  <td className="px-3 py-2" title={inc.motivo ?? ''}>
+                    <span className={`font-semibold ${TIPO_COLORS[inc.tipo]}`}>{TIPO_LABELS[inc.tipo]}</span>
+                    {inc.motivo && <span className="text-muted ml-1.5">ⓘ</span>}
                   </td>
                 </tr>
               ))}
@@ -322,6 +373,21 @@ export function Incidentes() {
           </div>
         )}
       </div>
+
+      <FormModal title={`Etiquetar ${selected.size} incidente(s)`}
+        open={tagModal} onClose={() => setTagModal(false)} onSubmit={guardarEtiqueta} loading={tagging}>
+        <Field label="Tipo">
+          <Select value={tagTipo} onChange={e => setTagTipo(e.target.value as IncidenteTipo)}>
+            {(Object.keys(TIPO_LABELS) as IncidenteTipo[]).map(t => (
+              <option key={t} value={t}>{TIPO_LABELS[t]}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Motivo (opcional)">
+          <Input value={tagMotivo} onChange={e => setTagMotivo(e.target.value)}
+            placeholder="Ej: Reinicio forzado por jefe de plaza, mantenimiento programado…" />
+        </Field>
+      </FormModal>
     </div>
   )
 }

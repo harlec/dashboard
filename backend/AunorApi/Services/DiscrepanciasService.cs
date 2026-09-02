@@ -4,12 +4,8 @@ using Microsoft.Data.SqlClient;
 
 namespace AunorApi.Services;
 
-public class DiscrepanciasService(IConfiguration config)
+public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
 {
-    private readonly string _connStr =
-        Environment.GetEnvironmentVariable("CONSOLIDADO_CONN")
-        ?? config["ConsolidadoDb:ConnectionString"]
-        ?? throw new InvalidOperationException("CONSOLIDADO_CONN no configurado");
 
     // Períodos válidos → fragmento WHERE que usa GETDATE() del propio SQL Server
     private static readonly HashSet<string> PeriodosValidos =
@@ -61,7 +57,7 @@ public class DiscrepanciasService(IConfiguration config)
 
     public async Task<DiscrepanciasResumenDto> GetResumenAsync(string periodo)
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         string pw     = PeriodWhere(periodo);
         string bucket = PeriodBucket(periodo);
 
@@ -150,7 +146,7 @@ public class DiscrepanciasService(IConfiguration config)
 
     public async Task<DiscrepanciasAnalisisDto> GetAnalisisAsync()
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
         // Lectura sin bloqueos para evitar deadlocks con transacciones OLTP concurrentes
         await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
@@ -237,7 +233,7 @@ public class DiscrepanciasService(IConfiguration config)
     public async Task<DiscrepanciasDetalleDto> GetDetalleAsync(
         string periodo, string? estacion, string? placa, int pagina, int porPagina)
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         string pw = PeriodWhere(periodo);
 
         int? coest = estacion switch {

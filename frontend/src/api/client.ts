@@ -30,9 +30,23 @@ export const api = {
     )}`),
   incidentesResumen: (dias: number) =>
     request<IncidenteResumen>(`/incidentes/resumen?dias=${dias}`),
+  etiquetarIncidentes: (ids: number[], tipo: string, motivo?: string) =>
+    request(`/incidentes/etiquetar`, { method: 'PUT', body: JSON.stringify({ ids, tipo, motivo }) }),
   camaras:        () => request<CamaraStatus[]>('/camaras'),
+  mantenimientos: (soloActivos = false) =>
+    request<Mantenimiento[]>(`/mantenimiento?soloActivos=${soloActivos}`),
+  crearMantenimiento: (p: MantenimientoRequest) =>
+    request('/mantenimiento', { method: 'POST', body: JSON.stringify(p) }),
+  terminarMantenimiento: (id: number) =>
+    request(`/mantenimiento/${id}/terminar`, { method: 'PUT' }),
   sla:            (p: SlaParams) =>
-    request<SlaEquipo[]>(`/reporte/sla?${new URLSearchParams(p as any)}`),
+    request<SlaEquipo[]>(`/reporte/sla?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
+  slaPorEstacion: (p: SlaParams) =>
+    request<SlaEstacion[]>(`/reporte/sla/por-estacion?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
   discrepanciasResumen: (periodo: string) =>
     request<DiscrepanciasResumen>(`/discrepancias/resumen?periodo=${periodo}`),
   discrepanciasDetalle: (p: DiscrepanciasParams) =>
@@ -43,14 +57,18 @@ export const api = {
     request<DiscrepanciasAnalisis>('/discrepancias/analisis'),
 
   // ── OCR Placas ──────────────────────────────────────────────
-  ocrResumen: (periodo: string) =>
-    request<OcrResumen>(`/ocr/resumen?periodo=${periodo}`),
-  ocrAnalisis: () =>
-    request<OcrAnalisis>('/ocr/analisis'),
-  ocrTendencias: () =>
-    request<OcrTendencias>('/ocr/tendencias'),
+  ocrResumen: (periodo: string, soloPrepago = false) =>
+    request<OcrResumen>(`/ocr/resumen?periodo=${periodo}&soloPrepago=${soloPrepago}`),
+  ocrAnalisis: (soloPrepago = false) =>
+    request<OcrAnalisis>(`/ocr/analisis?soloPrepago=${soloPrepago}`),
+  ocrTendencias: (soloPrepago = false) =>
+    request<OcrTendencias>(`/ocr/tendencias?soloPrepago=${soloPrepago}`),
   ocrDetalle: (p: OcrDetalleParams) =>
     request<OcrDetalle>(`/ocr/detalle?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
+  ocrViaEvolucion: (p: { estacion: string; via: string; dias?: number; soloPrepago?: boolean }) =>
+    request<OcrViaEvolucion>(`/ocr/via-evolucion?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
 }
@@ -63,7 +81,7 @@ export interface KpiData {
 
 export interface EquipoLive {
   id: number; nombre: string; ip: string
-  tipoNombre: string; icono?: string
+  tipoNombre: string; icono?: string; tipoDescripcion?: string
   ultimoEstado?: string; latenciaMs?: number; ultimoPing?: string
   monitorear: boolean
   incInicio?: string; incMin?: number
@@ -83,23 +101,25 @@ export interface EstacionLive {
 
 export interface LiveDashboard { kpis: KpiData; estaciones: EstacionLive[] }
 
-export interface PingHist { timestamp: string; estado: string; latenciaMs?: number }
+export interface PingHist { timestamp: string; estado: string; latenciaMs?: number; detalleEstado?: string; interpretacion?: string }
 export interface EquipoDetail {
-  id: number; nombre: string; ip: string; tipoNombre: string
+  id: number; nombre: string; ip: string; tipoNombre: string; tipoDescripcion?: string
   ultimoEstado?: string; latenciaMs?: number; ultimoPing?: string
   incInicio?: string; incMin?: number
   historial: PingHist[]
 }
 
+export type IncidenteTipo = 'Real' | 'Mantenimiento' | 'ReinicioForzado' | 'Otro'
 export interface IncidenteItem {
   id: number; equipoId: number; equipoNombre: string
   estacion: string; via: string
   inicio: string; fin?: string; duracionMin?: number
+  tipo: IncidenteTipo; motivo?: string
 }
 export interface IncidentesPage { total: number; page: number; pageSize: number; items: IncidenteItem[] }
 export interface IncidentesParams {
   page?: number; pageSize?: number; soloAbiertos?: boolean
-  desde?: string; hasta?: string; estacion?: string
+  desde?: string; hasta?: string; estacion?: string; equipoId?: number
 }
 
 export interface EstacionInc  { estacion: string; total: number }
@@ -114,7 +134,25 @@ export interface IncidenteResumen {
 
 export interface CamaraStatus { id: number; camara: number; ultimoEmail?: string; minDesdeEmail?: number; online: boolean }
 
-export interface SlaEquipo { equipoId: number; nombre: string; tipoNombre: string; via: string; uptimePct: number; totalMin: number; downMin: number }
+export interface Mantenimiento {
+  id: number
+  estacionId?: number; estacion?: string
+  viaId?: number; via?: string
+  equipoId?: number; equipo?: string
+  desde: string; hasta: string
+  motivo: string; creadoPor: string; creadoEn: string
+}
+export interface MantenimientoRequest {
+  estacionId?: number; viaId?: number; equipoId?: number
+  hasta?: string; horas?: number; motivo: string
+}
+
+export interface SlaEquipo {
+  equipoId: number; nombre: string; tipoNombre: string
+  estacionId: number; estacion: string; via: string
+  uptimePct: number; totalMin: number; downMin: number; motivos?: string
+}
+export interface SlaEstacion { estacionId: number; estacion: string; uptimePct: number; total: number }
 export interface SlaParams { estacionId?: number; desde?: string; hasta?: string }
 
 // ── Discrepancias DAC ─────────────────────────────────────────
@@ -210,4 +248,12 @@ export interface OcrDetalle { total: number; pagina: number; porPagina: number; 
 export interface OcrDetalleParams {
   periodo?: string; estacion?: string; placa?: string
   tipoError?: string; pagina?: number; porPagina?: number
+  soloPrepago?: boolean
+}
+
+export interface OcrDiaVia { fecha: string; total: number; tasaError: number }
+export interface OcrViaEvolucion {
+  estacion: string; via: string; dias: number
+  diaria: OcrDiaVia[]
+  porHora: OcrCelda[]
 }

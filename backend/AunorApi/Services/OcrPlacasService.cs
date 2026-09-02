@@ -4,12 +4,8 @@ using Microsoft.Data.SqlClient;
 
 namespace AunorApi.Services;
 
-public class OcrPlacasService(IConfiguration config)
+public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
 {
-    private readonly string _connStr =
-        Environment.GetEnvironmentVariable("CONSOLIDADO_CONN")
-        ?? config["ConsolidadoDb:ConnectionString"]
-        ?? throw new InvalidOperationException("CONSOLIDADO_CONN no configurado");
 
     private static readonly HashSet<string> PeriodosValidos =
         ["1h", "4h", "12h", "24h", "ayer", "mes"];
@@ -33,6 +29,9 @@ public class OcrPlacasService(IConfiguration config)
         AND tra_titra = 'TR'
         AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)";
 
+    // tra_subfp = 1 identifica tránsitos prepago
+    private static string FiltroPrepago(bool soloPrepago) => soloPrepago ? "AND tra_subfp = 1" : "";
+
     // Clasificación del tipo de error OCR
     private const string TipoErrorExpr = @"
         CASE
@@ -48,12 +47,13 @@ public class OcrPlacasService(IConfiguration config)
         ELSE 'DESCONOCIDA' END";
 
     // ── Resumen + por estación + tipos de error ───────────────────────────
-    public async Task<OcrResumenDto> GetResumenAsync(string periodo)
+    public async Task<OcrResumenDto> GetResumenAsync(string periodo, bool soloPrepago = false)
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
         await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
         string pw = PeriodWhere(periodo);
+        string fp = FiltroPrepago(soloPrepago);
 
         // Totales en una sola pasada
         var totales = await conn.QueryFirstAsync($@"
@@ -66,6 +66,7 @@ public class OcrPlacasService(IConfiguration config)
             FROM transitos t
             WHERE {pw}
               {FiltroBase}
+              {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''");
 
         int total       = (int)totales.TotalConPlaca;
@@ -91,6 +92,7 @@ public class OcrPlacasService(IConfiguration config)
             FROM transitos t
             WHERE {pw}
               {FiltroBase}
+              {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''
             GROUP BY tra_coest
             ORDER BY Efectividad ASC")).ToList();
@@ -101,6 +103,7 @@ public class OcrPlacasService(IConfiguration config)
             FROM transitos t
             WHERE {pw}
               {FiltroBase}
+              {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''
               AND (tra_patocr IS NULL OR tra_patocr = '' OR tra_paten <> tra_patocr)
             GROUP BY {TipoErrorExpr}
@@ -122,6 +125,7 @@ public class OcrPlacasService(IConfiguration config)
             LEFT JOIN viadef vd ON t.tra_coest = vd.via_coest AND t.tra_nuvia = vd.via_nuvia
             WHERE {pw}
               {FiltroBase}
+              {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''
             GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr
             ORDER BY (
@@ -139,15 +143,16 @@ public class OcrPlacasService(IConfiguration config)
     }
 
     // ── Análisis de confusión de caracteres + por hora + pares ──────────
-    public async Task<OcrAnalisisDto> GetAnalisisAsync()
+    public async Task<OcrAnalisisDto> GetAnalisisAsync(bool soloPrepago = false)
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
         await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+        string fp = FiltroPrepago(soloPrepago);
 
         // 1. Matriz de confusión carácter a carácter (últimos 30 días)
         //    Solo cuando misma longitud: eso indica sustitución pura de un carácter
-        var topConfusiones = (await conn.QueryAsync<OcrConfusionCaracterDto>(@"
+        var topConfusiones = (await conn.QueryAsync<OcrConfusionCaracterDto>($@"
             SELECT TOP 40
                 p.pos                               AS Posicion,
                 SUBSTRING(t.tra_paten,  p.pos, 1)  AS Esperado,
@@ -163,6 +168,7 @@ public class OcrPlacasService(IConfiguration config)
               AND tra_tipop IN ('E','S','O','M','T')
               AND tra_titra = 'TR'
               AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
+              {fp}
               AND tra_paten  IS NOT NULL AND LEN(tra_paten)  > 0
               AND tra_patocr IS NOT NULL AND LEN(tra_patocr) > 0
               AND tra_paten <> tra_patocr
@@ -175,7 +181,7 @@ public class OcrPlacasService(IConfiguration config)
             commandTimeout: 90)).ToList();
 
         // 2. Efectividad por hora del día (últimos 7 días)
-        var porHora = (await conn.QueryAsync<OcrPorHoraDto>(@"
+        var porHora = (await conn.QueryAsync<OcrPorHoraDto>($@"
             SELECT
                 DATEPART(HOUR, tra_fecha) AS Hora,
                 COUNT(*) AS Total,
@@ -189,6 +195,7 @@ public class OcrPlacasService(IConfiguration config)
               AND tra_tipop IN ('E','S','O','M','T')
               AND tra_titra = 'TR'
               AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
+              {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''
             GROUP BY DATEPART(HOUR, tra_fecha)
             ORDER BY Hora",
@@ -206,6 +213,7 @@ public class OcrPlacasService(IConfiguration config)
               AND tra_tipop IN ('E','S','O','M','T')
               AND tra_titra = 'TR'
               AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
+              {fp}
               AND tra_paten  IS NOT NULL AND tra_paten  <> ''
               AND tra_patocr IS NOT NULL AND tra_patocr <> ''
               AND tra_paten <> tra_patocr
@@ -219,12 +227,13 @@ public class OcrPlacasService(IConfiguration config)
     // ── Detalle paginado ─────────────────────────────────────────────────
     public async Task<OcrDetalleDto> GetDetalleAsync(
         string periodo, string? estacion, string? placa, string? tipoError,
-        int pagina, int porPagina)
+        int pagina, int porPagina, bool soloPrepago = false)
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
         await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
         string pw = PeriodWhere(periodo);
+        string fp = FiltroPrepago(soloPrepago);
 
         int? coest = estacion switch {
             "FORTALEZA" => 1, "HUARMEY" => 2, "402" => 3, "VIRU" => 4, "SANTA" => 5, _ => null
@@ -245,6 +254,7 @@ public class OcrPlacasService(IConfiguration config)
             LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
             WHERE {pw}
               {FiltroBase}
+              {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''
               {tipoFiltro}
               AND (@coest IS NULL OR tra_coest = @coest)
@@ -272,18 +282,19 @@ public class OcrPlacasService(IConfiguration config)
     }
 
     // ── Tendencias: heatmap vía×hora + tendencia diaria + mejores vías ──
-    public async Task<OcrTendenciasDto> GetTendenciasAsync()
+    public async Task<OcrTendenciasDto> GetTendenciasAsync(bool soloPrepago = false)
     {
-        await using var conn = new SqlConnection(_connStr);
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
         await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
         const int timeout = 120;
 
-        const string filtro30d = @"
+        string filtro30d = $@"
             tra_fecha >= DATEADD(DAY, -30, GETDATE())
             AND tra_tipop IN ('E','S','O','M','T')
             AND tra_titra = 'TR'
             AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
+            {FiltroPrepago(soloPrepago)}
             AND tra_paten IS NOT NULL AND tra_paten <> ''";
 
         const string errSum = @"
@@ -375,5 +386,62 @@ public class OcrPlacasService(IConfiguration config)
             .ToList();
 
         return new OcrTendenciasDto(heatmap, tendenciaDiaria, mejoresVias);
+    }
+
+    // ── Evolución de una vía específica en el tiempo (día a día) ────────
+    public async Task<OcrViaEvolucionDto> GetViaEvolucionAsync(string estacion, string via, int dias, bool soloPrepago = false)
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+
+        int? coest = estacion switch {
+            "FORTALEZA" => 1, "HUARMEY" => 2, "402" => 3, "VIRU" => 4, "SANTA" => 5, _ => null
+        };
+
+        // La vía llega como el nombre que ya se le mostró al usuario (vd.via_nombr,
+        // o el fallback "Via N" cuando no hay nombre catalogado) — se compara igual.
+        const string viaMatch = @"
+            (vd.via_nombr = @via OR (vd.via_nombr IS NULL AND 'Via ' + CAST(t.tra_nuvia AS VARCHAR) = @via))";
+
+        string filtroBase = $@"
+            tra_fecha >= DATEADD(DAY, -@dias, GETDATE())
+            AND tra_tipop IN ('E','S','O','M','T')
+            AND tra_titra = 'TR'
+            AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
+            AND tra_paten IS NOT NULL AND tra_paten <> ''
+            {FiltroPrepago(soloPrepago)}
+            AND t.tra_coest = @coest
+            AND {viaMatch}";
+
+        const string errSum = @"
+            SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = ''
+                          OR tra_paten <> tra_patocr THEN 1 ELSE 0 END)";
+
+        var param = new { coest, via, dias };
+
+        var diaria = (await conn.QueryAsync<OcrDiaViaDto>($@"
+            SELECT CONVERT(varchar(10), CAST(tra_fecha AS DATE), 23) AS Fecha,
+                   COUNT(*) AS Total,
+                   ROUND(100.0 * {errSum} / NULLIF(COUNT(*), 0), 1) AS TasaError
+            FROM transitos t
+            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+            WHERE {filtroBase}
+            GROUP BY CAST(tra_fecha AS DATE)
+            ORDER BY Fecha",
+            param, commandTimeout: 90)).ToList();
+
+        var porHora = (await conn.QueryAsync<OcrCeldaDto>($@"
+            SELECT DATEPART(HOUR, tra_fecha) AS Hora,
+                   COUNT(*) AS Total,
+                   ROUND(100.0 * {errSum} / NULLIF(COUNT(*), 0), 1) AS TasaError
+            FROM transitos t
+            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+            WHERE {filtroBase}
+            GROUP BY DATEPART(HOUR, tra_fecha)
+            ORDER BY Hora",
+            param, commandTimeout: 90)).ToList();
+
+        return new OcrViaEvolucionDto(estacion, via, dias, diaria, porHora);
     }
 }

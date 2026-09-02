@@ -1,15 +1,15 @@
-using AunorApi.Data;
-using AunorApi.DTOs;
+using AunorApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AunorApi.Controllers;
 
 [ApiController]
 [Route("api/reporte")]
 [Authorize]
-public class ReporteController(AppDbContext db) : ControllerBase
+public class ReporteController(
+    ReporteService reporteService, ReporteSemanalService reporteSemanal,
+    ILogger<ReporteController> log) : ControllerBase
 {
     [HttpGet("sla")]
     public async Task<IActionResult> Sla(
@@ -19,36 +19,40 @@ public class ReporteController(AppDbContext db) : ControllerBase
     {
         var desdeDate = desde ?? DateTime.Now.AddDays(-30);
         var hastaDate = hasta ?? DateTime.Now;
-        var totalMin  = (int)(hastaDate - desdeDate).TotalMinutes;
+        return Ok(await reporteService.ComputeSlaAsync(desdeDate, hastaDate, soloCriticos: false, estacionId: estacionId));
+    }
 
-        var equipos = await db.Equipos
-            .Include(e => e.TipoEquipo)
-            .Include(e => e.Via).ThenInclude(v => v.Estacion)
-            .Where(e => e.Activo && e.Monitorear
-                && (estacionId == null || e.Via.EstacionId == estacionId))
-            .ToListAsync();
+    [HttpGet("sla/por-estacion")]
+    public async Task<IActionResult> SlaPorEstacion([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+    {
+        var desdeDate = desde ?? DateTime.Now.AddDays(-30);
+        var hastaDate = hasta ?? DateTime.Now;
+        return Ok(await reporteService.ComputeSlaPorEstacionAsync(desdeDate, hastaDate));
+    }
 
-        var result = new List<SlaEquipoDto>();
+    [HttpGet("semanal-critico")]
+    public async Task<IActionResult> SemanalCritico([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+    {
+        var hastaDate = hasta ?? DateTime.Now;
+        var desdeDate = desde ?? hastaDate.AddDays(-7);
+        return Ok(await reporteService.ComputeSlaAsync(desdeDate, hastaDate, soloCriticos: true));
+    }
 
-        foreach (var eq in equipos)
+    [HttpPost("semanal-critico/test")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> SemanalCriticoTest()
+    {
+        try
         {
-            var downMin = await db.Incidentes
-                .Where(i => i.EquipoId == eq.Id && i.Inicio <= hastaDate
-                    && (i.Fin == null || i.Fin >= desdeDate))
-                .SumAsync(i =>
-                    Math.Min(
-                        (int)(((DateTime)(i.Fin ?? hastaDate)) - (i.Inicio < desdeDate ? desdeDate : i.Inicio)).TotalMinutes,
-                        totalMin));
-
-            var uptime = totalMin > 0
-                ? Math.Round(100m - (decimal)downMin / totalMin * 100, 2)
-                : 100m;
-
-            result.Add(new SlaEquipoDto(
-                eq.Id, eq.Nombre, eq.TipoEquipo.Nombre,
-                eq.Via.Numero, uptime, totalMin, downMin));
+            var hasta = DateTime.Now;
+            var desde = hasta.AddDays(-7);
+            var (ok, message) = await reporteSemanal.EnviarAsync(desde, hasta);
+            return ok ? Ok(new { ok, message }) : BadRequest(new { ok, message });
         }
-
-        return Ok(result.OrderBy(r => r.Via).ThenBy(r => r.Nombre));
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error en prueba de reporte semanal");
+            return StatusCode(500, new { ok = false, message = $"Error interno: {ex.Message}" });
+        }
     }
 }

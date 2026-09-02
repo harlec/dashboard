@@ -36,6 +36,7 @@ export function AdminDashboard() {
             {[
               { href: '/admin/estaciones', label: 'Gestionar estaciones' },
               { href: '/admin/equipos',    label: 'Gestionar equipos' },
+              { href: '/admin/tipos-equipo', label: 'Gestionar tipos de equipo' },
               { href: '/admin/usuarios',   label: 'Gestionar usuarios' },
               { href: '/admin/config',     label: 'Configuración SMTP y pings' },
             ].map(l => (

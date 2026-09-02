@@ -5,12 +5,13 @@ import { StationGauge }  from './StationGauge'
 interface Props {
   estaciones: EstacionLive[]
   onEquipoClick: (eq: EquipoLive) => void
+  estacionesEnMtto?: Set<number>
 }
 
 // Todos los tipos de equipo en el orden deseado
-const TIPO_ORDER = ['PC Via', 'PC OCR', 'Display Tarifario', 'Camara OCR', 'PMV', 'Antena/Router', 'UPS', 'Switch']
+const TIPO_ORDER = ['PC Via', 'PC OCR', 'Display Tarifario', 'Camara OCR', 'Cámara Validación', 'PMV', 'Antena/Router', 'UPS', 'Switch']
 
-export function StationMatrix({ estaciones, onEquipoClick }: Props) {
+export function StationMatrix({ estaciones, onEquipoClick, estacionesEnMtto }: Props) {
   // Colectar todos los tipos presentes
   const tiposPresentes = TIPO_ORDER.filter(tipo =>
     estaciones.some(est =>
@@ -25,14 +26,24 @@ export function StationMatrix({ estaciones, onEquipoClick }: Props) {
             <th className="bg-transparent" />
             {estaciones.map(est => {
               const pct = est.total > 0 ? Math.round(est.up / est.total * 100) : 0
+              const enMtto = estacionesEnMtto?.has(est.id) ?? false
               return (
                 <th key={est.id} className={`rounded-lg p-0 align-bottom transition-colors ${
-                  est.enlace === 'STARLINK'
+                  enMtto
+                    ? 'bg-blue-500/15 ring-1 ring-blue-400/50'
+                    : est.enlace === 'STARLINK'
                     ? 'bg-orange-500/15 ring-1 ring-orange-500/40'
                     : 'bg-[#242120]'
                 }`}>
                   <div className="relative flex flex-col items-center gap-0.5 px-3 pt-2.5 pb-2">
-                    {est.enlace === 'STARLINK' && (
+                    {enMtto ? (
+                      <div className="absolute top-1.5 right-2.5 flex items-center gap-1">
+                        <span className="text-[0.7rem]">🔧</span>
+                        <span className="text-[0.58rem] font-bold text-blue-400 uppercase tracking-wide whitespace-nowrap">
+                          Mantenimiento
+                        </span>
+                      </div>
+                    ) : est.enlace === 'STARLINK' && (
                       <div className="absolute top-1.5 right-2.5 flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-ping-pulse" />
                         <span className="text-[0.58rem] font-bold text-orange-400 uppercase tracking-wide whitespace-nowrap">

@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import type { EquipoLive } from '../api/client'
+import { useEffect, useState } from 'react'
+import { api, type EquipoLive, type Mantenimiento } from '../api/client'
 import { useLiveDashboard }    from '../hooks/useLiveDashboard'
 import { NetworkTopology }     from '../components/NetworkTopology'
 import { DownEquiposList }     from '../components/DownEquiposList'
 import { EquipoModal }         from '../components/EquipoModal'
 import { NocLatencyChart, NocStatusChart } from '../components/NocCharts'
+import { computarIncidentesAgrupados, type ExclusionMantenimiento } from '../lib/incidentesAgrupados'
 
 function dur(min?: number | null) {
   if (min == null) return '—'
@@ -16,6 +17,14 @@ function dur(min?: number | null) {
 export function NocDashboard() {
   const { data, signalStatus, lastUpdate } = useLiveDashboard()
   const [selected, setSelected] = useState<EquipoLive | null>(null)
+  const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([])
+
+  useEffect(() => {
+    const loadMtto = () => api.mantenimientos(true).then(setMantenimientos).catch(() => {})
+    loadMtto()
+    const id = setInterval(loadMtto, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   if (!data) return (
     <div className="flex items-center justify-center min-h-[60vh] text-muted">Cargando…</div>
@@ -23,13 +32,22 @@ export function NocDashboard() {
 
   const { kpis, estaciones } = data
 
-  // Equipos caídos para el ticker
+  const estacionesEnMtto = new Set(mantenimientos.filter(m => m.estacionId).map(m => m.estacionId!))
+  const viasEnMtto       = new Set(mantenimientos.filter(m => m.viaId).map(m => m.viaId!))
+
+  // Equipos caídos para el ticker (excluye lo que está en mantenimiento activo)
   const caidos = estaciones.flatMap(est =>
-    est.vias.flatMap(via =>
-      via.equipos.filter(eq => eq.monitorear && eq.ultimoEstado === 'DOWN')
+    estacionesEnMtto.has(est.id) ? [] : est.vias.flatMap(via =>
+      viasEnMtto.has(via.id) ? [] : via.equipos.filter(eq => eq.monitorear && eq.ultimoEstado === 'DOWN')
         .map(eq => ({ nombre: eq.nombre, estacion: est.nombre, incMin: eq.incMin }))
     )
   ).sort((a, b) => (b.incMin ?? 0) - (a.incMin ?? 0))
+
+  const exclusionMtto: ExclusionMantenimiento = {
+    estaciones: new Set(mantenimientos.filter(m => m.estacionId).map(m => m.estacionId!)),
+    vias:       new Set(mantenimientos.filter(m => m.viaId).map(m => m.viaId!)),
+  }
+  const grupos = computarIncidentesAgrupados(estaciones, undefined, exclusionMtto)
 
   return (
     /* Contenedor full-height (descontando navbar 60px) */
@@ -67,8 +85,39 @@ export function NocDashboard() {
         </div>
       </div>
 
+      {/* ── Mantenimiento activo ── */}
+      {mantenimientos.length > 0 && (
+        <div style={{ minHeight: 34, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '4px 4px', background: 'linear-gradient(90deg,rgba(59,130,246,.16),rgba(59,130,246,.05))', borderBottom: '1px solid rgba(59,130,246,.3)' }}>
+          {mantenimientos.map(m => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12 }}>🔧</span>
+              <span style={{ fontWeight: 700, fontSize: 11, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '.06em' }}>Mantenimiento</span>
+              <span style={{ fontSize: 12, color: '#c7d9f5', fontFamily: 'monospace' }}>
+                {m.estacion ?? m.via ?? m.equipo} · {m.motivo} · hasta {new Date(m.hasta).toLocaleTimeString('es-PE', { hour12: false })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Alert ticker (46px) ── */}
-      {caidos.length > 0 ? (
+      {grupos.length > 0 ? (
+        <div style={{ minHeight: 46, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', padding: '6px 4px', background: 'linear-gradient(90deg,rgba(239,75,84,.22),rgba(239,75,84,.08))', borderBottom: '1px solid rgba(239,75,84,.4)' }}>
+          {grupos.map((g, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4b54', boxShadow: '0 0 10px #ef4b54', display: 'inline-block' }} />
+              <span style={{ fontWeight: 700, fontSize: 12, color: '#ff9ba0', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                {g.tipo === 'peaje' ? 'Incidente de peaje' : 'Incidente de vía'}
+              </span>
+              <span style={{ fontSize: 13, color: '#ffd7d9', fontFamily: 'monospace' }}>
+                {g.tipo === 'peaje'
+                  ? `${g.estacion} · ${g.pct}% caído (${g.caidos}/${g.total})`
+                  : `Vía ${g.via} (${g.estacion}) · ${g.caidos}/${g.total} sin conexión`}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : caidos.length > 0 ? (
         <div style={{ height: 46, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', background: 'linear-gradient(90deg,rgba(239,75,84,.16),rgba(239,75,84,.05))', borderBottom: '1px solid rgba(239,75,84,.28)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4b54', boxShadow: '0 0 10px #ef4b54', display: 'inline-block' }} />

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { api } from '../api/client'
-import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow } from '../api/client'
+import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion } from '../api/client'
 
 const PERIODOS = ['1h', '4h', '12h', '24h', 'ayer', 'mes'] as const
 const ESTACIONES = ['', 'FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA']
@@ -177,6 +177,61 @@ function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria
   )
 }
 
+// ── Evolución diaria de una vía específica ─────────────────────
+function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
+  if (!datos.length) return null
+  const W = 640, H = 160, pL = 32, pR = 8, pT = 8, pB = 24
+  const cW = W - pL - pR, cH = H - pT - pB
+  const maxT = Math.max(...datos.map(d => Number(d.tasaError)), 10)
+  const n = datos.length
+  const xOf = (i: number) => pL + (i / Math.max(n - 1, 1)) * cW
+  const yOf = (t: number) => pT + cH - Math.min(Number(t) / maxT, 1) * cH
+  const pts = datos.map((d, i) => `${xOf(i).toFixed(1)},${yOf(Number(d.tasaError)).toFixed(1)}`).join(' ')
+  const area = `${pL},${yOf(0)} ${pts} ${xOf(n - 1)},${yOf(0)}`
+  const step = Math.max(1, Math.floor(n / 8))
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }}>
+      {[0, maxT * 0.5, maxT].map((t, i) => (
+        <g key={i}>
+          <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
+          <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="8" fontFamily="monospace">{t.toFixed(0)}%</text>
+        </g>
+      ))}
+      <polygon points={area} fill="rgba(239,75,84,.08)" />
+      <polyline points={pts} fill="none" stroke="#ef4b54" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      {datos.map((d, i) => i % step === 0 ? (
+        <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="monospace">{d.fecha.slice(5)}</text>
+      ) : null)}
+    </svg>
+  )
+}
+
+function EvolucionHoraChart({ datos }: { datos: OcrViaEvolucion['porHora'] }) {
+  if (!datos.length) return <div style={{ color: '#5f7186', fontSize: 12, textAlign: 'center' }}>Sin datos suficientes</div>
+  const byHora = new Map(datos.map(d => [d.hora, d]))
+  const horas = Array.from({ length: 24 }, (_, h) => byHora.get(h) ?? null)
+  return (
+    <div style={{ position: 'relative', height: 90 }}>
+      <svg viewBox="0 0 240 70" style={{ display: 'block', width: '100%', height: 90 }}>
+        {horas.map((d, i) => {
+          if (!d) return null
+          const barH = Math.min(Number(d.tasaError) / 50, 1) * 56
+          const col = Number(d.tasaError) >= 30 ? '#ef4b54' : Number(d.tasaError) >= 15 ? '#e0991f' : '#3fb978'
+          return (
+            <g key={i}>
+              <rect x={i * 10 + 0.5} y={56 - barH} width={9} height={barH} rx="1.5" fill={col} opacity="0.75" />
+            </g>
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
+        <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
+      </div>
+    </div>
+  )
+}
+
 const ESTACION_COLOR: Record<string, string> = {
   FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
   '402': '#4A9EE0', VIRU: '#E060A0', SANTA: '#9B6BE0',
@@ -278,7 +333,15 @@ export function OcrDashboard() {
   const [detalle,    setDetalle]    = useState<OcrDetalle | null>(null)
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
-  const [tab,        setTab]        = useState<'confusion' | 'tendencias' | 'detalle'>('confusion')
+  const [tab,        setTab]        = useState<'confusion' | 'tendencias' | 'porvia' | 'detalle'>('confusion')
+  const [soloPrepago, setSoloPrepago] = useState(false)
+
+  // Evolución por vía
+  const [viaEstacion,  setViaEstacion]  = useState('')
+  const [viaSeleccion, setViaSeleccion] = useState('')
+  const [viaDias,      setViaDias]      = useState(60)
+  const [viaEvolucion, setViaEvolucion] = useState<OcrViaEvolucion | null>(null)
+  const [loadingVia,   setLoadingVia]   = useState(false)
 
   // Filtros detalle
   const [estacion,  setEstacion]  = useState('')
@@ -291,32 +354,67 @@ export function OcrDashboard() {
     setLoading(true)
     setError(null)
     try {
-      setResumen(await api.ocrResumen(periodo))
+      setResumen(await api.ocrResumen(periodo, soloPrepago))
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setLoading(false) }
-  }, [periodo])
+  }, [periodo, soloPrepago])
 
-  // Análisis y tendencias: ventanas fijas (30d/7d), independientes del período — cargan una vez
+  // Análisis y tendencias: ventanas fijas (30d/7d), independientes del período — se recargan si cambia soloPrepago
   useEffect(() => {
-    api.ocrAnalisis().then(setAnalisis).catch(() => {})
-  }, [])
+    setAnalisis(null)
+    api.ocrAnalisis(soloPrepago).then(setAnalisis).catch(() => {})
+  }, [soloPrepago])
 
   const loadTendencias = useCallback(async () => {
     if (tendencias) return  // ya cargadas
     setLoadingT(true)
-    try { setTendencias(await api.ocrTendencias()) }
+    try { setTendencias(await api.ocrTendencias(soloPrepago)) }
     catch { /* mostrar vacío */ }
     finally { setLoadingT(false) }
-  }, [tendencias])
+  }, [tendencias, soloPrepago])
+
+  useEffect(() => { setTendencias(null) }, [soloPrepago])
 
   const loadDetalle = useCallback(async () => {
-    const d = await api.ocrDetalle({ periodo, estacion: estacion||undefined, placa: placa||undefined, tipoError: tipoError||undefined, pagina, porPagina: 50 })
+    const d = await api.ocrDetalle({ periodo, estacion: estacion||undefined, placa: placa||undefined, tipoError: tipoError||undefined, pagina, porPagina: 50, soloPrepago })
     setDetalle(d)
-  }, [periodo, estacion, placa, tipoError, pagina])
+  }, [periodo, estacion, placa, tipoError, pagina, soloPrepago])
 
   useEffect(() => { loadResumen() }, [loadResumen])
   useEffect(() => { if (tab === 'detalle') loadDetalle() }, [tab, loadDetalle])
+  useEffect(() => { if (tab === 'porvia') loadTendencias() }, [tab, loadTendencias])
+
+  // Lista de vías disponibles (con datos) por estación, sacada del heatmap ya cargado
+  const viasPorEstacion = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const row of tendencias?.heatmap ?? []) {
+      if (!map.has(row.estacion)) map.set(row.estacion, [])
+      map.get(row.estacion)!.push(row.via)
+    }
+    for (const vias of map.values()) vias.sort()
+    return map
+  }, [tendencias])
+  const estacionesConDatos = useMemo(() => Array.from(viasPorEstacion.keys()).sort(), [viasPorEstacion])
+
+  // Preseleccionar la primera estación/vía apenas haya datos
+  useEffect(() => {
+    if (!viaEstacion && estacionesConDatos.length > 0) {
+      const e = estacionesConDatos[0]
+      setViaEstacion(e)
+      setViaSeleccion(viasPorEstacion.get(e)?.[0] ?? '')
+    }
+  }, [estacionesConDatos, viasPorEstacion, viaEstacion])
+
+  const loadViaEvolucion = useCallback(async () => {
+    if (!viaEstacion || !viaSeleccion) return
+    setLoadingVia(true)
+    try { setViaEvolucion(await api.ocrViaEvolucion({ estacion: viaEstacion, via: viaSeleccion, dias: viaDias, soloPrepago })) }
+    catch { setViaEvolucion(null) }
+    finally { setLoadingVia(false) }
+  }, [viaEstacion, viaSeleccion, viaDias, soloPrepago])
+
+  useEffect(() => { if (tab === 'porvia') loadViaEvolucion() }, [tab, loadViaEvolucion])
 
   return (
     <div className="p-7 space-y-6" style={{ background: '#06090e', minHeight: 'calc(100vh - 60px)' }}>
@@ -329,7 +427,13 @@ export function OcrDashboard() {
             Comparación placa cajero vs. placa detectada por cámara · últimos 30 días para análisis de caracteres
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <button onClick={() => { setSoloPrepago(v => !v); setPagina(1) }}
+            title="Filtrar solo tránsitos prepago (tra_subfp = 1)"
+            style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: soloPrepago ? '#F99B1C' : 'rgba(255,255,255,.1)', background: soloPrepago ? 'rgba(249,155,28,.14)' : 'transparent', color: soloPrepago ? '#F99B1C' : '#6b7a8c', marginRight: 4 }}>
+            {soloPrepago ? '✓ ' : ''}Solo prepago
+          </button>
+          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,.1)', margin: '0 4px' }} />
           {PERIODOS.map(p => (
             <button key={p} onClick={() => { setPeriodo(p); setPagina(1) }}
               style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: periodo === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: periodo === p ? 'rgba(45,212,167,.12)' : 'transparent', color: periodo === p ? '#2dd4a7' : '#6b7a8c' }}>
@@ -375,6 +479,7 @@ export function OcrDashboard() {
             {([
               ['confusion',  'Análisis de Caracteres'],
               ['tendencias', 'Tendencias 30d'],
+              ['porvia',     'Evolución por Vía'],
               ['detalle',    'Detalle de Registros'],
             ] as const).map(([t, label]) => (
               <button key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }}
@@ -630,6 +735,64 @@ export function OcrDashboard() {
                           )
                         })()}
                       </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {tab === 'porvia' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Selector */}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', padding: '14px 18px', background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12 }}>
+                <select value={viaEstacion} onChange={e => { const es = e.target.value; setViaEstacion(es); setViaSeleccion(viasPorEstacion.get(es)?.[0] ?? '') }}
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>
+                  {estacionesConDatos.length === 0 && <option value="">Sin datos</option>}
+                  {estacionesConDatos.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+                <select value={viaSeleccion} onChange={e => setViaSeleccion(e.target.value)}
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>
+                  {(viasPorEstacion.get(viaEstacion) ?? []).map(v => <option key={v} value={v}>{v}</option>)}
+                </select>
+                <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+                  {[30, 60, 90].map(d => (
+                    <button key={d} onClick={() => setViaDias(d)}
+                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : '#6b7a8c' }}>
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+                <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 10, color: '#2a4040' }}>solo vías con ≥50 tránsitos en 30d aparecen en la lista</span>
+              </div>
+
+              {loadingT || loadingVia ? (
+                <div style={{ padding: 48, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 13 }}>Cargando…</div>
+              ) : !viaEvolucion || viaEvolucion.diaria.length === 0 ? (
+                <div style={{ padding: 32, textAlign: 'center', color: '#5f7186', fontFamily: 'monospace', fontSize: 12 }}>
+                  Sin datos suficientes para esta vía en el período
+                </div>
+              ) : (
+                <>
+                  <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
+                        {viaEvolucion.estacion} · {viaEvolucion.via} — % ERROR POR DÍA · ÚLTIMOS {viaEvolucion.dias}D
+                      </span>
+                    </div>
+                    <div style={{ padding: '12px 18px 8px' }}>
+                      <EvolucionDiariaChart datos={viaEvolucion.diaria} />
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                        PERFIL HORARIO · MISMA VÍA · {viaEvolucion.dias}D
+                      </span>
+                    </div>
+                    <div style={{ padding: '12px 18px' }}>
+                      <EvolucionHoraChart datos={viaEvolucion.porHora} />
                     </div>
                   </div>
                 </>

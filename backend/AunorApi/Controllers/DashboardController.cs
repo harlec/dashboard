@@ -1,5 +1,6 @@
 using AunorApi.Data;
 using AunorApi.DTOs;
+using AunorApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -66,8 +67,8 @@ public class DashboardController(AppDbContext db) : ControllerBase
 
                     eqDtos.Add(new EquipoLiveDto(
                         eq.Id, eq.Nombre, eq.Ip,
-                        eq.TipoEquipo.Nombre, eq.TipoEquipo.Icono,
-                        lastPing?.Estado, lastPing?.LatenciaMs, lastPing?.Timestamp,
+                        eq.TipoEquipo.Nombre, eq.TipoEquipo.Icono, eq.TipoEquipo.Descripcion,
+                        lastPing?.Estado, eq.UltimaLatenciaMs, eq.UltimoPingEn ?? lastPing?.Timestamp,
                         eq.Monitorear,
                         incActivo?.Inicio, incMin));
                 }
@@ -119,16 +120,19 @@ public class DashboardController(AppDbContext db) : ControllerBase
         int? incMin = incActivo is null ? null
             : (int)(DateTime.Now - incActivo.Inicio).TotalMinutes;
 
-        var hist = await db.PingLogs
+        var histRaw = await db.PingLogs
             .Where(p => p.EquipoId == id)
             .OrderByDescending(p => p.Timestamp)
             .Take(50)
-            .Select(p => new PingHistDto(p.Timestamp, p.Estado, p.LatenciaMs))
             .ToListAsync();
+        var hist = histRaw
+            .Select(p => new PingHistDto(p.Timestamp, p.Estado, p.LatenciaMs, p.DetalleEstado,
+                PingWorkerService.InterpretarDetalle(p.DetalleEstado)))
+            .ToList();
 
         return Ok(new EquipoDetailDto(
-            eq.Id, eq.Nombre, eq.Ip, eq.TipoEquipo.Nombre,
-            lastPing?.Estado, lastPing?.LatenciaMs, lastPing?.Timestamp,
+            eq.Id, eq.Nombre, eq.Ip, eq.TipoEquipo.Nombre, eq.TipoEquipo.Descripcion,
+            lastPing?.Estado, eq.UltimaLatenciaMs, eq.UltimoPingEn ?? lastPing?.Timestamp,
             incActivo?.Inicio, incMin, hist));
     }
 }

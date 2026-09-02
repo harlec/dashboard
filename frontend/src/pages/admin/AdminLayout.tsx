@@ -6,6 +6,8 @@ const links = [
   { to: '/admin/estaciones', label: '🏢 Estaciones'  },
   { to: '/admin/vias',       label: '🛣 Vías'         },
   { to: '/admin/equipos',    label: '🖥 Equipos'      },
+  { to: '/admin/tipos-equipo', label: '🏷 Tipos de equipo' },
+  { to: '/admin/mantenimiento', label: '🔧 Mantenimiento' },
   { to: '/admin/usuarios',   label: '👤 Usuarios'     },
   { to: '/admin/config',     label: '⚙ Configuración' },
 ]

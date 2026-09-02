@@ -24,6 +24,8 @@ services:
       - "5000:5000"
     cap_add:
       - NET_RAW
+    volumes:
+      - audio_data:/app/audio
     environment:
       ASPNETCORE_URLS: http://+:5000
       ASPNETCORE_ENVIRONMENT: Production
@@ -60,6 +62,7 @@ services:
 
 volumes:
   sqlserver_data:
+  audio_data:
 
 # NOTA: no se usa network_mode: host — la subred del bridge de Docker (172.18.0.0/16)
 # no choca con la red interna (10.15.x.x / 10.18.x.x), así que el ping sale igual

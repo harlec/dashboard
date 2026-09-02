@@ -93,9 +93,33 @@ public class IncidentesController(AppDbContext db) : ControllerBase
                 i.Equipo.Nombre,
                 i.Equipo.Via.Estacion.Nombre,
                 i.Equipo.Via.Numero,
-                i.Inicio, i.Fin, i.DuracionMin))
+                i.Inicio, i.Fin, i.DuracionMin,
+                i.Tipo, i.Motivo))
             .ToListAsync();
 
         return Ok(new { total, page, pageSize, items });
     }
+
+    private static readonly string[] TiposValidos = ["Real", "Mantenimiento", "ReinicioForzado", "Otro"];
+
+    [HttpPut("etiquetar")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> Etiquetar([FromBody] EtiquetarRequest req)
+    {
+        if (!TiposValidos.Contains(req.Tipo))
+            return BadRequest(new { error = "Tipo inválido" });
+        if (req.Ids is null || req.Ids.Count == 0)
+            return BadRequest(new { error = "Debe indicar al menos un incidente" });
+
+        var incidentes = await db.Incidentes.Where(i => req.Ids.Contains(i.Id)).ToListAsync();
+        foreach (var inc in incidentes)
+        {
+            inc.Tipo   = req.Tipo;
+            inc.Motivo = req.Motivo;
+        }
+        await db.SaveChangesAsync();
+        return Ok(new { actualizados = incidentes.Count });
+    }
 }
+
+public record EtiquetarRequest(List<int> Ids, string Tipo, string? Motivo);

@@ -14,6 +14,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CamaraHeartbeat> CamarasHeartbeat  { get; set; }
     public DbSet<Usuario>         Usuarios          { get; set; }
     public DbSet<Configuracion>   Configuraciones   { get; set; }
+    public DbSet<Mantenimiento>   Mantenimientos    { get; set; }
+    public DbSet<IncidenteGrupo>  IncidenteGrupos   { get; set; }
+    public DbSet<EnlaceEvento>    EnlaceEventos     { get; set; }
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -34,6 +37,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Descripcion).HasColumnName("descripcion");
             e.Property(x => x.CheckPort).HasColumnName("check_port");
             e.Property(x => x.Monitorear).HasColumnName("monitorear");
+            e.Property(x => x.EsCritico).HasColumnName("es_critico");
+            e.Property(x => x.UltimaLatenciaMs).HasColumnName("ultima_latencia_ms");
+            e.Property(x => x.UltimoPingEn).HasColumnName("ultimo_ping_en");
             e.Property(x => x.AgenteInstalado).HasColumnName("agente_instalado");
             e.Property(x => x.Activo).HasColumnName("activo");
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
@@ -49,6 +55,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Timestamp).HasColumnName("timestamp");
             e.Property(x => x.Estado).HasColumnName("estado");
             e.Property(x => x.LatenciaMs).HasColumnName("latencia_ms");
+            e.Property(x => x.DetalleEstado).HasColumnName("detalle_estado");
             e.HasOne(x => x.Equipo).WithMany(x => x.PingLogs).HasForeignKey(x => x.EquipoId);
         });
 
@@ -60,6 +67,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Inicio).HasColumnName("inicio");
             e.Property(x => x.Fin).HasColumnName("fin");
             e.Property(x => x.DuracionMin).HasColumnName("duracion_min");
+            e.Property(x => x.Tipo).HasColumnName("tipo");
+            e.Property(x => x.Motivo).HasColumnName("motivo");
             e.HasOne(x => x.Equipo).WithMany(x => x.Incidentes).HasForeignKey(x => x.EquipoId);
         });
 
@@ -92,6 +101,49 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(x => x.Clave);
             e.Property(x => x.Clave).HasColumnName("clave");
             e.Property(x => x.Valor).HasColumnName("valor");
+        });
+
+        m.Entity<IncidenteGrupo>(e => {
+            e.ToTable("incidente_grupos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Tipo).HasColumnName("tipo");
+            e.Property(x => x.EstacionId).HasColumnName("estacion_id");
+            e.Property(x => x.ViaId).HasColumnName("via_id");
+            e.Property(x => x.Inicio).HasColumnName("inicio");
+            e.Property(x => x.Fin).HasColumnName("fin");
+            e.Property(x => x.TelegramChatId).HasColumnName("telegram_chat_id");
+            e.Property(x => x.TelegramMessageId).HasColumnName("telegram_message_id");
+            e.Property(x => x.EquiposAfectados).HasColumnName("equipos_afectados");
+            e.Property(x => x.EquiposTotal).HasColumnName("equipos_total");
+        });
+
+        m.Entity<EnlaceEvento>(e => {
+            e.ToTable("enlace_eventos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.EquipoId).HasColumnName("equipo_id");
+            e.Property(x => x.Inicio).HasColumnName("inicio");
+            e.Property(x => x.Fin).HasColumnName("fin");
+            e.Property(x => x.DuracionMin).HasColumnName("duracion_min");
+            e.Property(x => x.Enlace).HasColumnName("enlace");
+            e.Property(x => x.LatenciaMs).HasColumnName("latencia_ms");
+            e.Property(x => x.Ttl).HasColumnName("ttl");
+            e.HasOne(x => x.Equipo).WithMany().HasForeignKey(x => x.EquipoId);
+        });
+
+        m.Entity<Mantenimiento>(e => {
+            e.ToTable("mantenimientos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.EstacionId).HasColumnName("estacion_id");
+            e.Property(x => x.ViaId).HasColumnName("via_id");
+            e.Property(x => x.EquipoId).HasColumnName("equipo_id");
+            e.Property(x => x.Desde).HasColumnName("desde");
+            e.Property(x => x.Hasta).HasColumnName("hasta");
+            e.Property(x => x.Motivo).HasColumnName("motivo");
+            e.Property(x => x.CreadoPor).HasColumnName("creado_por");
+            e.Property(x => x.CreadoEn).HasColumnName("creado_en");
         });
     }
 }
