@@ -336,6 +336,90 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
 
         return new DiscrepanciasDetalleDto(totalCount, pagina, porPagina, items);
     }
+
+    // ── Evolución diaria de una vía específica ─────────────────────────────
+    // Sirve tanto para "mejor/peor vía" (Discrepancias.tsx las pide automático
+    // según el ranking de topVias) como para el selector manual "elige cualquier
+    // vía" — mismo endpoint, misma forma de comparar contra tra_manua<>tra_dac.
+    public async Task<ViaEvolucionDto> GetViaEvolucionAsync(string estacion, string via, int dias)
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+
+        int? coest = estacion switch {
+            "FORTALEZA" => 1, "HUARMEY" => 2, "402" => 3, "VIRU" => 4, "SANTA" => 5, _ => null
+        };
+
+        // La vía llega como el nombre que ya se le mostró al usuario (vd.via_nombr,
+        // o el fallback "Via N" cuando no hay nombre catalogado) — se compara igual
+        // que en OcrPlacasService.GetViaEvolucionAsync.
+        const string viaMatch = @"
+            (vd.via_nombr = @via OR (vd.via_nombr IS NULL AND 'Via ' + CAST(t.tra_nuvia AS VARCHAR) = @via))";
+
+        string filtroBase = $@"
+            tra_fecha >= DATEADD(DAY, -@dias, GETDATE())
+            {FiltroTipo}
+            AND t.tra_coest = @coest
+            AND {viaMatch}";
+
+        var param = new { coest, via, dias };
+
+        var diaria = (await conn.QueryAsync<DiaViaDiscrepanciaDto>($@"
+            SELECT CONVERT(varchar(10), CAST(tra_fecha AS DATE), 23) AS Fecha,
+                   COUNT(*) AS Total,
+                   SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END) AS Discrepancias,
+                   ROUND(100.0 * SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END)
+                       / NULLIF(COUNT(*), 0), 2) AS Pct
+            FROM transitos t
+            LEFT JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                             AND dis_numev=tra_numev  AND dis_fecha=tra_fecha
+            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+            WHERE {filtroBase}
+            GROUP BY CAST(tra_fecha AS DATE)
+            ORDER BY Fecha",
+            param, commandTimeout: 90)).ToList();
+
+        return new ViaEvolucionDto(estacion, via, dias, diaria);
+    }
+
+    // ── Top confusiones de una vía específica ──────────────────────────────
+    // Igual que topPares de GetResumenAsync (arriba) pero acotado a una sola
+    // vía — para la tarjeta "peor vía", que además de decir el % debe decir
+    // EN QUÉ se equivoca (ej. "P6 → P5"). Usa el mismo período de arriba (el
+    // que ya decide QUÉ vía es la peor), no la ventana de días de la gráfica
+    // de evolución — si no, los números no calzan con lo que se ve arriba.
+    public async Task<List<ConfusionParDto>> GetTopParesViaAsync(string estacion, string via, string periodo, int top)
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        string pw = PeriodWhere(periodo);
+        int? coest = estacion switch {
+            "FORTALEZA" => 1, "HUARMEY" => 2, "402" => 3, "VIRU" => 4, "SANTA" => 5, _ => null
+        };
+
+        const string viaMatch = @"
+            (vd.via_nombr = @via OR (vd.via_nombr IS NULL AND 'Via ' + CAST(t.tra_nuvia AS VARCHAR) = @via))";
+
+        var pares = (await conn.QueryAsync<ConfusionParDto>($@"
+            WITH cte AS (
+                SELECT
+                    ISNULL(C1.cfa_catde, CAST(t.tra_manua AS VARCHAR(30))) AS Desde,
+                    ISNULL(C2.cfa_catde, CAST(t.tra_dac   AS VARCHAR(30))) AS Hasta
+                FROM transitos t {DisjusJoin}
+                LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+                LEFT JOIN catfau C1 ON t.tra_manua=C1.cfa_tarif AND C1.cfa_coest IS NULL
+                LEFT JOIN catfau C2 ON t.tra_dac  =C2.cfa_tarif AND C2.cfa_coest IS NULL
+                WHERE t.tra_coest = @coest AND {viaMatch}
+                  AND {pw}
+                  AND t.tra_manua <> t.tra_dac
+                  {FiltroTipo}
+            )
+            SELECT TOP (@top) Desde, Hasta, COUNT(*) AS Total
+            FROM cte GROUP BY Desde, Hasta ORDER BY Total DESC",
+            new { coest, via, top }, commandTimeout: 60)).ToList();
+
+        return pares;
+    }
 }
 
 // Resultado crudo de las consultas de agrupación por vía (Dapper) — antes de

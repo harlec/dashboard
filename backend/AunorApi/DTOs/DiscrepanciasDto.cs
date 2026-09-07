@@ -58,3 +58,7 @@ public record DiscrepanciasDetalleDto(
     int Total, int Pagina, int PorPagina,
     List<DiscrepanciaItemDto> Items
 );
+
+// ── Evolución diaria de una vía específica (elegida a mano, o la mejor/peor) ──
+public record DiaViaDiscrepanciaDto(string Fecha, int Total, int Discrepancias, decimal Pct);
+public record ViaEvolucionDto(string Estacion, string Via, int Dias, List<DiaViaDiscrepanciaDto> Diaria);

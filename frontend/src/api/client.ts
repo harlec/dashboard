@@ -61,6 +61,14 @@ export const api = {
     request<DiscrepanciasAnalisis>('/discrepancias/analisis'),
   discrepanciasVias: (periodo: string) =>
     request<ViaConteo[]>(`/discrepancias/vias?periodo=${periodo}`),
+  discrepanciasViaEvolucion: (p: { estacion: string; via: string; dias?: number }) =>
+    request<ViaEvolucion>(`/discrepancias/via-evolucion?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
+  discrepanciasViaPares: (p: { estacion: string; via: string; periodo?: string; top?: number }) =>
+    request<ConfusionPar[]>(`/discrepancias/via-pares?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
 
   // ── OCR Placas ──────────────────────────────────────────────
   ocrResumen: (periodo: string, soloPrepago = false) =>
@@ -195,6 +203,8 @@ export interface ConfusionPar   { desde: string; hasta: string; total: number }
 export interface EstacionConteo { estacion: string; total: number; totalTransacciones: number; efectividad: number }
 export interface TrendPunto     { bucket: string; estacion: string; total: number }
 export interface ViaConteo { via: string; estacion: string; total: number; totalTransitos: number; pct: number }
+export interface DiaViaDiscrepancia { fecha: string; total: number; discrepancias: number; pct: number }
+export interface ViaEvolucion { estacion: string; via: string; dias: number; diaria: DiaViaDiscrepancia[] }
 export interface DiscrepanciasResumen {
   total: number
   totalTransacciones: number

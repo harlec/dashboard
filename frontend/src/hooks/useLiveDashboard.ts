@@ -22,6 +22,15 @@ export function useLiveDashboard(onAlert?: (estado: 'UP' | 'DOWN') => void, onIn
 
   useEffect(() => { load() }, [load])
 
+  // Red de seguridad: si el WebSocket queda permanentemente caído (agotó los
+  // reintentos automáticos de SignalR tras un corte largo — wifi, VPN, laptop en
+  // suspensión), esto igual reconcilia el estado real cada par de minutos en vez
+  // de dejar la pantalla "pegada" hasta un refresco manual de la página.
+  useEffect(() => {
+    const id = setInterval(load, 120_000)
+    return () => clearInterval(id)
+  }, [load])
+
   useSignalR({
     onEquipoStatusChanged: (equipoId, estado, latenciaMs, timestamp, alerta) => {
       setSignal('ok')
@@ -67,6 +76,12 @@ export function useLiveDashboard(onAlert?: (estado: 'UP' | 'DOWN') => void, onIn
     },
     onIncidenteAbierto: () => onIncidenteEvento?.(),
     onIncidenteCerrado: () => onIncidenteEvento?.(),
+    // La reconexión automática de SignalR resume el flujo de eventos NUEVOS, pero
+    // no reenvía lo que se perdió durante el corte — sin esto, un equipo que cambió
+    // de estado justo en ese hueco se queda mostrando el valor viejo indefinidamente
+    // (o hasta su próximo cambio real). Un refresco completo por REST al reconectar
+    // corrige cualquier estado desincronizado al instante.
+    onReconnected: () => load(),
   })
 
   return { data, signalStatus, lastUpdate }

@@ -27,6 +27,28 @@ public class DiscrepanciasController(DiscrepanciasService svc) : ControllerBase
         return Ok(await svc.GetViasAsync(periodo));
     }
 
+    [HttpGet("via-evolucion")]
+    public async Task<IActionResult> ViaEvolucion(
+        [FromQuery] string estacion, [FromQuery] string via, [FromQuery] int dias = 30)
+    {
+        if (string.IsNullOrWhiteSpace(estacion) || string.IsNullOrWhiteSpace(via))
+            return BadRequest("estacion y via son requeridos");
+        dias = Math.Clamp(dias, 7, 90);
+        return Ok(await svc.GetViaEvolucionAsync(estacion, via, dias));
+    }
+
+    [HttpGet("via-pares")]
+    public async Task<IActionResult> ViaPares(
+        [FromQuery] string estacion, [FromQuery] string via,
+        [FromQuery] string periodo = "12h", [FromQuery] int top = 3)
+    {
+        if (string.IsNullOrWhiteSpace(estacion) || string.IsNullOrWhiteSpace(via))
+            return BadRequest("estacion y via son requeridos");
+        if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
+        top = Math.Clamp(top, 1, 10);
+        return Ok(await svc.GetTopParesViaAsync(estacion, via, periodo, top));
+    }
+
     [HttpGet("detalle")]
     public async Task<IActionResult> Detalle(
         [FromQuery] string  periodo   = "12h",

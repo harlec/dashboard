@@ -1,6 +1,19 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
-import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo, type EstacionConteo, type DiscrepanciasAnalisis, type ViaAnalisis } from '../api/client'
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
+import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo, type ViaEvolucion, type ConfusionPar, type EstacionConteo, type DiscrepanciasAnalisis, type ViaAnalisis } from '../api/client'
+
+// Tránsitos mínimos para que una vía entre en la comparación "mejor/peor" — igual
+// que en el resto de la página, una vía alterna con 5 tránsitos no debe ganar por
+// suerte (0 discrepancias de 5 no dice nada) ni perder por mala suerte.
+const UMBRAL_VOLUMEN_GUIA = 50
+
+// Ventana de la evolución diaria — sigue al período de arriba: mientras más atrás
+// mira el período elegido, más días de contexto tiene sentido mostrar en el
+// histórico (no tiene sentido pedir 30 días de contexto para ver "última hora",
+// ni solo 7 cuando ya estás mirando el mes).
+const DIAS_EVOLUCION: Record<Periodo, number> = {
+  '1h': 7, '4h': 7, '12h': 14, '24h': 14, ayer: 14, mes: 30,
+}
 
 // ── Períodos ──────────────────────────────────────────────────
 const PERIODOS = [
@@ -142,6 +155,38 @@ function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }
         </div>
       )}
     </div>
+  )
+}
+
+// ── Evolución diaria de una vía (mejor/peor o elegida a mano) ────
+function EvolucionTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  const d = payload[0]?.payload
+  return (
+    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
+      <div className="text-muted mb-1">{label}</div>
+      <div className="text-[#eae7e4]">{d.discrepancias.toLocaleString('es-PE')} / {d.total.toLocaleString('es-PE')} tránsitos</div>
+      <div className="font-bold" style={{ color: tasaColor(d.pct) }}>{d.pct.toFixed(1)}%</div>
+    </div>
+  )
+}
+
+function ViaEvolucionChart({ data, loading }: { data: ViaEvolucion | null; loading: boolean }) {
+  if (loading) return <div className="h-[170px] flex items-center justify-center text-muted text-sm">Cargando…</div>
+  if (!data || data.diaria.length === 0)
+    return <div className="h-[170px] flex items-center justify-center text-muted text-sm">Sin datos suficientes en este rango</div>
+  const promedio = data.diaria.reduce((s, d) => s + d.pct, 0) / data.diaria.length
+  return (
+    <ResponsiveContainer width="100%" height={170}>
+      <LineChart data={data.diaria} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+        <XAxis dataKey="fecha" tick={{ fill: '#a09890', fontSize: 10 }} tickLine={false} axisLine={false}
+          tickFormatter={f => f.slice(5)} interval="preserveStartEnd" />
+        <YAxis tick={{ fill: '#a09890', fontSize: 10 }} tickLine={false} axisLine={false}
+          tickFormatter={v => `${v}%`} width={34} domain={[0, (max: number) => Math.max(5, Math.ceil(Math.max(max, promedio) * 1.2))]} />
+        <Tooltip content={<EvolucionTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)' }} />
+        <Line type="monotone" dataKey="pct" stroke="#00BBE7" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+      </LineChart>
+    </ResponsiveContainer>
   )
 }
 
@@ -470,6 +515,20 @@ export function Discrepancias() {
   const [showAnalisis, setShowAnalisis] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // "Vía guía" — mejor/peor vía + evolución diaria. todasVias (a diferencia de
+  // resumen.topVias, que solo trae vías con ≥1 discrepancia) incluye también las
+  // que van perfectas, que es justo el caso que interesa para "mejor vía".
+  const [todasVias, setTodasVias]   = useState<ViaConteo[]>([])
+  const [loadingVias, setLoadingVias] = useState(false)
+  const [viaSeleccionada, setViaSeleccionada] = useState<{ estacion: string; via: string } | null>(null)
+  const [evolucion, setEvolucion]   = useState<ViaEvolucion | null>(null)
+  const [loadingEvolucion, setLoadingEvolucion] = useState(false)
+
+  // Top confusiones DE la peor vía específicamente (no del global) — para
+  // responder "en qué se equivoca" dentro de la propia tarjeta.
+  const [paresPeorVia, setParesPeorVia] = useState<ConfusionPar[]>([])
+  const [loadingParesPeorVia, setLoadingParesPeorVia] = useState(false)
+
   const loadResumen = useCallback(async () => {
     setLoadingR(true)
     try {
@@ -500,6 +559,47 @@ export function Discrepancias() {
     timerRef.current = setInterval(loadResumen, 60_000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [loadResumen])
+
+  // Vía guía: se recarga con el mismo período de arriba
+  const loadVias = useCallback(async () => {
+    setLoadingVias(true)
+    try { setTodasVias(await api.discrepanciasVias(periodo)) }
+    catch { setTodasVias([]) }
+    finally { setLoadingVias(false) }
+  }, [periodo])
+  useEffect(() => { loadVias() }, [loadVias])
+
+  const { mejorVia, peorVia } = useMemo(() => {
+    const elegibles = todasVias.filter(v => v.totalTransitos >= UMBRAL_VOLUMEN_GUIA)
+    if (elegibles.length === 0) return { mejorVia: null as ViaConteo | null, peorVia: null as ViaConteo | null }
+    const ordenadas = [...elegibles].sort((a, b) => a.pct - b.pct)
+    return { mejorVia: ordenadas[0], peorVia: ordenadas[ordenadas.length - 1] }
+  }, [todasVias])
+
+  // Por defecto se muestra la peor vía (la que más pide atención); el usuario
+  // puede cambiar a la mejor o elegir cualquier otra desde el selector.
+  useEffect(() => {
+    if (peorVia) setViaSeleccionada(v => v ?? { estacion: peorVia.estacion, via: peorVia.via })
+  }, [peorVia])
+
+  const diasEvolucion = DIAS_EVOLUCION[periodo]
+  useEffect(() => {
+    if (!viaSeleccionada) { setEvolucion(null); return }
+    setLoadingEvolucion(true)
+    api.discrepanciasViaEvolucion({ estacion: viaSeleccionada.estacion, via: viaSeleccionada.via, dias: diasEvolucion })
+      .then(setEvolucion)
+      .catch(() => setEvolucion(null))
+      .finally(() => setLoadingEvolucion(false))
+  }, [viaSeleccionada, diasEvolucion])
+
+  useEffect(() => {
+    if (!peorVia) { setParesPeorVia([]); return }
+    setLoadingParesPeorVia(true)
+    api.discrepanciasViaPares({ estacion: peorVia.estacion, via: peorVia.via, periodo, top: 3 })
+      .then(setParesPeorVia)
+      .catch(() => setParesPeorVia([]))
+      .finally(() => setLoadingParesPeorVia(false))
+  }, [peorVia, periodo])
 
   const trendPivot = useMemo(() => {
     const map = new Map<string, Record<string, number | string>>()
@@ -705,6 +805,104 @@ export function Discrepancias() {
 
         {/* Top 5 vías */}
         <TopViasPanel vias={resumen?.topVias ?? []} loading={loadingR} />
+      </div>
+
+      {/* ── Vía guía: mejor/peor vía + evolución ─────────────── */}
+      <div className="bg-surface rounded-xl p-4 mb-3.5">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <div className="text-[0.85rem] font-bold text-[#eae7e4]">Vía guía</div>
+            <div className="text-[0.7rem] text-muted">
+              mejor y peor vía (mín. {UMBRAL_VOLUMEN_GUIA} tránsitos, mismo período de arriba) · evolución de los últimos {diasEvolucion} días
+            </div>
+          </div>
+          <select
+            value={viaSeleccionada ? `${viaSeleccionada.estacion}|${viaSeleccionada.via}` : ''}
+            onChange={e => {
+              const [est, via] = e.target.value.split('|')
+              setViaSeleccionada(est && via ? { estacion: est, via } : null)
+            }}
+            className="bg-surface-2 border border-border text-[0.8rem] text-[#eae7e4] px-2.5 py-1.5
+              rounded-lg outline-none focus:border-warn/60 max-w-[240px]">
+            <option value="">Elegir cualquier vía…</option>
+            {[...todasVias]
+              .sort((a, b) => a.estacion.localeCompare(b.estacion) || a.via.localeCompare(b.via))
+              .map(v => (
+                <option key={`${v.estacion}|${v.via}`} value={`${v.estacion}|${v.via}`}>
+                  {v.estacion} · {v.via} — {v.pct.toFixed(1)}%
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {loadingVias ? (
+          <div className="h-[80px] flex items-center justify-center text-muted text-sm">Cargando…</div>
+        ) : !mejorVia || !peorVia ? (
+          <div className="h-[80px] flex items-center justify-center text-muted text-sm">
+            Ninguna vía alcanza el volumen mínimo en este período
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 mb-3.5">
+            {[{ label: 'Mejor vía', v: mejorVia, color: '#72BF44' },
+              { label: 'Peor vía',  v: peorVia,  color: '#F04545' }].map(({ label, v, color }) => {
+              const activa = viaSeleccionada?.estacion === v.estacion && viaSeleccionada?.via === v.via
+              return (
+                <button key={label} onClick={() => setViaSeleccionada({ estacion: v.estacion, via: v.via })}
+                  className={`text-left rounded-lg p-3 border transition-all ${
+                    activa ? 'border-white/25 bg-white/[0.045]' : 'border-border hover:bg-white/[0.02]'}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                    <span className="text-[0.7rem] font-bold uppercase tracking-wide" style={{ color }}>{label}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <div className="text-[0.92rem] font-bold text-[#eae7e4]">{v.via}</div>
+                      <div className="text-[0.75rem]" style={{ color: COLORS[v.estacion] ?? '#a09890' }}>{v.estacion}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[1.35rem] font-extrabold leading-none" style={{ color }}>{v.pct.toFixed(1)}%</div>
+                      <div className="text-[0.7rem] text-dim mt-0.5">{v.total.toLocaleString('es-PE')}/{v.totalTransitos.toLocaleString('es-PE')}</div>
+                    </div>
+                  </div>
+
+                  {/* Espacio libre de la tarjeta: en qué se confunde específicamente esta vía */}
+                  {label === 'Peor vía' && (
+                    <div className="mt-2.5 pt-2 border-t border-border/50">
+                      <div className="text-[0.64rem] text-dim uppercase tracking-wide mb-1">se confunde en</div>
+                      {loadingParesPeorVia ? (
+                        <div className="text-[0.72rem] text-muted">Cargando…</div>
+                      ) : paresPeorVia.length === 0 ? (
+                        <div className="text-[0.72rem] text-muted">Sin patrón dominante en este período</div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          {paresPeorVia.map((p, i) => (
+                            <div key={i} className="flex items-center justify-between text-[0.76rem]">
+                              <span className="text-[#eae7e4]">
+                                <span className="text-warn font-semibold">{abbrev(p.desde)}</span>
+                                {' → '}
+                                <span className="text-[#00BBE7] font-semibold">{abbrev(p.hasta)}</span>
+                              </span>
+                              <span className="text-dim flex-shrink-0 ml-2">{p.total.toLocaleString('es-PE')}×</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {viaSeleccionada && (
+          <div>
+            <div className="text-[0.75rem] text-muted mb-1">
+              Evolución diaria — <b className="text-[#eae7e4]">{viaSeleccionada.via} · {viaSeleccionada.estacion}</b>
+            </div>
+            <ViaEvolucionChart data={evolucion} loading={loadingEvolucion} />
+          </div>
+        )}
       </div>
 
       {/* ── Análisis de sensores ───────────────────────────── */}
