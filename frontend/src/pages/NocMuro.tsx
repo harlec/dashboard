@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type ViaConteo, type IncidenteItem, type EquipoLive, type DisponibilidadDiaria } from '../api/client'
 import { useLiveDashboard } from '../hooks/useLiveDashboard'
@@ -177,11 +177,22 @@ export function NocMuro() {
   const reloj = useReloj()
   const escala = useEscalaPantalla()
   const { playDown, playUp } = useAlertSound()
-  const { data } = useLiveDashboard(estado => (estado === 'DOWN' ? playDown() : playUp()))
 
   const [vias, setVias] = useState<ViaConteo[]>([])
   const [incidentesAbiertos, setIncidentesAbiertos] = useState<IncidenteItem[]>([])
   const [mttrMin, setMttrMin] = useState<number | null>(null)
+
+  // "Requieren atención" + MTTR no llegan por SignalR como el estado de red de
+  // useLiveDashboard — se piden por REST. onIncidenteEvento (abajo) hace que esto
+  // se recargue AL INSTANTE cada vez que se abre/cierra un incidente real, en vez
+  // de esperar al intervalo de respaldo (que solo cubre el caso de un evento
+  // perdido, ej. una reconexión de SignalR).
+  const cargarIncidentes = useCallback(() => {
+    api.incidentes({ soloAbiertos: true, pageSize: 100 }).then(r => setIncidentesAbiertos(r.items)).catch(() => {})
+    api.incidentesResumen(7).then(r => setMttrMin(r.mttrMin ?? null)).catch(() => {})
+  }, [])
+
+  const { data } = useLiveDashboard(estado => (estado === 'DOWN' ? playDown() : playUp()), cargarIncidentes)
   const [disponibilidadDiaria, setDisponibilidadDiaria] = useState<DisponibilidadDiaria | null>(null)
   const [selectedEquipo, setSelectedEquipo] = useState<EquipoLive | null>(null)
   const [menuAbierto, setMenuAbierto] = useState(false)
@@ -238,16 +249,20 @@ export function NocMuro() {
     return next
   })
 
-  // Datos que NO llegan por SignalR (a diferencia del estado de red de
-  // useLiveDashboard, que se actualiza solo con cada ping) — hay que refrescarlos
-  // por polling propio. La pantalla de muro queda abierta horas, así que no basta
-  // con cargarlos una sola vez al montar.
+  // cargarIncidentes ya se dispara al instante con cada IncidenteAbierto/Cerrado
+  // (ver useLiveDashboard arriba) — este intervalo es solo el respaldo por si se
+  // pierde un evento (reconexión de SignalR, etc.), por eso puede ser más espaciado.
   useEffect(() => {
-    const cargar = () => {
-      api.incidentes({ soloAbiertos: true, pageSize: 100 }).then(r => setIncidentesAbiertos(r.items)).catch(() => {})
-      api.incidentesResumen(7).then(r => setMttrMin(r.mttrMin ?? null)).catch(() => {})
-      api.disponibilidadDiaria(30).then(setDisponibilidadDiaria).catch(() => {})
-    }
+    cargarIncidentes()
+    const id = setInterval(cargarIncidentes, 60_000)
+    return () => clearInterval(id)
+  }, [cargarIncidentes])
+
+  // Disponibilidad de 30 días es un rollup diario ("hasta ayer") — no refleja
+  // incidentes de hoy sin importar qué tan seguido se pida, así que se queda con
+  // un refresco espaciado propio.
+  useEffect(() => {
+    const cargar = () => { api.disponibilidadDiaria(30).then(setDisponibilidadDiaria).catch(() => {}) }
     cargar()
     const id = setInterval(cargar, 5 * 60_000)
     return () => clearInterval(id)

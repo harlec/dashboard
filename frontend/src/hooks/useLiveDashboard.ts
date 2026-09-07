@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from 'react'
 import { api, type LiveDashboard } from '../api/client'
 import { useSignalR } from './useSignalR'
 
-export function useLiveDashboard(onAlert?: (estado: 'UP' | 'DOWN') => void) {
+// onIncidenteEvento: se dispara con cada apertura/cierre real de incidente (no con
+// cada ping) — para que una pantalla como el muro NOC pueda refrescar de inmediato
+// su lista de "Requieren atención" en vez de esperar a su próximo poll periódico.
+export function useLiveDashboard(onAlert?: (estado: 'UP' | 'DOWN') => void, onIncidenteEvento?: () => void) {
   const [data,         setData]       = useState<LiveDashboard | null>(null)
   const [signalStatus, setSignal]     = useState<'idle' | 'ok' | 'error'>('idle')
   const [lastUpdate,   setLastUpdate] = useState<Date>(new Date())
@@ -62,6 +65,8 @@ export function useLiveDashboard(onAlert?: (estado: 'UP' | 'DOWN') => void) {
         return { ...prev, kpis: { ...prev.kpis, ups, downs, total, sinDatos, incActivos, uptimePct } }
       })
     },
+    onIncidenteAbierto: () => onIncidenteEvento?.(),
+    onIncidenteCerrado: () => onIncidenteEvento?.(),
   })
 
   return { data, signalStatus, lastUpdate }
