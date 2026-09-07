@@ -59,12 +59,16 @@ export function NocDashboard() {
           <div style={{ fontSize: 24, fontWeight: 700, color: '#e6edf3', letterSpacing: '.01em' }}>
             NOC — Centro de Operaciones
           </div>
-          <div style={{ fontFamily: 'monospace', fontSize: 12, color: '#5f7186', marginTop: 5, letterSpacing: '.04em' }}>
+          <div style={{ fontFamily: 'var(--app-font)', fontSize: 12, color: '#5f7186', marginTop: 5, letterSpacing: '.04em' }}>
             {lastUpdate.toLocaleTimeString('es-PE')} · {estaciones.length} estaciones · {kpis.total} equipos monitoreados · RED MPLS AUNOR
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 10 }}>
+          <a href="/muro/noc" target="_blank" rel="noopener noreferrer"
+            style={{ alignSelf: 'center', fontSize: 12, color: '#8aa0b8', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '7px 12px', letterSpacing: '.04em', whiteSpace: 'nowrap' }}>
+            🖥 Abrir muro
+          </a>
           {[
             { val: kpis.ups,        label: 'UP',     color: '#3fb978', bg: 'rgba(63,185,120,.08)',  border: 'rgba(63,185,120,.32)'  },
             { val: kpis.downs,      label: 'DOWN',   color: '#ef4b54', bg: 'rgba(239,75,84,.08)',   border: 'rgba(239,75,84,.32)'   },
@@ -72,7 +76,7 @@ export function NocDashboard() {
             { val: `${kpis.uptimePct}%`, label: 'UPTIME', color: '#2dd4a7', bg: 'rgba(45,212,167,.08)', border: 'rgba(45,212,167,.32)' },
           ].map(({ val, label, color, bg, border }) => (
             <div key={label} style={{ minWidth: 90, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'monospace', fontSize: 28, fontWeight: 600, color, lineHeight: 1 }}>{val}</div>
+              <div style={{ fontFamily: 'var(--app-font)', fontSize: 28, fontWeight: 600, color, lineHeight: 1 }}>{val}</div>
               <div style={{ fontSize: 11, letterSpacing: '.16em', color: '#6b7a8c', marginTop: 6 }}>{label}</div>
             </div>
           ))}
@@ -92,7 +96,7 @@ export function NocDashboard() {
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12 }}>🔧</span>
               <span style={{ fontWeight: 700, fontSize: 11, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '.06em' }}>Mantenimiento</span>
-              <span style={{ fontSize: 12, color: '#c7d9f5', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: 12, color: '#c7d9f5', fontFamily: 'var(--app-font)' }}>
                 {m.estacion ?? m.via ?? m.equipo} · {m.motivo} · hasta {new Date(m.hasta).toLocaleTimeString('es-PE', { hour12: false })}
               </span>
             </div>
@@ -109,7 +113,7 @@ export function NocDashboard() {
               <span style={{ fontWeight: 700, fontSize: 12, color: '#ff9ba0', textTransform: 'uppercase', letterSpacing: '.06em' }}>
                 {g.tipo === 'peaje' ? 'Incidente de peaje' : 'Incidente de vía'}
               </span>
-              <span style={{ fontSize: 13, color: '#ffd7d9', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: 13, color: '#ffd7d9', fontFamily: 'var(--app-font)' }}>
                 {g.tipo === 'peaje'
                   ? `${g.estacion} · ${g.pct}% caído (${g.caidos}/${g.total})`
                   : `Vía ${g.via} (${g.estacion}) · ${g.caidos}/${g.total} sin conexión`}
@@ -125,7 +129,7 @@ export function NocDashboard() {
               {caidos.length} equipo{caidos.length > 1 ? 's' : ''} caído{caidos.length > 1 ? 's' : ''} en este momento
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontFamily: 'monospace', fontSize: 12, color: '#c98c8f' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontFamily: 'var(--app-font)', fontSize: 12, color: '#c98c8f' }}>
             {caidos.slice(0, 3).map((c, i) => (
               <span key={i}>
                 {c.nombre} · <span style={{ color: '#ef4b54' }}>{dur(c.incMin)}</span>
@@ -156,7 +160,7 @@ export function NocDashboard() {
 
           {/* [0,1] Resumen general */}
           <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, padding: '14px 18px', overflow: 'auto' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#7d8a9c', marginBottom: 8 }}>RESUMEN GENERAL</div>
+            <div style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#7d8a9c', marginBottom: 8 }}>RESUMEN GENERAL</div>
             {[
               { label: 'Equipos totales',    val: kpis.total,           color: '#e6edf3' },
               { label: 'Operativos ahora',   val: kpis.ups,             color: '#3fb978' },
@@ -166,7 +170,7 @@ export function NocDashboard() {
             ].map(({ label, val, color }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,.05)' }} className="last:border-0">
                 <span style={{ fontSize: 13, color: '#9aa7b6' }}>{label}</span>
-                <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 600, color }}>{val}</span>
+                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 600, color }}>{val}</span>
               </div>
             ))}
           </div>

@@ -39,13 +39,13 @@ function heatFg(tasa: number | null): string {
 function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
   const HORAS = Array.from({ length: 24 }, (_, i) => i)
   if (!rows.length) return (
-    <div style={{ padding: 32, textAlign: 'center', color: '#3a4a50', fontFamily: 'monospace', fontSize: 12 }}>
+    <div style={{ padding: 32, textAlign: 'center', color: '#3a4a50', fontFamily: 'var(--app-font)', fontSize: 12 }}>
       Sin datos suficientes para el heatmap
     </div>
   )
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'monospace' }}>
+      <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--app-font)' }}>
         <thead>
           <tr>
             <th style={{ padding: '4px 10px 4px 0', textAlign: 'left', color: '#3a4a50', fontWeight: 600, whiteSpace: 'nowrap', minWidth: 110 }}>Vía</th>
@@ -93,7 +93,7 @@ function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
 }
 
 // ── Perfil horario mejores vías ───────────────────────────────
-const LINEA_COLORS = ['#3fb978', '#4A9EE0', '#a78bfa', '#2dd4a7', '#F99B1C']
+const LINEA_COLORS = ['#3fb978', '#00BBE7', '#FFDD00', '#2dd4a7', '#F99B1C']
 
 function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
   if (!vias.length) return null
@@ -110,7 +110,7 @@ function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
       {[0, maxT * 0.5, maxT].map((t, i) => (
         <g key={i}>
           <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="monospace">{t.toFixed(0)}%</text>
+          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
         </g>
       ))}
       {/* Líneas por vía */}
@@ -123,7 +123,7 @@ function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
       })}
       {/* Eje X */}
       {[0, 6, 12, 18, 23].map(h => (
-        <text key={h} x={xOf(h)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="monospace">{String(h).padStart(2,'0')}h</text>
+        <text key={h} x={xOf(h)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="var(--app-font)">{String(h).padStart(2,'0')}h</text>
       ))}
     </svg>
   )
@@ -158,7 +158,7 @@ function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria
       {[0, maxT * 0.5, maxT].map((t, i) => (
         <g key={i}>
           <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="monospace">{t.toFixed(0)}%</text>
+          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
         </g>
       ))}
       {/* Área red semitransparente */}
@@ -169,7 +169,7 @@ function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria
       {ptsMej && <polyline points={ptsMej} fill="none" stroke="#3fb978" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />}
       {/* Eje X (fechas) */}
       {datos.map((d, i) => i % step === 0 ? (
-        <text key={i} x={xOf(i)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="7" fontFamily="monospace">
+        <text key={i} x={xOf(i)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="7" fontFamily="var(--app-font)">
           {d.fecha.slice(5)}
         </text>
       ) : null)}
@@ -200,7 +200,7 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
         {[0, maxT * 0.5, maxT].map((t, i) => (
           <g key={i}>
             <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-            <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="8" fontFamily="monospace">{t.toFixed(0)}%</text>
+            <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="8" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
           </g>
         ))}
         <polygon points={area} fill="rgba(239,75,84,.08)" />
@@ -208,10 +208,10 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
         <polyline points={ptsNoDet}  fill="none" stroke="#e0991f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         <polyline points={ptsErrRec} fill="none" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         {datos.map((d, i) => i % step === 0 ? (
-          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="monospace">{d.fecha.slice(5)}</text>
+          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="var(--app-font)">{d.fecha.slice(5)}</text>
         ) : null)}
       </svg>
-      <div style={{ display: 'flex', gap: 16, padding: '0 4px 4px', fontFamily: 'monospace', fontSize: 10 }}>
+      <div style={{ display: 'flex', gap: 16, padding: '0 4px 4px', fontFamily: 'var(--app-font)', fontSize: 10 }}>
         <span style={{ color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{ width: 14, height: 2, background: '#ef4b54', display: 'inline-block' }} /> Error total
         </span>
@@ -244,16 +244,18 @@ function EvolucionHoraChart({ datos }: { datos: OcrViaEvolucion['porHora'] }) {
           )
         })}
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
         <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
       </div>
     </div>
   )
 }
 
+// Colores corporativos ALEATICA — mismos tonos que el muro NOC. Antes VIRU/SANTA
+// tenían rosado/morado que no son parte de la paleta de marca.
 const ESTACION_COLOR: Record<string, string> = {
   FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
-  '402': '#4A9EE0', VIRU: '#E060A0', SANTA: '#9B6BE0',
+  '402': '#00BBE7', VIRU: '#FFDD00', SANTA: '#D3DF4E',
 }
 
 function RankingVias({ vias }: { vias: OcrVia[] }) {
@@ -265,10 +267,10 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
   return (
     <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.18)', borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '11px 18px', borderBottom: '1px solid rgba(239,75,84,.1)', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#c05050', fontWeight: 700 }}>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c05050', fontWeight: 700 }}>
           RANKING VÍAS · ERRORES OCR
         </span>
-        <div style={{ display: 'flex', gap: 16, fontFamily: 'monospace', fontSize: 10, color: '#3a4a50', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50', marginLeft: 'auto' }}>
           <span><span style={{ color: '#ef4b54' }}>■</span> No reconocida</span>
           <span><span style={{ color: '#e0991f' }}>■</span> Confusión</span>
         </div>
@@ -288,13 +290,13 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
               return (
                 <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: rank <= 3 ? '#ef4b54' : '#3a4a50', width: 20, textAlign: 'right', fontWeight: 700 }}>#{rank}</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: rank <= 3 ? '#ef4b54' : '#3a4a50', width: 20, textAlign: 'right', fontWeight: 700 }}>#{rank}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#ccd0d8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.via}</span>
                         <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'baseline' }}>
                           <span style={{ fontSize: 10, color: eColor, fontWeight: 600 }}>{v.estacion}</span>
-                          <span style={{ fontFamily: 'monospace', fontSize: 12, color: errColor, fontWeight: 700 }}>{tasaError.toFixed(1)}% err</span>
+                          <span style={{ fontFamily: 'var(--app-font)', fontSize: 12, color: errColor, fontWeight: 700 }}>{tasaError.toFixed(1)}% err</span>
                         </div>
                       </div>
 
@@ -306,7 +308,7 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
                         <div style={{ position: 'absolute', left: `${tasaNoRec}%`, top: 0, height: '100%', width: `${tasaConf}%`, background: '#e0991f', opacity: .8 }} />
                       </div>
 
-                      <div style={{ display: 'flex', gap: 10, fontFamily: 'monospace', fontSize: 10 }}>
+                      <div style={{ display: 'flex', gap: 10, fontFamily: 'var(--app-font)', fontSize: 10 }}>
                         <span style={{ color: '#ef4b54' }}>{tasaNoRec.toFixed(1)}% no det.</span>
                         <span style={{ color: '#e0991f' }}>{tasaConf.toFixed(1)}% conf.</span>
                         <span style={{ marginLeft: 'auto', color: '#3a4a50' }}>{v.total.toLocaleString()} tráns.</span>
@@ -325,10 +327,10 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
 
 // Resalta caracteres distintos entre dos placas
 function PlacaDiff({ cajero, ocr }: { cajero: string; ocr: string }) {
-  if (!ocr) return <span style={{ color: '#ef4b54', fontFamily: 'monospace', fontSize: 14 }}>—</span>
+  if (!ocr) return <span style={{ color: '#ef4b54', fontFamily: 'var(--app-font)', fontSize: 14 }}>—</span>
   const maxLen = Math.max(cajero.length, ocr.length)
   return (
-    <span style={{ fontFamily: 'monospace', fontSize: 14, letterSpacing: '.06em' }}>
+    <span style={{ fontFamily: 'var(--app-font)', fontSize: 14, letterSpacing: '.06em' }}>
       {Array.from({ length: maxLen }, (_, i) => {
         const c = cajero[i] ?? ''
         const o = ocr[i]    ?? ''
@@ -442,20 +444,20 @@ export function OcrDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#e6edf3' }}>OCR · Efectividad de Lectura de Placas</h1>
-          <p style={{ fontSize: 12, color: '#9aa7b6', marginTop: 4, fontFamily: 'monospace' }}>
+          <p style={{ fontSize: 12, color: '#9aa7b6', marginTop: 4, fontFamily: 'var(--app-font)' }}>
             Comparación placa cajero vs. placa detectada por cámara · últimos 30 días para análisis de caracteres
           </p>
         </div>
         <div className="flex gap-2 items-center">
           <button onClick={() => { setSoloPrepago(v => !v); setPagina(1) }}
             title="Filtrar solo tránsitos prepago (tra_subfp = 1)"
-            style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: soloPrepago ? '#F99B1C' : 'rgba(255,255,255,.1)', background: soloPrepago ? 'rgba(249,155,28,.14)' : 'transparent', color: soloPrepago ? '#F99B1C' : '#6b7a8c', marginRight: 4 }}>
+            style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: soloPrepago ? '#F99B1C' : 'rgba(255,255,255,.1)', background: soloPrepago ? 'rgba(249,155,28,.14)' : 'transparent', color: soloPrepago ? '#F99B1C' : '#6b7a8c', marginRight: 4 }}>
             {soloPrepago ? '✓ ' : ''}Solo prepago
           </button>
           <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,.1)', margin: '0 4px' }} />
           {PERIODOS.map(p => (
             <button key={p} onClick={() => { setPeriodo(p); setPagina(1) }}
-              style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: periodo === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: periodo === p ? 'rgba(45,212,167,.12)' : 'transparent', color: periodo === p ? '#2dd4a7' : '#6b7a8c' }}>
+              style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: periodo === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: periodo === p ? 'rgba(45,212,167,.12)' : 'transparent', color: periodo === p ? '#2dd4a7' : '#6b7a8c' }}>
               {p}
             </button>
           ))}
@@ -467,8 +469,8 @@ export function OcrDashboard() {
       ) : error ? (
         <div style={{ background: 'rgba(239,75,84,.08)', border: '1px solid rgba(239,75,84,.3)', borderRadius: 12, padding: '24px 28px' }}>
           <div style={{ color: '#ff9ba0', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Error al cargar datos OCR</div>
-          <pre style={{ fontFamily: 'monospace', fontSize: 12, color: '#ef4b54', whiteSpace: 'pre-wrap', margin: 0 }}>{error}</pre>
-          <button onClick={loadResumen} style={{ marginTop: 16, padding: '8px 20px', background: 'rgba(239,75,84,.15)', border: '1px solid rgba(239,75,84,.4)', borderRadius: 8, color: '#ff9ba0', cursor: 'pointer', fontFamily: 'monospace', fontSize: 12 }}>
+          <pre style={{ fontFamily: 'var(--app-font)', fontSize: 12, color: '#ef4b54', whiteSpace: 'pre-wrap', margin: 0 }}>{error}</pre>
+          <button onClick={loadResumen} style={{ marginTop: 16, padding: '8px 20px', background: 'rgba(239,75,84,.15)', border: '1px solid rgba(239,75,84,.4)', borderRadius: 8, color: '#ff9ba0', cursor: 'pointer', fontFamily: 'var(--app-font)', fontSize: 12 }}>
             Reintentar
           </button>
         </div>
@@ -484,8 +486,8 @@ export function OcrDashboard() {
               { label: 'EFECTIVIDAD',      val: `${resumen.tasaEfectividad}%`,           color: colorTasa(resumen.tasaEfectividad), border: `rgba(${resumen.tasaEfectividad >= 95 ? '63,185,120' : resumen.tasaEfectividad >= 85 ? '224,153,31' : '239,75,84'},.35)` },
             ].map(({ label, val, color, border }) => (
               <div key={label} style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: `1px solid ${border}`, borderRadius: 12, padding: '16px 20px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'monospace', fontSize: 28, fontWeight: 700, color }}>{val}</div>
-                <div style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.14em', color: '#9aa7b6', marginTop: 6 }}>{label}</div>
+                <div style={{ fontFamily: 'var(--app-font)', fontSize: 28, fontWeight: 700, color }}>{val}</div>
+                <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.14em', color: '#9aa7b6', marginTop: 6 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -502,7 +504,7 @@ export function OcrDashboard() {
               ['detalle',    'Detalle de Registros'],
             ] as const).map(([t, label]) => (
               <button key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }}
-                style={{ padding: '8px 20px', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', borderBottom: `2px solid ${tab === t ? '#2dd4a7' : 'transparent'}`, color: tab === t ? '#2dd4a7' : '#9aa7b6', marginBottom: -1 }}>
+                style={{ padding: '8px 20px', fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', borderBottom: `2px solid ${tab === t ? '#2dd4a7' : 'transparent'}`, color: tab === t ? '#2dd4a7' : '#9aa7b6', marginBottom: -1 }}>
                 {label}
               </button>
             ))}
@@ -517,14 +519,14 @@ export function OcrDashboard() {
                 {/* Matriz de confusión de caracteres */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(224,153,31,.2)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(224,153,31,.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#b07a20', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#b07a20', fontWeight: 700 }}>
                       CONFUSIÓN DE CARACTERES · SUSTITUCIONES · ÚLTIMOS 30 DÍAS
                     </span>
-                    <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#3a4a30' }}>solo misma longitud</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a30' }}>solo misma longitud</span>
                   </div>
 
                   {analisis.topConfusiones.length === 0 ? (
-                    <div style={{ padding: 32, textAlign: 'center', color: '#3fb978', fontFamily: 'monospace', fontSize: 13 }}>
+                    <div style={{ padding: 32, textAlign: 'center', color: '#3fb978', fontFamily: 'var(--app-font)', fontSize: 13 }}>
                       ✓ Sin sustituciones de caracteres en el período
                     </div>
                   ) : (
@@ -533,7 +535,7 @@ export function OcrDashboard() {
                         <thead>
                           <tr style={{ background: 'rgba(255,255,255,.03)' }}>
                             {['Pos.', 'Cajero escribió', 'OCR leyó', 'Veces', 'Visualización'].map(h => (
-                              <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', color: '#9aa7b6', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.05)' }}>{h}</th>
+                              <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.1em', color: '#9aa7b6', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.05)' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -542,15 +544,15 @@ export function OcrDashboard() {
                             <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(224,153,31,.05)')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                              <td style={{ padding: '9px 16px', fontFamily: 'monospace', color: '#9aa7b6' }}>{c.posicion}</td>
+                              <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', color: '#9aa7b6' }}>{c.posicion}</td>
                               <td style={{ padding: '9px 16px' }}>
-                                <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 700, color: '#3fb978', background: 'rgba(63,185,120,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.esperado}</span>
+                                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 700, color: '#3fb978', background: 'rgba(63,185,120,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.esperado}</span>
                               </td>
                               <td style={{ padding: '9px 16px' }}>
-                                <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 700, color: '#ef4b54', background: 'rgba(239,75,84,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.ocrLeyo}</span>
+                                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 700, color: '#ef4b54', background: 'rgba(239,75,84,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.ocrLeyo}</span>
                               </td>
-                              <td style={{ padding: '9px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#e0991f' }}>{c.casos}</td>
-                              <td style={{ padding: '9px 16px', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6' }}>
+                              <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', fontWeight: 700, color: '#e0991f' }}>{c.casos}</td>
+                              <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', fontSize: 12, color: '#9aa7b6' }}>
                                 <span style={{ color: '#3fb978' }}>{c.esperado}</span>
                                 <span style={{ color: '#9aa7b6', margin: '0 8px' }}>→</span>
                                 <span style={{ color: '#ef4b54' }}>{c.ocrLeyo}</span>
@@ -567,21 +569,21 @@ export function OcrDashboard() {
                 {/* Top pares (placa cajero → placa OCR) */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
                       TOP PARES MÁS FRECUENTES · ERRORES OCR
                     </span>
                   </div>
                   <div style={{ overflowY: 'auto', maxHeight: 260 }}>
                     {analisis.topPares.map((p, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,.2)', width: 20 }}>{i + 1}</span>
-                        <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#e6edf3', letterSpacing: '.06em', minWidth: 80 }}>{p.placaCajero}</span>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'rgba(255,255,255,.2)', width: 20 }}>{i + 1}</span>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 14, color: '#e6edf3', letterSpacing: '.06em', minWidth: 80 }}>{p.placaCajero}</span>
                         <span style={{ color: '#3a4a50', fontSize: 12 }}>→</span>
                         <PlacaDiff cajero={p.placaCajero} ocr={p.placaOcr} />
-                        <span style={{ marginLeft: 'auto', fontSize: 11, color: colorError(p.tipoError), fontFamily: 'monospace', fontWeight: 600, flexShrink: 0 }}>
+                        <span style={{ marginLeft: 'auto', fontSize: 11, color: colorError(p.tipoError), fontFamily: 'var(--app-font)', fontWeight: 600, flexShrink: 0 }}>
                           {p.tipoError}
                         </span>
-                        <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#e0991f', width: 36, textAlign: 'right' }}>{p.casos}×</span>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 13, fontWeight: 700, color: '#e0991f', width: 36, textAlign: 'right' }}>{p.casos}×</span>
                       </div>
                     ))}
                   </div>
@@ -594,14 +596,14 @@ export function OcrDashboard() {
                 {/* Por estación */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>EFECTIVIDAD POR ESTACIÓN</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>EFECTIVIDAD POR ESTACIÓN</span>
                   </div>
                   <div style={{ padding: '8px 0' }}>
                     {resumen.porEstacion.map(e => (
                       <div key={e.estacion} style={{ padding: '10px 18px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                           <span style={{ fontSize: 13, color: '#ccd0d8', fontWeight: 600 }}>{e.estacion}</span>
-                          <div style={{ display: 'flex', gap: 12, fontFamily: 'monospace', fontSize: 11 }}>
+                          <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--app-font)', fontSize: 11 }}>
                             <span style={{ color: '#ef4b54' }}>✗ {e.sinDetectar + e.errores}</span>
                             <span style={{ color: colorTasa(e.efectividad), fontWeight: 700 }}>{e.efectividad}%</span>
                           </div>
@@ -609,7 +611,7 @@ export function OcrDashboard() {
                         <div style={{ height: 6, background: 'rgba(255,255,255,.05)', borderRadius: 3, overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${e.efectividad}%`, background: colorTasa(e.efectividad), borderRadius: 3, transition: 'width .4s' }} />
                         </div>
-                        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontFamily: 'monospace', fontSize: 10, color: '#3a4a50' }}>
+                        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50' }}>
                           <span>{e.total.toLocaleString()} tránsitos</span>
                           <span>·</span>
                           <span style={{ color: '#3fb978' }}>{e.aciertos.toLocaleString()} OK</span>
@@ -624,7 +626,7 @@ export function OcrDashboard() {
                 {/* Tipos de error */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>CLASIFICACIÓN DE ERRORES</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>CLASIFICACIÓN DE ERRORES</span>
                   </div>
                   <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {resumen.porTipoError.map(t => {
@@ -633,7 +635,7 @@ export function OcrDashboard() {
                         <div key={t.tipoError}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                             <span style={{ fontSize: 13, color: colorError(t.tipoError), fontWeight: 600 }}>{t.tipoError}</span>
-                            <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6' }}>{t.total.toLocaleString()} · <span style={{ color: colorError(t.tipoError) }}>{pct}%</span></span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 12, color: '#9aa7b6' }}>{t.total.toLocaleString()} · <span style={{ color: colorError(t.tipoError) }}>{pct}%</span></span>
                           </div>
                           <div style={{ height: 5, background: 'rgba(255,255,255,.05)', borderRadius: 3, overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${pct}%`, background: colorError(t.tipoError), borderRadius: 3, opacity: .7 }} />
@@ -647,8 +649,8 @@ export function OcrDashboard() {
                 {/* Efectividad por hora (últimos 7 días) */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>EFECTIVIDAD POR HORA · 7 DÍAS</span>
-                    <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040' }}>posibles caídas de iluminación</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>EFECTIVIDAD POR HORA · 7 DÍAS</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040' }}>posibles caídas de iluminación</span>
                   </div>
                   <div style={{ padding: '12px 18px' }}>
                     <HoraChart data={analisis.porHora} />
@@ -661,21 +663,21 @@ export function OcrDashboard() {
           {tab === 'tendencias' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {loadingT ? (
-                <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 13 }}>
+                <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 13 }}>
                   Calculando tendencias de 30 días…
                 </div>
               ) : !tendencias ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12 }}>Sin datos</div>
+                <div style={{ padding: 32, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 12 }}>Sin datos</div>
               ) : (
                 <>
                   {/* ── Heatmap vía × hora ── */}
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
                         HEATMAP ERROR OCR · VÍA × HORA DEL DÍA · ÚLTIMOS 30 DÍAS
                       </span>
-                      <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040' }}>peor a mejor de arriba a abajo · hover para detalle</span>
-                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontFamily: 'monospace', fontSize: 10 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040' }}>peor a mejor de arriba a abajo · hover para detalle</span>
+                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontFamily: 'var(--app-font)', fontSize: 10 }}>
                         {[['<10%','rgba(63,185,120,.55)'],['10-20%','rgba(224,153,31,.6)'],['20-35%','rgba(239,75,84,.55)'],['>35%','rgba(239,75,84,.88)']].map(([l,c]) => (
                           <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#3a4a50' }}>
                             <span style={{ width: 14, height: 10, borderRadius: 2, background: c as string, display: 'inline-block' }} />{l}
@@ -694,10 +696,10 @@ export function OcrDashboard() {
                     {/* Perfil horario de las mejores vías */}
                     <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(63,185,120,.15)', borderRadius: 12, overflow: 'hidden' }}>
                       <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(63,185,120,.08)' }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#3a6a4a', fontWeight: 700 }}>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#3a6a4a', fontWeight: 700 }}>
                           PERFIL HORARIO · MEJORES VÍAS (REFERENCIA)
                         </span>
-                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
+                        <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
                           vías con menor tasa de error — {tendencias.mejoresVias.length} vías · mín. 100 tránsitos
                         </div>
                       </div>
@@ -709,14 +711,14 @@ export function OcrDashboard() {
                         {tendencias.mejoresVias.map((v, i) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <div style={{ width: 20, height: 2.5, background: LINEA_COLORS[i], borderRadius: 2, flexShrink: 0 }} />
-                            <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#ccd0d8' }}>{v.via}</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#ccd0d8' }}>{v.via}</span>
                             <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? '#a09890', marginLeft: 2 }}>{v.estacion}</span>
-                            <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#3fb978', marginLeft: 'auto' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3fb978', marginLeft: 'auto' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
                           </div>
                         ))}
                       </div>
                       {tendencias.mejoresVias.length === 0 && (
-                        <div style={{ padding: '12px 18px', color: '#3a4a50', fontFamily: 'monospace', fontSize: 12 }}>
+                        <div style={{ padding: '12px 18px', color: '#3a4a50', fontFamily: 'var(--app-font)', fontSize: 12 }}>
                           Insuficientes vías con ≥100 tránsitos en 30d
                         </div>
                       )}
@@ -725,10 +727,10 @@ export function OcrDashboard() {
                     {/* Tendencia diaria 30d */}
                     <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                       <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
                           TENDENCIA DIARIA · % ERROR RED VS REFERENCIA
                         </span>
-                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
+                        <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
                           ¿el sistema mejora o empeora? · caídas bruscas = incidente
                         </div>
                       </div>
@@ -736,10 +738,10 @@ export function OcrDashboard() {
                         <TendenciaDiariaChart datos={tendencias.tendenciaDiaria} />
                       </div>
                       <div style={{ padding: '0 18px 14px', display: 'flex', gap: 18 }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{ width: 20, height: 2, background: '#ef4b54', borderRadius: 2 }} /> Red completa
                         </span>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#3fb978', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#3fb978', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{ width: 20, height: 2, background: '#3fb978', borderRadius: 2 }} /> Mejores vías
                         </span>
                         {tendencias.tendenciaDiaria.length > 1 && (() => {
@@ -747,7 +749,7 @@ export function OcrDashboard() {
                           const last  = Number(tendencias.tendenciaDiaria[tendencias.tendenciaDiaria.length - 1].tasaRed)
                           const delta = last - first
                           return (
-                            <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 11,
+                            <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 11,
                               color: delta > 2 ? '#ef4b54' : delta < -2 ? '#3fb978' : '#9aa7b6' }}>
                               {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(1)}% vs hace 30d
                             </span>
@@ -766,36 +768,36 @@ export function OcrDashboard() {
               {/* Selector */}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', padding: '14px 18px', background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12 }}>
                 <select value={viaEstacion} onChange={e => { const es = e.target.value; setViaEstacion(es); setViaSeleccion(viasPorEstacion.get(es)?.[0] ?? '') }}
-                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer' }}>
                   {estacionesConDatos.length === 0 && <option value="">Sin datos</option>}
                   {estacionesConDatos.map(e => <option key={e} value={e}>{e}</option>)}
                 </select>
                 <select value={viaSeleccion} onChange={e => setViaSeleccion(e.target.value)}
-                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer' }}>
                   {(viasPorEstacion.get(viaEstacion) ?? []).map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
                 <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
                   {[30, 60, 90].map(d => (
                     <button key={d} onClick={() => setViaDias(d)}
-                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : '#6b7a8c' }}>
+                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : '#6b7a8c' }}>
                       {d}d
                     </button>
                   ))}
                 </div>
-                <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 10, color: '#2a4040' }}>solo vías con ≥50 tránsitos en 30d aparecen en la lista</span>
+                <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040' }}>solo vías con ≥50 tránsitos en 30d aparecen en la lista</span>
               </div>
 
               {loadingT || loadingVia ? (
-                <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 13 }}>Cargando…</div>
+                <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 13 }}>Cargando…</div>
               ) : !viaEvolucion || viaEvolucion.diaria.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12 }}>
+                <div style={{ padding: 32, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 12 }}>
                   Sin datos suficientes para esta vía en el período
                 </div>
               ) : (
                 <>
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
                         {viaEvolucion.estacion} · {viaEvolucion.via} — % ERROR POR DÍA · ÚLTIMOS {viaEvolucion.dias}D
                       </span>
                     </div>
@@ -806,7 +808,7 @@ export function OcrDashboard() {
 
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
                         PERFIL HORARIO · MISMA VÍA · {viaEvolucion.dias}D
                       </span>
                     </div>
@@ -824,20 +826,20 @@ export function OcrDashboard() {
               {/* Filtros */}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '14px 18px', background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12 }}>
                 <select value={estacion} onChange={e => { setEstacion(e.target.value); setPagina(1) }}
-                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer' }}>
                   {ESTACIONES.map(e => <option key={e} value={e}>{e || 'Todas las estaciones'}</option>)}
                 </select>
                 <select value={tipoError} onChange={e => { setTipoError(e.target.value); setPagina(1) }}
-                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer' }}>
                   {TIPOS_ERROR.map(t => <option key={t} value={t}>{t || 'Todos los tipos'}</option>)}
                 </select>
                 <input placeholder="Buscar placa…" value={placa} onChange={e => { setPlaca(e.target.value.toUpperCase()); setPagina(1) }}
-                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#e6edf3', fontFamily: 'monospace', fontSize: 12, width: 160 }} />
+                  style={{ padding: '6px 12px', background: '#0a1520', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, color: '#e6edf3', fontFamily: 'var(--app-font)', fontSize: 12, width: 160 }} />
                 <button onClick={loadDetalle}
-                  style={{ padding: '6px 18px', background: 'rgba(45,212,167,.12)', border: '1px solid rgba(45,212,167,.3)', borderRadius: 8, color: '#2dd4a7', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '6px 18px', background: 'rgba(45,212,167,.12)', border: '1px solid rgba(45,212,167,.3)', borderRadius: 8, color: '#2dd4a7', fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Buscar
                 </button>
-                {detalle && <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6', alignSelf: 'center' }}>{detalle.total.toLocaleString()} registros</span>}
+                {detalle && <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 12, color: '#9aa7b6', alignSelf: 'center' }}>{detalle.total.toLocaleString()} registros</span>}
               </div>
 
               {/* Tabla */}
@@ -847,7 +849,7 @@ export function OcrDashboard() {
                     <thead>
                       <tr style={{ background: 'rgba(255,255,255,.03)' }}>
                         {['Fecha', 'Estación', 'Vía', 'Ticket', 'Placa Cajero', 'Placa OCR', 'Diferencia', 'Tipo Error'].map(h => (
-                          <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontFamily: 'monospace', fontSize: 10, letterSpacing: '.1em', color: '#9aa7b6', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.06)', whiteSpace: 'nowrap' }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.1em', color: '#9aa7b6', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,.06)', whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -856,13 +858,13 @@ export function OcrDashboard() {
                         <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.02)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6', whiteSpace: 'nowrap' }}>{item.fecha}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 12, color: '#9aa7b6', whiteSpace: 'nowrap' }}>{item.fecha}</td>
                           <td style={{ padding: '9px 14px', fontSize: 12, color: '#9aa7b6' }}>{item.estacion}</td>
                           <td style={{ padding: '9px 14px', fontSize: 12, color: '#9aa7b6' }}>{item.via}</td>
-                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 11, color: '#9aa7b6' }}>{item.ticket}</td>
-                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 14, color: '#3fb978', letterSpacing: '.06em' }}>{item.placaCajero}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 11, color: '#9aa7b6' }}>{item.ticket}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 14, color: '#3fb978', letterSpacing: '.06em' }}>{item.placaCajero}</td>
                           <td style={{ padding: '9px 14px' }}><PlacaDiff cajero={item.placaCajero} ocr={item.placaOcr} /></td>
-                          <td style={{ padding: '9px 14px', fontFamily: 'monospace', fontSize: 12, color: '#9aa7b6' }}>
+                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 12, color: '#9aa7b6' }}>
                             {item.placaOcr ? (
                               Array.from(item.placaCajero).filter((c, i) => c !== (item.placaOcr[i] ?? '')).length > 0
                                 ? <span style={{ color: '#ef4b54' }}>{Array.from(item.placaCajero).filter((c, i) => c !== (item.placaOcr[i] ?? '')).length} char(s)</span>
@@ -870,7 +872,7 @@ export function OcrDashboard() {
                             ) : <span style={{ color: '#ef4b54' }}>no detectada</span>}
                           </td>
                           <td style={{ padding: '9px 14px' }}>
-                            <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 600, color: colorError(item.tipoError), background: `${colorError(item.tipoError)}18`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: 11, fontFamily: 'var(--app-font)', fontWeight: 600, color: colorError(item.tipoError), background: `${colorError(item.tipoError)}18`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
                               {item.tipoError}
                             </span>
                           </td>
@@ -884,7 +886,7 @@ export function OcrDashboard() {
                     <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderTop: '1px solid rgba(255,255,255,.05)' }}>
                       {Array.from({ length: Math.min(Math.ceil(detalle.total / 50), 10) }, (_, i) => i + 1).map(p => (
                         <button key={p} onClick={() => setPagina(p)}
-                          style={{ width: 32, height: 32, borderRadius: 6, fontFamily: 'monospace', fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: pagina === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: pagina === p ? 'rgba(45,212,167,.12)' : 'transparent', color: pagina === p ? '#2dd4a7' : '#6b7a8c' }}>
+                          style={{ width: 32, height: 32, borderRadius: 6, fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: pagina === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: pagina === p ? 'rgba(45,212,167,.12)' : 'transparent', color: pagina === p ? '#2dd4a7' : '#6b7a8c' }}>
                           {p}
                         </button>
                       ))}
@@ -920,7 +922,7 @@ function HoraChart({ data }: { data: { hora: number; total: number; efectividad:
               <rect x={i * 10 + 0.5} y={48 - barH} width={9} height={barH} rx="1.5"
                 fill={col} opacity="0.7" />
               {h.efectividad < 90 && (
-                <text x={i * 10 + 5} y={56} textAnchor="middle" fill={col} fontSize="5" fontFamily="monospace">{h.hora}</text>
+                <text x={i * 10 + 5} y={56} textAnchor="middle" fill={col} fontSize="5" fontFamily="var(--app-font)">{h.hora}</text>
               )}
             </g>
           )
@@ -928,7 +930,7 @@ function HoraChart({ data }: { data: { hora: number; total: number; efectividad:
         {/* 95% line */}
         <line x1="0" y1={48 * 0.05} x2="240" y2={48 * 0.05} stroke="#3fb978" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
         <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
       </div>
     </div>

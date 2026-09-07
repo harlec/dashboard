@@ -100,14 +100,32 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
             SELECT TOP 15 Desde, Hasta, COUNT(*) AS Total
             FROM cte GROUP BY Desde, Hasta ORDER BY Total DESC")).ToList();
 
-        // 4. Por estación
-        var porEstacion = (await conn.QueryAsync<EstacionConteoDto>($@"
+        // 4. Por estación — discrepancias y transacciones totales, para poder
+        // mostrar un gauge de efectividad individual por estación (no solo el global)
+        var porEstacionDisc = (await conn.QueryAsync<(string Estacion, int Total)>($@"
             SELECT {EstacionCase} AS Estacion, COUNT(*) AS Total
             FROM transitos t {DisjusJoin}
             WHERE {pw}
               AND t.tra_manua <> t.tra_dac
               {FiltroTipo}
-            GROUP BY tra_coest ORDER BY Total DESC")).ToList();
+            GROUP BY tra_coest")).ToList();
+
+        var porEstacionTx = (await conn.QueryAsync<(string Estacion, int Total)>($@"
+            SELECT {EstacionCase} AS Estacion, COUNT(*) AS Total
+            FROM transitos t
+            WHERE {pw}
+              {FiltroTipo}
+            GROUP BY tra_coest")).ToList();
+
+        var discPorEstacion = porEstacionDisc.ToDictionary(x => x.Estacion, x => x.Total);
+        var porEstacion = porEstacionTx
+            .Select(x => {
+                var disc = discPorEstacion.GetValueOrDefault(x.Estacion);
+                var ef   = x.Total > 0 ? Math.Round((x.Total - disc) * 100.0 / x.Total, 2) : 100.0;
+                return new EstacionConteoDto(x.Estacion, disc, x.Total, ef);
+            })
+            .OrderByDescending(x => x.Total)
+            .ToList();
 
         // 5. Tendencia por bucket
         var trendRaw = (await conn.QueryAsync<(DateTime Bucket, string Estacion, int Total)>($@"
@@ -125,23 +143,60 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
             .Select(r => new TrendPuntoDto(FormatBucket(r.Bucket, periodo), r.Estacion, r.Total))
             .ToList();
 
-        // 6. Top 5 vías
-        var topVias = (await conn.QueryAsync<ViaConteoDto>($@"
-            SELECT TOP 5
-                ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR(5))) AS Via,
-                {EstacionCase} AS Estacion,
-                COUNT(*) AS Total
-            FROM transitos t {DisjusJoin}
-            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
-            WHERE {pw}
-              AND t.tra_manua <> t.tra_dac
-              {FiltroTipo}
-            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr
-            ORDER BY Total DESC")).ToList();
+        // 6. Vías — discrepancias y tránsitos totales, para ordenar por TASA de
+        // error (no por conteo crudo). Cada peaje tiene ~8 vías pero 2 son de uso
+        // eventual con mucho menos tránsito: comparar solo el total absoluto las
+        // esconde (aunque tengan una tasa de error alta) o sobre-castiga a las
+        // vías regulares (que acumulan más por volumen, no por ser peores).
+        var topVias = (await ComputeViasAsync(conn, pw))
+            .Where(v => v.Total > 0)
+            .OrderByDescending(v => v.Pct)
+            .ToList();
 
         return new DiscrepanciasResumenDto(
             total, totalTx, efectividad,
             topPares, porEstacion, trend, topVias);
+    }
+
+    // Todas las vías (incluidas las de 0 discrepancias) con su % sobre tránsitos del
+    // período — a diferencia de topVias (arriba, filtrado a solo las que fallan),
+    // esto lo usa el muro NOC para pintar el DAC de cada vía, que necesita saber
+    // también cuáles están perfectamente bien.
+    public async Task<List<ViaConteoDto>> GetViasAsync(string periodo)
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        return (await ComputeViasAsync(conn, PeriodWhere(periodo)))
+            .OrderByDescending(v => v.Pct)
+            .ToList();
+    }
+
+    private async Task<List<ViaConteoDto>> ComputeViasAsync(SqlConnection conn, string pw)
+    {
+        const string viaGroupSelect = @"
+            ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR(5))) AS Via,
+            {0} AS Estacion,
+            COUNT(*) AS Total
+            FROM transitos t {1}
+            LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
+            WHERE {2}
+              {3}
+            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr";
+
+        var viaDisc = (await conn.QueryAsync<ViaConteoRaw>($@"
+            SELECT {string.Format(viaGroupSelect, EstacionCase, DisjusJoin, pw + " AND t.tra_manua <> t.tra_dac", FiltroTipo)}"))
+            .ToDictionary(x => (x.Via, x.Estacion), x => x.Total);
+
+        var viaTx = (await conn.QueryAsync<ViaConteoRaw>($@"
+            SELECT {string.Format(viaGroupSelect, EstacionCase, "", pw, FiltroTipo)}"))
+            .ToList();
+
+        return viaTx
+            .Select(x => {
+                var disc = viaDisc.GetValueOrDefault((x.Via, x.Estacion));
+                var pct  = x.Total > 0 ? Math.Round(disc * 100.0 / x.Total, 2) : 0.0;
+                return new ViaConteoDto(x.Via, x.Estacion, disc, x.Total, pct);
+            })
+            .ToList();
     }
 
     public async Task<DiscrepanciasAnalisisDto> GetAnalisisAsync()
@@ -282,3 +337,7 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         return new DiscrepanciasDetalleDto(totalCount, pagina, porPagina, items);
     }
 }
+
+// Resultado crudo de las consultas de agrupación por vía (Dapper) — antes de
+// combinar discrepancias/tránsitos en ViaConteoDto con el % calculado.
+file record ViaConteoRaw(string Via, string Estacion, int Total);

@@ -133,7 +133,7 @@ export function NetworkTopology({ estaciones }: Props) {
             Topología de Red · Heartbeat en Vivo
           </span>
         </div>
-        <span className="text-[0.66rem] text-[#1a3535] font-mono">
+        <span className="text-[0.66rem] text-[#1a3535]">
           {estaciones.length} nodos · ciclo 30 s
         </span>
       </div>
@@ -231,7 +231,7 @@ export function NetworkTopology({ estaciones }: Props) {
               <text x={lbl.x} y={lbl.y + 2}
                 textAnchor={lbl.anchor as 'start'|'end'|'middle'}
                 fill={lblFill} fontSize="12" fontWeight="700"
-                fontFamily="'Segoe UI', Arial, sans-serif">
+                fontFamily="var(--app-font)">
                 {est.nombre}
               </text>
 
@@ -239,7 +239,7 @@ export function NetworkTopology({ estaciones }: Props) {
               <text x={lbl.x} y={lbl.y + 16}
                 textAnchor={lbl.anchor as 'start'|'end'|'middle'}
                 fill={lblFill2} fontSize="9"
-                fontFamily="'Segoe UI', Arial, sans-serif">
+                fontFamily="var(--app-font)">
                 {`${pct}%`}{lat != null ? ` · ${lat}ms` : ''}{` · ${est.up}/${total}`}
               </text>
             </g>
@@ -258,20 +258,20 @@ export function NetworkTopology({ estaciones }: Props) {
           fill="none" stroke="#4CAF75" strokeWidth="0.6" opacity="0.35" />
         <text x={HUB.x} y={HUB.y - 3} textAnchor="middle"
           fill="#DAFFF0" fontSize="7.5" fontWeight="900"
-          fontFamily="'Segoe UI', Arial, sans-serif" letterSpacing="1">
+          fontFamily="var(--app-font)" letterSpacing="1">
           PULSO
         </text>
         <text x={HUB.x} y={HUB.y + 8} textAnchor="middle"
           fill="#DAFFF0" fontSize="7.5" fontWeight="900"
-          fontFamily="'Segoe UI', Arial, sans-serif" letterSpacing="1">
+          fontFamily="var(--app-font)" letterSpacing="1">
           VIAL
         </text>
 
         {/* Watermark */}
-        <text x="16" y={H - 14} fill="#0b2520" fontSize="7.5" fontFamily="monospace">
+        <text x="16" y={H - 14} fill="#0b2520" fontSize="7.5" fontFamily="var(--app-font)">
           RED MPLS AUNOR · ciclo 30s
         </text>
-        <text x={W - 16} y={H - 14} textAnchor="end" fill="#0b2520" fontSize="7.5" fontFamily="monospace">
+        <text x={W - 16} y={H - 14} textAnchor="end" fill="#0b2520" fontSize="7.5" fontFamily="var(--app-font)">
           {estaciones.length} peajes · {estaciones.reduce((a, e) => a + e.up + e.down, 0)} equipos
         </text>
       </svg>

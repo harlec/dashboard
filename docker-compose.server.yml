@@ -1,0 +1,65 @@
+services:
+
+  sqlserver:
+    build: ./sqlserver
+    environment:
+      SA_PASSWORD: ${DB_SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+    # Sin publicar puerto al host: solo el backend lo necesita, vía la red interna
+    # de Docker (hostname "sqlserver"). El servidor ya tiene otro SQL Server en 1433.
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null -C
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    # Sin publicar puerto al host: el frontend (nginx) lo alcanza internamente
+    # vía "backend:5000" — no hace falta exponerlo fuera del servidor.
+    cap_add:
+      - NET_RAW
+    volumes:
+      - audio_data:/app/audio
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=red;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True"
+      JWT_SECRET: ${JWT_SECRET}
+      AGENT_API_KEY: ${AGENT_API_KEY}
+      CAM_EMAIL: ${CAM_EMAIL}
+      CAM_PASSWORD: ${CAM_PASSWORD}
+      CAM_EMAIL2: ${CAM_EMAIL2}
+      CAM_PASSWORD2: ${CAM_PASSWORD2}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
+      GRAPH_SENDER: ${GRAPH_SENDER}
+      CONSOLIDADO_CONN: ${CONSOLIDADO_CONN}
+      TZ: America/Lima
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      # Puerto propio y distinto al resto de apps del servidor (80/8080/443 ya usados)
+      - "8090:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  audio_data:

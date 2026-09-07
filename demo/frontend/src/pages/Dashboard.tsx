@@ -1,0 +1,213 @@
+import { useEffect, useState, useCallback } from 'react'
+import { api, type LiveDashboard, type EquipoLive, type CamaraStatus, type Mantenimiento } from '../api/client'
+import { DonutChart }     from '../components/DonutChart'
+import { StationMatrix }  from '../components/StationMatrix'
+import { EquipoModal }    from '../components/EquipoModal'
+import { useSignalR }     from '../hooks/useSignalR'
+import { useAlertSound }  from '../hooks/useAlertSound'
+import { computarIncidentesAgrupados, type ExclusionMantenimiento } from '../lib/incidentesAgrupados'
+
+export function Dashboard() {
+  const [data,          setData]     = useState<LiveDashboard | null>(null)
+  const [camaras,       setCamaras]  = useState<CamaraStatus[]>([])
+  const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([])
+  const [selectedEquipo, setSelected] = useState<EquipoLive | null>(null)
+  const [signalStatus,  setSignal]   = useState<'idle'|'ok'|'error'>('idle')
+  const [lastUpdate,    setLastUpdate] = useState<Date>(new Date())
+  const [muted,         setMuted]    = useState(false)
+  const { playDown, playUp, toggleMute } = useAlertSound()
+
+  const load = useCallback(async () => {
+    try {
+      const [live, cams] = await Promise.all([api.liveDashboard(), api.camaras()])
+      setData(live)
+      setCamaras(cams)
+      setLastUpdate(new Date())
+      setSignal('ok')
+    } catch {
+      setSignal('error')
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  // Mantenimientos activos — se refresca cada minuto, no necesita tiempo real
+  useEffect(() => {
+    const loadMtto = () => api.mantenimientos(true).then(setMantenimientos).catch(() => {})
+    loadMtto()
+    const id = setInterval(loadMtto, 60_000)
+    return () => clearInterval(id)
+  }, [])
+
+  // SignalR — actualizaciones en tiempo real
+  useSignalR({
+    onEquipoStatusChanged: (equipoId, estado, latenciaMs, timestamp, alerta) => {
+      setSignal('ok')
+      if (alerta) {
+        if (estado === 'DOWN') playDown()
+        else if (estado === 'UP') playUp()
+      }
+      setData(prev => {
+        if (!prev) return prev
+        const estaciones = prev.estaciones.map(est => {
+          const vias = est.vias.map(via => ({
+            ...via,
+            equipos: via.equipos.map(eq =>
+              eq.id === equipoId
+                ? { ...eq, ultimoEstado: estado, latenciaMs: latenciaMs ?? undefined, ultimoPing: timestamp }
+                : eq)
+          }))
+          // Recalcular contadores UP/DN/sin para que el gauge se actualice
+          const monitoreados = vias.flatMap(v => v.equipos).filter(e => e.monitorear)
+          const up   = monitoreados.filter(e => e.ultimoEstado === 'UP').length
+          const down = monitoreados.filter(e => e.ultimoEstado === 'DOWN').length
+          const sin  = monitoreados.filter(e => !e.ultimoEstado).length
+          return { ...est, vias, up, down, sin }
+        })
+        return { ...prev, estaciones }
+      })
+      setLastUpdate(new Date())
+    },
+    onEnlaceChanged: (estacionId, enlace) => {
+      setData(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          estaciones: prev.estaciones.map(est =>
+            est.id === estacionId ? { ...est, enlace } : est)
+        }
+      })
+    },
+    onKpiUpdated: (ups, downs, total, incActivos) => {
+      setData(prev => {
+        if (!prev) return prev
+        const sinDatos  = total - ups - downs
+        const uptimePct = total > 0 ? Math.round(ups / total * 100) : 0
+        return { ...prev, kpis: { ...prev.kpis, ups, downs, total, sinDatos, incActivos, uptimePct } }
+      })
+    },
+    onCamaraUpdated: (camara, ultimoEmail, minDesdeEmail, online) => {
+      setCamaras(prev =>
+        prev.map(c => c.camara === camara ? { ...c, ultimoEmail, minDesdeEmail, online } : c))
+    },
+  })
+
+  if (!data) return (
+    <div className="flex items-center justify-center min-h-[60vh] text-muted">
+      Cargando…
+    </div>
+  )
+
+  const { kpis, estaciones } = data
+  const sinD = Math.max(kpis.total - kpis.ups - kpis.downs - kpis.incActivos, 0)
+  const exclusionMtto: ExclusionMantenimiento = {
+    estaciones: new Set(mantenimientos.filter(m => m.estacionId).map(m => m.estacionId!)),
+    vias:       new Set(mantenimientos.filter(m => m.viaId).map(m => m.viaId!)),
+  }
+  const grupos = computarIncidentesAgrupados(estaciones, undefined, exclusionMtto)
+
+  return (
+    <div className="px-5 py-4 pb-10">
+      {/* Mantenimiento activo */}
+      {mantenimientos.length > 0 && (
+        <div className="flex flex-col gap-1.5 mb-3.5">
+          {mantenimientos.map(m => (
+            <div key={m.id} className="flex items-center gap-2.5 bg-blue-500/10 border border-blue-500/40 rounded-xl px-4 py-2.5">
+              <span className="text-[0.9rem]">🔧</span>
+              <span className="font-extrabold text-blue-400 text-[0.85rem] uppercase tracking-wide">Mantenimiento</span>
+              <span className="text-[#eae7e4] text-[0.85rem]">
+                {m.estacion ?? m.via ?? m.equipo} — {m.motivo} (hasta {new Date(m.hasta).toLocaleTimeString('es-PE', { hour12: false })})
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Incidentes agrupados (vía/peaje) */}
+      {grupos.length > 0 && (
+        <div className="flex flex-col gap-1.5 mb-3.5">
+          {grupos.map((g, i) => (
+            <div key={i} className="flex items-center gap-2.5 bg-danger/10 border border-danger/40 rounded-xl px-4 py-2.5">
+              <span className="w-2 h-2 rounded-full bg-danger flex-shrink-0 animate-blink-down" />
+              <span className="font-extrabold text-danger text-[0.85rem] uppercase tracking-wide">
+                {g.tipo === 'peaje' ? 'Incidente de peaje' : 'Incidente de vía'}
+              </span>
+              <span className="text-[#eae7e4] text-[0.85rem]">
+                {g.tipo === 'peaje'
+                  ? <>{g.estacion} — {g.pct}% caído ({g.caidos}/{g.total} equipos)</>
+                  : <>Vía {g.via} ({g.estacion}) sin conexión — {g.caidos}/{g.total} equipos</>}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Topbar */}
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 bg-surface rounded-xl px-7 py-4 mb-3.5">
+        {/* Left */}
+        <div className="flex flex-col gap-1.5">
+          <div className="text-[1.1rem] font-extrabold text-[#eae7e4]">Estado en Tiempo Real</div>
+          <div className="text-[0.8rem] text-muted">
+            Actualizado: <b className="text-[#d4cec9]">{lastUpdate.toLocaleTimeString('es-PE')}</b>
+          </div>
+          <div className="text-[0.75rem] text-dim">
+            {new Date().toLocaleDateString('es-PE')} · {estaciones.length} estaciones activas
+          </div>
+        </div>
+
+        {/* Center: donut + leyenda */}
+        <div className="flex justify-center items-center gap-7">
+          <DonutChart ups={kpis.ups} downs={kpis.downs} incActivos={kpis.incActivos} total={kpis.total} />
+          <div className="flex flex-col gap-2.5">
+            {[
+              { color: '#72BF44', val: kpis.ups,       label: 'Operativos' },
+              { color: '#F04545', val: kpis.downs,      label: 'Caídos' },
+              { color: '#F99B1C', val: kpis.incActivos, label: 'Incidentes' },
+              { color: '#38332F', val: sinD,             label: 'Sin datos', textColor: '#a09890' },
+            ].map(({ color, val, label, textColor }) => (
+              <div key={label} className="flex items-center gap-2.5 text-[0.88rem]">
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                <span className="font-extrabold text-[1.1rem] min-w-[32px] text-right"
+                  style={{ color: textColor ?? color }}>{val}</span>
+                <span className="text-muted">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="w-px h-20 bg-border" />
+
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="text-[2.8rem] font-extrabold text-brand leading-none">{kpis.uptimePct}%</div>
+            <div className="text-[0.78rem] text-muted uppercase tracking-widest">Uptime</div>
+          </div>
+        </div>
+
+        {/* Right: status + mute */}
+        <div className="flex flex-col items-end gap-2">
+          <div className={`flex items-center gap-1.5 text-[0.75rem] text-white/70
+            bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              signalStatus === 'ok' ? 'bg-brand animate-ping-pulse' :
+              signalStatus === 'error' ? 'bg-danger' : 'bg-[#a09890]'
+            }`} />
+            <span>{signalStatus === 'ok' ? 'En vivo' : signalStatus === 'error' ? 'Sin conexión' : 'En espera'}</span>
+          </div>
+          <button
+            onClick={() => setMuted(toggleMute())}
+            title={muted ? 'Activar alertas sonoras' : 'Silenciar alertas sonoras'}
+            className="text-[0.75rem] bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-full
+              text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            {muted ? '🔇 Silenciado' : '🔔 Sonido activo'}
+          </button>
+        </div>
+      </div>
+
+      {/* Matriz de equipos */}
+      <StationMatrix estaciones={estaciones} onEquipoClick={setSelected} estacionesEnMtto={exclusionMtto.estaciones} />
+
+      {/* Modal */}
+      <EquipoModal equipo={selectedEquipo} onClose={() => setSelected(null)} />
+    </div>
+  )
+}

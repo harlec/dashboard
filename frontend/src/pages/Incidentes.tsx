@@ -5,6 +5,7 @@ import {
 import { api, type IncidenteItem, type IncidenteResumen, type IncidenteTipo } from '../api/client'
 import { useAuth } from '../hooks/useAuth'
 import { FormModal, Field, Select, Input } from '../components/admin/FormModal'
+import { IncidenteDetalleModal } from '../components/IncidenteDetalleModal'
 import { TIPO_LABELS, TIPO_COLORS } from '../lib/incidentes'
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -26,12 +27,14 @@ const DIAS_OPS = [
   { label: '30 días', dias: 30 },
 ] as const
 
+// Colores corporativos ALEATICA — mismos tonos que el muro NOC. Antes VIRU/SANTA
+// tenían rosado/morado que no son parte de la paleta de marca.
 const EST_COLORS: Record<string, string> = {
   FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
-  KM402: '#4A9EE0', VIRU: '#E060A0', SANTA: '#9B6BE0',
+  KM402: '#00BBE7', VIRU: '#FFDD00', SANTA: '#D3DF4E',
 }
-const RANK_COLORS = ['#F04545', '#F99B1C', '#FACC15', '#4A9EE0', '#72BF44',
-                     '#9B6BE0', '#E060A0', '#a09890', '#7a7470', '#4A9EE0']
+const RANK_COLORS = ['#F04545', '#F99B1C', '#FACC15', '#00BBE7', '#72BF44',
+                     '#D3DF4E', '#0DB14B', '#a09890', '#7a7470', '#00BBE7']
 
 function estColor(name: string) {
   const key = Object.keys(EST_COLORS).find(k => name.toUpperCase().includes(k))
@@ -80,6 +83,29 @@ function TopViasInc({ vias }: { vias: IncidenteResumen['topVias'] }) {
   )
 }
 
+// ── Top causas list ──────────────────────────────────────────
+function TopCausasInc({ causas }: { causas: IncidenteResumen['porCausa'] }) {
+  const max = causas[0]?.total ?? 1
+  return (
+    <div className="flex flex-col gap-2">
+      {causas.map((c, i) => (
+        <div key={i} className="flex items-center gap-2.5">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[0.8rem] text-[#eae7e4] font-semibold truncate" title={c.causa}>{c.causa}</span>
+              <span className="text-[0.78rem] font-bold ml-2 flex-shrink-0 text-danger">{c.total}</span>
+            </div>
+            <div className="bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+              <div className="h-full rounded-full bg-danger"
+                style={{ width: `${Math.round(c.total / max * 100)}%` }} />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Página ────────────────────────────────────────────────────
 export function Incidentes() {
   const { user } = useAuth()
@@ -93,6 +119,8 @@ export function Incidentes() {
   const [loadingR, setLoadingR] = useState(false)
   const [loadingL, setLoadingL] = useState(false)
   const pageSize = 50
+
+  const [detalleId, setDetalleId] = useState<number | null>(null)
 
   const [selected,  setSelected]  = useState<Set<number>>(new Set())
   const [tagModal,  setTagModal]  = useState(false)
@@ -193,6 +221,13 @@ export function Incidentes() {
             </span>
             <span className="text-[0.7rem] text-muted uppercase tracking-widest">activos ahora</span>
           </div>
+          <div className="w-px bg-border" />
+          <div className="flex flex-col items-center">
+            <span className="text-[1.8rem] font-extrabold text-[#eae7e4] leading-none">
+              {loadingR ? '—' : resumen?.mttrMin != null ? dur(resumen.mttrMin) : '—'}
+            </span>
+            <span className="text-[0.7rem] text-muted uppercase tracking-widest">MTTR</span>
+          </div>
         </div>
       </div>
 
@@ -267,6 +302,49 @@ export function Incidentes() {
         </div>
       </div>
 
+      {/* Segunda fila: patrones horarios y causas */}
+      <div className="grid grid-cols-2 gap-3.5 mb-3.5">
+        <div className="bg-surface rounded-xl p-4">
+          <div className="text-[0.85rem] font-bold text-[#eae7e4] mb-3">Por hora del día</div>
+          <div className="text-[0.72rem] text-muted -mt-2 mb-3">
+            Para detectar patrones (ej. siempre entre 1-2am), sobre todo el período
+          </div>
+          {loadingR ? (
+            <div className="h-[180px] flex items-center justify-center text-muted text-sm">Cargando…</div>
+          ) : (resumen?.porHora ?? []).every(h => h.total === 0) ? (
+            <div className="h-[180px] flex items-center justify-center text-muted text-sm">Sin datos</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={resumen?.porHora} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+                <XAxis dataKey="hora" tick={{ fill: '#a09890', fontSize: 10 }}
+                  tickLine={false} axisLine={false} interval={1}
+                  tickFormatter={h => String(h).padStart(2, '0')} />
+                <YAxis tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                  contentStyle={{ background: '#1e1c1a', border: '1px solid #252220', borderRadius: 8, fontSize: 12 }}
+                  labelFormatter={h => `${String(h).padStart(2, '0')}:00`}
+                  labelStyle={{ color: '#d4cec9' }}
+                  itemStyle={{ color: '#F04545' }}
+                />
+                <Bar dataKey="total" fill="#F04545" radius={[4, 4, 0, 0]} maxBarSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="bg-surface rounded-xl p-4">
+          <div className="text-[0.85rem] font-bold text-[#eae7e4] mb-3">Top causas</div>
+          {loadingR ? (
+            <div className="h-[180px] flex items-center justify-center text-muted text-sm">Cargando…</div>
+          ) : (resumen?.porCausa ?? []).length === 0 ? (
+            <div className="h-[180px] flex items-center justify-center text-muted text-sm">Sin datos</div>
+          ) : (
+            <TopCausasInc causas={resumen?.porCausa ?? []} />
+          )}
+        </div>
+      </div>
+
       {/* Lista */}
       <div className="bg-surface rounded-xl p-4">
         <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -311,20 +389,21 @@ export function Incidentes() {
                       onChange={toggleSelAll} className="accent-brand" />
                   </th>
                 )}
-                {['Equipo', 'Estación', 'Vía', 'Inicio', 'Fin', 'Duración', 'Tipo'].map(h => (
+                {['Equipo', 'Estación', 'Vía', 'Inicio', 'Fin', 'Duración', 'Tipo', 'Causa'].map(h => (
                   <th key={h} className="text-left py-2 px-3 text-[0.75rem] text-muted font-semibold uppercase">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loadingL ? (
-                <tr><td colSpan={user?.rol === 'admin' ? 8 : 7} className="py-8 text-center text-muted">Cargando…</td></tr>
+                <tr><td colSpan={user?.rol === 'admin' ? 9 : 8} className="py-8 text-center text-muted">Cargando…</td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={user?.rol === 'admin' ? 8 : 7} className="py-8 text-center text-muted">No hay incidentes en el período</td></tr>
+                <tr><td colSpan={user?.rol === 'admin' ? 9 : 8} className="py-8 text-center text-muted">No hay incidentes en el período</td></tr>
               ) : items.map(inc => (
-                <tr key={inc.id} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
+                <tr key={inc.id} onClick={() => setDetalleId(inc.id)}
+                  className="border-b border-border/40 hover:bg-white/[0.02] transition-colors cursor-pointer">
                   {user?.rol === 'admin' && (
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
                       <input type="checkbox" checked={selected.has(inc.id)}
                         onChange={() => toggleSel(inc.id)} className="accent-brand" />
                     </td>
@@ -348,6 +427,9 @@ export function Incidentes() {
                   <td className="px-3 py-2" title={inc.motivo ?? ''}>
                     <span className={`font-semibold ${TIPO_COLORS[inc.tipo]}`}>{TIPO_LABELS[inc.tipo]}</span>
                     {inc.motivo && <span className="text-muted ml-1.5">ⓘ</span>}
+                  </td>
+                  <td className="px-3 py-2 text-muted text-[0.76rem] max-w-[180px] truncate" title={inc.causa ?? ''}>
+                    {inc.causa ?? '—'}
                   </td>
                 </tr>
               ))}
@@ -388,6 +470,8 @@ export function Incidentes() {
             placeholder="Ej: Reinicio forzado por jefe de plaza, mantenimiento programado…" />
         </Field>
       </FormModal>
+
+      <IncidenteDetalleModal id={detalleId} onClose={() => setDetalleId(null)} />
     </div>
   )
 }

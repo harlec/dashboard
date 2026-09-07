@@ -196,6 +196,7 @@ public class PingWorkerService(
                     Inicio   = DateTime.Now,
                     Tipo     = enMantenimiento ? "Mantenimiento" : "Real",
                     Motivo   = enMantenimiento ? $"Modo mantenimiento: {motivoMtto}" : null,
+                    DetalleEstado = detalle,
                 });
 
             await db.SaveChangesAsync(ct);

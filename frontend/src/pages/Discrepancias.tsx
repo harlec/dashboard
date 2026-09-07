@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
-import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo, type DiscrepanciasAnalisis, type ViaAnalisis } from '../api/client'
+import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type ViaConteo, type EstacionConteo, type DiscrepanciasAnalisis, type ViaAnalisis } from '../api/client'
 
 // ── Períodos ──────────────────────────────────────────────────
 const PERIODOS = [
@@ -15,11 +15,13 @@ type Periodo = typeof PERIODOS[number]['key']
 
 // ── Constantes ────────────────────────────────────────────────
 const ESTACIONES = ['FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA'] as const
+// Colores corporativos ALEATICA (manual de marca, sección "2.7 Colores corporativos")
+// — mismos tonos que ya usa el muro NOC. Antes VIRU/SANTA tenían rosado/morado que no
+// son parte de la paleta de marca.
 const COLORS: Record<string, string> = {
   FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
-  '402': '#4A9EE0', VIRU: '#E060A0', SANTA: '#9B6BE0',
+  '402': '#00BBE7', VIRU: '#FFDD00', SANTA: '#D3DF4E',
 }
-const RANK_COLORS = ['#F04545', '#F99B1C', '#FACC15', '#4A9EE0', '#a09890']
 
 function abbrev(cat: string): string {
   if (!cat) return '?'
@@ -29,8 +31,10 @@ function abbrev(cat: string): string {
   return cat.slice(0, 7)
 }
 
+// Meta de negocio: 99.5% de efectividad. Verde solo si la cumple, naranja de 90%
+// a 99.5%, rojo por debajo de 90%.
 function efectColor(pct: number) {
-  if (pct >= 95) return '#72BF44'
+  if (pct >= 99.5) return '#72BF44'
   if (pct >= 90) return '#F99B1C'
   return '#F04545'
 }
@@ -52,11 +56,11 @@ function EfectGauge({ pct }: { pct: number }) {
         fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
         strokeDasharray={`${arc} ${circ}`} />
       <text x={cx} y={cy - 2} textAnchor="middle" fill={color}
-        fontSize="17" fontWeight="800" fontFamily="Segoe UI,sans-serif">
+        fontSize="17" fontWeight="800" fontFamily="var(--app-font)">
         {pct.toFixed(1)}%
       </text>
       <text x={cx} y={cy + 13} textAnchor="middle" fill="#7a7470"
-        fontSize="9" fontFamily="Segoe UI,sans-serif">EFECTIVIDAD</text>
+        fontSize="9" fontFamily="var(--app-font)">EFECTIVIDAD</text>
     </svg>
   )
 }
@@ -88,47 +92,82 @@ function ParTooltip({ active, payload }: any) {
   return (
     <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem] max-w-[260px]">
       <div className="text-warn font-semibold mb-0.5">{d?.desde}</div>
-      <div className="text-[#4A9EE0] font-semibold mb-1">→ {d?.hasta}</div>
+      <div className="text-[#00BBE7] font-semibold mb-1">→ {d?.hasta}</div>
       <div className="text-[#eae7e4] font-bold text-base">{d?.total} discrepancias</div>
     </div>
   )
 }
 
-// ── Top vías ──────────────────────────────────────────────────
+// ── Vías (todas, ordenadas por tasa de error) ────────────────────
 function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }) {
-  const max = vias[0]?.total ?? 1
+  const maxPct = vias[0]?.pct ?? 1
   return (
     <div className="bg-surface rounded-xl p-4">
-      <div className="text-[0.85rem] font-bold text-[#eae7e4] mb-3">Top 5 vías</div>
+      <div className="flex items-center justify-between mb-0.5">
+        <div className="text-[0.85rem] font-bold text-[#eae7e4]">Vías</div>
+        {vias.length > 0 && <div className="text-[0.72rem] text-muted">{vias.length} en total</div>}
+      </div>
+      <div className="text-[0.7rem] text-muted mb-3">% discrepancias sobre tránsitos de esa vía</div>
       {loading ? (
         <div className="flex items-center justify-center h-24 text-muted text-sm">Cargando…</div>
       ) : vias.length === 0 ? (
         <div className="flex items-center justify-center h-24 text-muted text-sm">Sin datos</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 overflow-y-auto pr-1" style={{ maxHeight: 250 }}>
           {vias.map((v, i) => (
             <div key={i} className="flex items-center gap-2.5">
-              <span className="text-[0.78rem] font-extrabold w-4 text-right flex-shrink-0"
-                style={{ color: RANK_COLORS[i] }}>#{i + 1}</span>
+              <span className="text-[0.72rem] font-bold w-5 text-right flex-shrink-0 text-dim">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="text-[0.8rem] text-[#eae7e4] font-semibold truncate">{v.via}</span>
-                  <span className="text-[0.78rem] font-bold ml-2 flex-shrink-0"
-                    style={{ color: RANK_COLORS[i] }}>{v.total.toLocaleString('es-PE')}</span>
+                  <span className="text-[0.78rem] font-bold ml-2 flex-shrink-0" style={{ color: tasaColor(v.pct) }}>
+                    {v.pct.toFixed(1)}%
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
                     <div className="h-full rounded-full"
-                      style={{ width: `${Math.round(v.total / max * 100)}%`, background: COLORS[v.estacion] ?? RANK_COLORS[i] }} />
+                      style={{ width: `${Math.round(v.pct / maxPct * 100)}%`, background: COLORS[v.estacion] ?? '#a09890' }} />
                   </div>
-                  <span className="text-[0.7rem] text-dim flex-shrink-0"
-                    style={{ color: COLORS[v.estacion] ?? '#a09890' }}>{v.estacion}</span>
+                  <span className="text-[0.7rem] flex-shrink-0" style={{ color: COLORS[v.estacion] ?? '#a09890' }}>
+                    {v.estacion}
+                  </span>
+                  <span className="text-[0.68rem] text-dim flex-shrink-0">
+                    {v.total.toLocaleString('es-PE')}/{v.totalTransitos.toLocaleString('es-PE')}
+                  </span>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Mini gauge de efectividad por estación ──────────────────────
+function MiniEstGauge({ est }: { est: EstacionConteo }) {
+  const r = 40, cx = 52, cy = 48
+  const circ = Math.PI * r
+  const arc  = Math.max(0, Math.min(1, est.efectividad / 100)) * circ
+  const color = efectColor(est.efectividad)
+  return (
+    <div className="flex flex-col items-center">
+      <svg width="104" height="62" viewBox="0 0 104 62">
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none" stroke="#252220" strokeWidth="12" strokeLinecap="round" />
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
+          strokeDasharray={`${arc} ${circ}`} />
+        <text x={cx} y={cy - 2} textAnchor="middle" fill={color}
+          fontSize="17" fontWeight="800" fontFamily="var(--app-font)">
+          {est.efectividad.toFixed(0)}%
+        </text>
+      </svg>
+      <span className="text-[0.85rem] font-bold -mt-0.5" style={{ color: COLORS[est.estacion] ?? '#a09890' }}>
+        {est.estacion}
+      </span>
+      <span className="text-[0.75rem] text-dim">{est.total.toLocaleString('es-PE')} disc.</span>
     </div>
   )
 }
@@ -316,8 +355,8 @@ th.c{text-align:center}
               </span>
             )}
             <button onClick={exportarPDF}
-              className="flex items-center gap-1.5 px-3 py-1 bg-[#4A9EE0]/10 hover:bg-[#4A9EE0]/20
-                border border-[#4A9EE0]/30 text-[#4A9EE0] text-[0.75rem] font-semibold
+              className="flex items-center gap-1.5 px-3 py-1 bg-[#00BBE7]/10 hover:bg-[#00BBE7]/20
+                border border-[#00BBE7]/30 text-[#00BBE7] text-[0.75rem] font-semibold
                 rounded-lg transition-all whitespace-nowrap">
               ⬇ Exportar PDF
             </button>
@@ -345,13 +384,13 @@ th.c{text-align:center}
                       {v.estacion}
                     </span>
                   </td>
-                  <td className="py-1.5 px-2 text-muted font-mono">{v.tasaSem1.toFixed(1)}%</td>
-                  <td className="py-1.5 px-2 font-mono font-bold" style={{
+                  <td className="py-1.5 px-2 text-muted">{v.tasaSem1.toFixed(1)}%</td>
+                  <td className="py-1.5 px-2 font-bold" style={{
                     color: v.tasaSem2 > 20 ? '#F04545' : v.tasaSem2 > 15 ? '#F99B1C' : '#d4cec9'
                   }}>
                     {v.tasaSem2.toFixed(1)}%
                   </td>
-                  <td className="py-1.5 px-2 font-mono font-bold">
+                  <td className="py-1.5 px-2 font-bold">
                     <span className={v.delta > 0 ? 'text-danger' : v.delta < 0 ? 'text-brand' : 'text-muted'}>
                       {v.delta > 0 ? '+' : ''}{v.delta.toFixed(1)}%
                     </span>
@@ -389,7 +428,7 @@ th.c{text-align:center}
                 {analisis.porHora.map((h, i) => (
                   <Cell key={i}
                     fill={h.tasaError >= maxTasa * 0.85 ? '#F04545' :
-                          h.tasaError >= maxTasa * 0.65 ? '#F99B1C' : '#4A9EE0'} />
+                          h.tasaError >= maxTasa * 0.65 ? '#F99B1C' : '#00BBE7'} />
                 ))}
               </Bar>
             </BarChart>
@@ -400,7 +439,7 @@ th.c{text-align:center}
           const isNocturno = peakHora.hora >= 20 || peakHora.hora <= 6
           return (
             <div className={`mt-2 px-3 py-2 rounded-lg text-[0.75rem] ${
-              isNocturno ? 'bg-warn/10 text-warn' : 'bg-[#4A9EE0]/10 text-[#4A9EE0]'}`}>
+              isNocturno ? 'bg-warn/10 text-warn' : 'bg-[#00BBE7]/10 text-[#00BBE7]'}`}>
               Pico máximo: <b>{String(peakHora.hora).padStart(2,'0')}:00</b> con <b>{peakHora.tasaError}%</b> de error
               {isNocturno ? ' — revisar iluminación y sensores OCR nocturnos' : ' — revisar calibración por volumen de tráfico'}
             </div>
@@ -543,6 +582,7 @@ export function Discrepancias() {
               ? <EfectGauge pct={ef} />
               : <div className="text-muted text-sm">—</div>
             }
+            <div className="text-[0.66rem] text-dim -mt-1">meta 99.5%</div>
           </div>
 
           {/* Separador */}
@@ -562,6 +602,16 @@ export function Discrepancias() {
               </span>
               <span className="text-[0.68rem] text-muted uppercase tracking-wide">transacciones</span>
             </div>
+          </div>
+
+          {/* Separador */}
+          <div className="w-px h-10 bg-border hidden lg:block" />
+
+          {/* Efectividad por estación */}
+          <div className="flex gap-7 ml-auto flex-wrap">
+            {(resumen?.porEstacion ?? []).map(e => (
+              <MiniEstGauge key={e.estacion} est={e} />
+            ))}
           </div>
         </div>
       </div>
@@ -615,7 +665,7 @@ export function Discrepancias() {
                   {paresData.map((_, i) => (
                     <Cell key={i}
                       fill={i >= paresData.length - 3 ? '#F04545' :
-                            i >= paresData.length - 6 ? '#F99B1C' : '#4A9EE0'} />
+                            i >= paresData.length - 6 ? '#F99B1C' : '#00BBE7'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -662,7 +712,7 @@ export function Discrepancias() {
         <button onClick={toggleAnalisis}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[0.82rem] font-semibold
             border transition-all ${showAnalisis
-              ? 'bg-[#4A9EE0]/15 border-[#4A9EE0]/40 text-[#4A9EE0]'
+              ? 'bg-[#00BBE7]/15 border-[#00BBE7]/40 text-[#00BBE7]'
               : 'bg-surface border-border text-white/60 hover:text-white hover:border-white/20'}`}>
           <span>{showAnalisis ? '▼' : '▶'}</span>
           Análisis de sensores
@@ -751,19 +801,19 @@ export function Discrepancias() {
                     <td className="py-1.5 px-2.5 text-muted">{item.via}</td>
                     <td className="py-1.5 px-2.5 text-dim">{item.ticket ?? '—'}</td>
                     <td className="py-1.5 px-2.5">
-                      <span className="bg-warn/10 text-warn px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
+                      <span className="bg-warn/10 text-warn px-1.5 py-0.5 rounded text-[0.76rem]">
                         {abbrev(item.catTabulada)}
                       </span>
                     </td>
                     <td className="py-1.5 px-2.5">
-                      <span className="bg-[#4A9EE0]/10 text-[#4A9EE0] px-1.5 py-0.5 rounded text-[0.76rem] font-mono">
+                      <span className="bg-[#00BBE7]/10 text-[#00BBE7] px-1.5 py-0.5 rounded text-[0.76rem]">
                         {abbrev(item.catDetectada)}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2.5 font-mono text-[0.78rem] text-[#eae7e4]">
+                    <td className="py-1.5 px-2.5 text-[0.78rem] text-[#eae7e4]">
                       {item.placaTabulada || '—'}
                     </td>
-                    <td className={`py-1.5 px-2.5 font-mono text-[0.78rem] ${
+                    <td className={`py-1.5 px-2.5 text-[0.78rem] ${
                       placaDiff ? 'text-danger font-bold' : 'text-muted'}`}>
                       {item.placaDetectada || '—'}
                     </td>

@@ -183,6 +183,7 @@ CREATE TABLE incidentes (
     duracion_min INT      NULL,
     tipo         NVARCHAR(30) NOT NULL DEFAULT 'Real',  -- Real | Mantenimiento | ReinicioForzado | Otro
     motivo       NVARCHAR(500) NULL,
+    detalle_estado NVARCHAR(60) NULL,  -- IPStatus/error crudo al momento de caer, para diagnóstico (ver ping_log)
     CONSTRAINT PK_incidentes PRIMARY KEY (id),
     CONSTRAINT FK_incidentes_equipos FOREIGN KEY (equipo_id) REFERENCES equipos(id)
 );
@@ -196,7 +197,7 @@ CREATE TABLE enlace_eventos (
     inicio       DATETIME2 NOT NULL,
     fin          DATETIME2 NULL,
     duracion_min INT       NULL,
-    enlace       NVARCHAR(10) NOT NULL DEFAULT 'MPLS',
+    enlace       NVARCHAR(20) NOT NULL DEFAULT 'MPLS',
     latencia_ms  FLOAT     NULL,
     ttl          INT       NULL,
     CONSTRAINT PK_enlace_eventos PRIMARY KEY (id),
@@ -349,7 +350,9 @@ BEGIN
     (5, 'PMV',              '[PMV]',  'Media converter de fibra óptica — su caída puede indicar corte de fibra en la vía'),       -- TCP 80
     (6, 'Antena/Router',    '[RED]',  'Equipo de red y conectividad'),   -- ICMP
     (7, 'UPS',              '[UPS]',  'Sistema de alimentacion ininterrumpida'), -- ICMP
-    (8, 'Switch',           '[SW]',   'Switch de red de la via');         -- TCP 22/23
+    (8, 'Switch',           '[SW]',   'Switch de red de la via'),        -- TCP 22/23
+    (9, 'Cámara Validación','[CAM]',  'Camara de validacion de clasificacion vehicular'),
+    (10, 'DAC',             '[DAC]',  'Detector Automatico de Clasificacion de la via — no se monitorea por ping, su estado se deriva de la tasa de discrepancia (ver modulo Discrepancias)');
 
 -- Puertos TCP por defecto según tipo (se pueden editar por equipo individualmente):
 -- PC Via (1) y PC OCR (2)   → puerto 445 (SMB Windows, siempre abierto)
@@ -359,6 +362,9 @@ BEGIN
 -- Antena/Router (6)          → NULL       (ICMP ping)
 -- UPS (7)                    → NULL       (ICMP ping)
 -- Switch (8)                 → NULL       (ICMP ping)
+-- Cámara Validación (9)      → puerto 554 (RTSP video stream)
+-- DAC (10)                   → sin IP real ni ping — monitorear=0 siempre, es un
+--   equipo "virtual" por vía cuyo estado en el NOC viene de Discrepancias, no del ping
     SET IDENTITY_INSERT tipos_equipo OFF;
 END
 GO

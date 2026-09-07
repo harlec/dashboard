@@ -1,0 +1,71 @@
+services:
+
+  demo-sqlserver:
+    build: ./demo/sqlserver
+    environment:
+      SA_PASSWORD: ${DEMO_SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+    ports:
+      - "1434:1433"
+    volumes:
+      - demo_sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null -C
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+
+  demo-backend:
+    build: ./demo/backend
+    ports:
+      - "5001:5000"
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Server=demo-sqlserver,1433;Database=red;User Id=sa;Password=${DEMO_SA_PASSWORD};TrustServerCertificate=True"
+      JWT_SECRET: ${DEMO_JWT_SECRET}
+      AGENT_API_KEY: demo
+      CONSOLIDADO_CONN: "Server=demo-sqlserver,1433;Database=consolidado_demo;User Id=sa;Password=${DEMO_SA_PASSWORD};TrustServerCertificate=True"
+      DEMO_MODE: "true"
+      TZ: America/Lima
+    depends_on:
+      demo-sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+  demo-frontend:
+    build: ./demo/frontend
+    ports:
+      - "8095:80"
+    depends_on:
+      - demo-backend
+    restart: unless-stopped
+
+volumes:
+  demo_sqlserver_data:
+
+# ============================================================
+#  Instancia DEMO — genérica, sin datos ni red reales
+# ============================================================
+# Variante 100% independiente de la app (código en ./demo/, copiado y
+# sanitizado desde ./backend y ./frontend): nombres de estación genéricos
+# (Alfa/Beta/Gamma/Delta/Epsilon), IPs ficticias (192.168.x.x) y datos de
+# tránsito/discrepancias/OCR generados aleatoriamente — pensada para
+# mostrarle el sistema a otras concesiones sin exponer ninguna vía, IP ni
+# dato real de la empresa. El ping worker corre en modo simulado
+# (DEMO_MODE=true) porque esas IPs no existen de verdad; no hay SMTP ni
+# Telegram configurados (alertas_activas=0 desde el seed).
+#
+# Puertos separados del stack real para poder correr ambos a la vez:
+#   Frontend demo:  http://localhost:8095   (real: puerto 80)
+#   Backend demo:   http://localhost:5001   (real: puerto 5000)
+#   SQL Server demo: localhost,1434         (real: puerto 1433)
+#
+# Uso:
+#   cp .env.demo.example .env.demo   (si no existe ya — trae valores dummy listos)
+#   docker compose -f docker-compose.demo.yml --env-file .env.demo up -d --build
+#
+# Login: admin / admin123 (igual que en el stack de desarrollo local)
