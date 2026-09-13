@@ -163,7 +163,7 @@ export function Dashboard() {
               { color: '#72BF44', val: kpis.ups,       label: 'Operativos' },
               { color: '#F04545', val: kpis.downs,      label: 'Caídos' },
               { color: '#F99B1C', val: kpis.incActivos, label: 'Incidentes' },
-              { color: '#38332F', val: sinD,             label: 'Sin datos', textColor: '#a09890' },
+              { color: '#232733', val: sinD,             label: 'Sin datos', textColor: '#8d94a3' },
             ].map(({ color, val, label, textColor }) => (
               <div key={label} className="flex items-center gap-2.5 text-[0.88rem]">
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
@@ -188,7 +188,7 @@ export function Dashboard() {
             bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
               signalStatus === 'ok' ? 'bg-brand animate-ping-pulse' :
-              signalStatus === 'error' ? 'bg-danger' : 'bg-[#a09890]'
+              signalStatus === 'error' ? 'bg-danger' : 'bg-[#8d94a3]'
             }`} />
             <span>{signalStatus === 'ok' ? 'En vivo' : signalStatus === 'error' ? 'Sin conexión' : 'En espera'}</span>
           </div>

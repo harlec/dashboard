@@ -4,17 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta Pulso Vial — tomada del logo
-        brand:        '#0F6F5A',
-        'brand-light': '#4CAF75',
+        // Paleta corporativa ALEATICA — misma que usa el muro NOC (NocMuro.tsx),
+        // migrada acá para que todo el sistema comparta una sola identidad visual.
+        brand:        '#72BF44',
+        'brand-light': '#72BF44',
         danger:  '#F04545',
         warn:    '#F99B1C',
-        surface: '#141210',
-        'surface-2': '#1e1c1a',
-        'surface-3': '#242120',
-        border:  '#252220',
-        muted:   '#a09890',
-        dim:     '#7a7470',
+        surface: '#12141b',
+        'surface-2': '#191c26',
+        'surface-3': '#1f2330',
+        border:  '#262c3a',
+        muted:   '#8d94a3',
+        dim:     '#656d7d',
       },
       fontFamily: {
         // --app-font la fija useFontScale.ts en runtime según Admin → Configuración

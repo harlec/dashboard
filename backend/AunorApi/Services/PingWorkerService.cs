@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Channels;
@@ -20,34 +21,68 @@ public class PingWorkerService(
 {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        var intervalSec  = config.GetValue<int>("Ping:IntervalSeconds",  30);
-        var downRetrySec = config.GetValue<int>("Ping:DownRetrySeconds", 12);
-        var timeoutMs    = config.GetValue<int>("Ping:TimeoutSeconds",   3) * 1000;
-        var pingsPerHost = config.GetValue<int>("Ping:PingsPerHost",     2);
-        var maxParallel  = config.GetValue<int>("Ping:MaxParallel",      60);
+        var intervalSec    = config.GetValue<int>("Ping:IntervalSeconds",  30);
+        var downRetrySec   = config.GetValue<int>("Ping:DownRetrySeconds", 12);
+        var timeoutMs      = config.GetValue<int>("Ping:TimeoutSeconds",   3) * 1000;
+        var pingsPerHost   = config.GetValue<int>("Ping:PingsPerHost",     2);
+        var maxParallel    = config.GetValue<int>("Ping:MaxParallel",      60);
+        var icmpMaxParallel = config.GetValue<int>("Ping:IcmpMaxParallel", 20);
+        var confirmacionesDown = config.GetValue<int>("Ping:ConfirmacionesDown", 2);
 
         log.LogInformation(
-            "PingWorker iniciado — ciclo normal {n}s, retry DOWN {d}s, timeout {t}s, paralelo {p}",
-            intervalSec, downRetrySec, timeoutMs / 1000, maxParallel);
+            "PingWorker iniciado — ciclo normal {n}s, retry DOWN {d}s, timeout {t}s, paralelo {p}, paralelo ICMP {pi}, confirmaciones DOWN {c}",
+            intervalSec, downRetrySec, timeoutMs / 1000, maxParallel, icmpMaxParallel, confirmacionesDown);
+
+        // Semáforo dedicado para los sockets ICMP raw (compartido entre ciclo normal
+        // y retry DOWN). En Linux un socket raw recibe una copia de TODO el tráfico
+        // ICMP del host, no solo el suyo — con muchos sockets raw abiertos a la vez
+        // (una estación con 40+ equipos, maxParallel alto) cada respuesta se reparte
+        // y se filtra en todos ellos, y algunas se procesan tarde y expiran el timeout
+        // aunque el paquete sí llegó a tiempo. Limitarlo aparte del paralelo general
+        // (que también cubre chequeos TCP, sin este problema) evita el atasco.
+        // (Se probó quitar CAP_NET_RAW para usar sockets sin privilegios y no
+        // necesitar este límite — el .NET de esta imagen no soporta ese fallback en
+        // Linux, así que se mantiene CAP_NET_RAW y este semáforo como el fix real.)
+        var icmpSem = new SemaphoreSlim(icmpMaxParallel, icmpMaxParallel);
+
+        // Cuenta de ciclos DOWN consecutivos por equipo (compartida entre ciclo
+        // normal y retry). Un solo ciclo malo (aunque ya no debería ser común,
+        // ver icmpSem arriba) no basta para declarar un incidente — se necesitan
+        // confirmacionesDown seguidas. Filtra el "va y vuelve en <1 minuto" que
+        // antes creaba incidente y mandaba alerta desde el primer ciclo fallido.
+        var downStreak = new ConcurrentDictionary<int, int>();
 
         // Canal para el loop de retry rápido de equipos DOWN
         var downChannel = Channel.CreateUnbounded<int>();
 
+        // Cola de alertas: email/Telegram se despachan aparte, en su propia tarea,
+        // para que un SMTP lento o caído (o muchos cambios de estado a la vez) no
+        // bloqueen el loop que procesa resultados de ping — ese loop es lo que
+        // actualiza la BD y el hub en tiempo real, y antes esperaba a que cada
+        // alerta terminara (o fallara) antes de seguir con el siguiente equipo.
+        var alertQueue = Channel.CreateUnbounded<AlertRequest>();
+
         // Tarea: ciclo normal completo cada intervalSec
-        var normalTask = RunNormalCycle(downChannel.Writer, timeoutMs, pingsPerHost,
-                                        maxParallel, intervalSec, ct);
+        var normalTask = RunNormalCycle(downChannel.Writer, alertQueue.Writer, timeoutMs, pingsPerHost,
+                                        maxParallel, icmpSem, downStreak, confirmacionesDown, intervalSec, ct);
 
         // Tarea: retry rápido solo para equipos DOWN cada downRetrySec
-        var retryTask  = RunDownRetry(downChannel.Reader, timeoutMs, pingsPerHost,
-                                      downRetrySec, ct);
+        var retryTask  = RunDownRetry(downChannel.Reader, alertQueue.Writer, timeoutMs, pingsPerHost,
+                                      icmpSem, downStreak, confirmacionesDown, downRetrySec, ct);
 
-        await Task.WhenAll(normalTask, retryTask);
+        // Tarea: despacha la cola de alertas a su propio ritmo
+        var alertTask  = RunAlertQueue(alertQueue.Reader, ct);
+
+        await Task.WhenAll(normalTask, retryTask, alertTask);
     }
+
+    private readonly record struct AlertRequest(int EquipoId, bool Down, int DuracionMin, string? Detalle);
 
     // ── Ciclo completo: pinga todo en paralelo ────────────────────────────
     private async Task RunNormalCycle(
-        ChannelWriter<int> downWriter,
-        int timeoutMs, int pingsPerHost, int maxParallel,
+        ChannelWriter<int> downWriter, ChannelWriter<AlertRequest> alertWriter,
+        int timeoutMs, int pingsPerHost, int maxParallel, SemaphoreSlim icmpSem,
+        ConcurrentDictionary<int, int> downStreak, int confirmacionesDown,
         int intervalSec, CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
@@ -68,7 +103,7 @@ public class PingWorkerService(
                 var pingTasks = equipos.Select(async eq =>
                 {
                     await sem.WaitAsync(ct);
-                    try   { return (eq.Id, eq.ViaId, eq.EstacionId, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost)); }
+                    try   { return (eq.Id, eq.ViaId, eq.EstacionId, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost, icmpSem)); }
                     finally { sem.Release(); }
                 });
 
@@ -81,14 +116,16 @@ public class PingWorkerService(
                 foreach (var (equipoId, viaId, estacionId, (estado, latencia, detalle)) in results)
                 {
                     var motivoMtto = ResolverMantenimiento(mantenimientosActivos, equipoId, viaId, estacionId);
-                    var changed = await ProcessResult(db2, equipoId, viaId, estacionId, estado, latencia, detalle, motivoMtto, ct);
-                    if (changed)
-                    {
-                        kpiChanged = true;
-                        // Si quedó DOWN → mandarlo al canal de retry rápido
-                        if (estado == "DOWN")
-                            await downWriter.WriteAsync(equipoId, ct);
-                    }
+                    var changed = await ProcessResult(db2, alertWriter, downStreak, confirmacionesDown,
+                        equipoId, viaId, estacionId, estado, latencia, detalle, motivoMtto, ct);
+                    if (changed) kpiChanged = true;
+
+                    // Encolarlo para reintento rápido (downRetrySec) apenas sale DOWN,
+                    // esté confirmado o no — así la confirmación llega en ~downRetrySec
+                    // en vez de esperar hasta el próximo ciclo completo (intervalSec),
+                    // sin bloquear el resto del barrido (RunDownRetry corre aparte).
+                    if (estado == "DOWN")
+                        await downWriter.WriteAsync(equipoId, ct);
                 }
 
                 if (kpiChanged) await EmitKpis(db2, ct);
@@ -104,8 +141,9 @@ public class PingWorkerService(
 
     // ── Retry rápido: solo los equipos DOWN ───────────────────────────────
     private async Task RunDownRetry(
-        ChannelReader<int> downReader,
-        int timeoutMs, int pingsPerHost,
+        ChannelReader<int> downReader, ChannelWriter<AlertRequest> alertWriter,
+        int timeoutMs, int pingsPerHost, SemaphoreSlim icmpSem,
+        ConcurrentDictionary<int, int> downStreak, int confirmacionesDown,
         int retrySec, CancellationToken ct)
     {
         // Conjunto de IDs que están en DOWN para monitorear más seguido
@@ -126,14 +164,15 @@ public class PingWorkerService(
                 var mantenimientosActivos = await CargarMantenimientosActivos(db, ct);
 
                 var pingTasks = equipos.Select(async eq =>
-                    (eq.Id, eq.ViaId, eq.EstacionId, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost)));
+                    (eq.Id, eq.ViaId, eq.EstacionId, await CheckHost(eq.Ip, eq.CheckPort, timeoutMs, pingsPerHost, icmpSem)));
                 var results = await Task.WhenAll(pingTasks);
 
                 using var db2 = NewDb();
                 foreach (var (equipoId, viaId, estacionId, (estado, latencia, detalle)) in results)
                 {
                     var motivoMtto = ResolverMantenimiento(mantenimientosActivos, equipoId, viaId, estacionId);
-                    var changed = await ProcessResult(db2, equipoId, viaId, estacionId, estado, latencia, detalle, motivoMtto, ct);
+                    var changed = await ProcessResult(db2, alertWriter, downStreak, confirmacionesDown,
+                        equipoId, viaId, estacionId, estado, latencia, detalle, motivoMtto, ct);
                     // Si recuperó → sacarlo del conjunto DOWN
                     if (estado == "UP") downIds.Remove(equipoId);
                     if (changed) await EmitKpis(db2, ct);
@@ -149,7 +188,9 @@ public class PingWorkerService(
 
     // ── Procesar un resultado de ping ─────────────────────────────────────
     private async Task<bool> ProcessResult(
-        AppDbContext db, int equipoId, int viaId, int estacionId,
+        AppDbContext db, ChannelWriter<AlertRequest> alertWriter,
+        ConcurrentDictionary<int, int> downStreak, int confirmacionesDown,
+        int equipoId, int viaId, int estacionId,
         string estado, double? latencia, string? detalle, string? motivoMtto, CancellationToken ct)
     {
         // Se actualiza SIEMPRE, en todo ciclo (a diferencia de ping_log, que solo
@@ -166,6 +207,19 @@ public class PingWorkerService(
         else
             await db.Equipos.Where(e => e.Id == equipoId)
                 .ExecuteUpdateAsync(s => s.SetProperty(e => e.UltimoPingEn, ahora), ct);
+
+        // Confirmación de DOWN: un solo ciclo fallido no basta (podría ser un
+        // socket que se quedó atrás, no una caída real) — se necesitan
+        // confirmacionesDown ciclos seguidos en DOWN antes de tocar ping_log/
+        // incidentes/alertas. Esto es lo que evita que un "va y vuelve" de
+        // menos de 1 minuto quede registrado como incidente.
+        if (estado == "UP")
+            downStreak.TryRemove(equipoId, out _);
+        else
+        {
+            var racha = downStreak.AddOrUpdate(equipoId, 1, (_, c) => c + 1);
+            if (racha < confirmacionesDown) return false;
+        }
 
         var last = await db.PingLogs
             .Where(p => p.EquipoId == equipoId)
@@ -208,7 +262,7 @@ public class PingWorkerService(
                 {
                     var enGrupo = await EvaluarGrupoAsync(db, viaId, estacionId, ct);
                     if (!enGrupo)
-                        await SendAlertsAsync(db, equipoId, down: true, duracionMin: 0, detalle);
+                        await alertWriter.WriteAsync(new AlertRequest(equipoId, true, 0, detalle), ct);
                 }
             }
         }
@@ -232,7 +286,7 @@ public class PingWorkerService(
                 {
                     var enGrupo = await EvaluarGrupoAsync(db, viaId, estacionId, ct);
                     if (!enGrupo)
-                        await SendAlertsAsync(db, equipoId, down: false, duracionMin: inc.DuracionMin ?? 0);
+                        await alertWriter.WriteAsync(new AlertRequest(equipoId, false, inc.DuracionMin ?? 0, null), ct);
                 }
             }
         }
@@ -382,6 +436,26 @@ public class PingWorkerService(
         return min < 60 ? $"{min}m" : $"{min / 60}h {min % 60}m";
     }
 
+    // ── Consumidor de la cola de alertas ───────────────────────────────────
+    // Corre aparte del loop de ping: si el email (u otro canal) está lento o
+    // caído, aquí se queda atrás sin frenar la actualización de estado/BD/hub
+    // que ve el dashboard.
+    private async Task RunAlertQueue(ChannelReader<AlertRequest> reader, CancellationToken ct)
+    {
+        await foreach (var req in reader.ReadAllAsync(ct))
+        {
+            try
+            {
+                using var db = NewDb();
+                await SendAlertsAsync(db, req.EquipoId, req.Down, req.DuracionMin, req.Detalle);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, "Error procesando cola de alertas para equipo {id}", req.EquipoId);
+            }
+        }
+    }
+
     // ── Notificar email + Telegram cuando un equipo cae o se recupera ─────
     private async Task SendAlertsAsync(AppDbContext db, int equipoId, bool down, int duracionMin, string? detalle = null)
     {
@@ -436,10 +510,10 @@ public class PingWorkerService(
 
     // Decide el método según si hay puerto(s) TCP configurados
     private static Task<(string estado, double? latencia, string? detalle)> CheckHost(
-        string ip, string? ports, int timeoutMs, int pingsPerHost)
+        string ip, string? ports, int timeoutMs, int pingsPerHost, SemaphoreSlim icmpSem)
     {
         if (string.IsNullOrWhiteSpace(ports))
-            return IcmpPing(ip, timeoutMs, pingsPerHost);
+            return IcmpPing(ip, timeoutMs, pingsPerHost, icmpSem);
 
         var portList = ports.Split(',')
             .Select(p => int.TryParse(p.Trim(), out var n) ? n : 0)
@@ -447,7 +521,7 @@ public class PingWorkerService(
             .ToList();
 
         return portList.Count == 0
-            ? IcmpPing(ip, timeoutMs, pingsPerHost)
+            ? IcmpPing(ip, timeoutMs, pingsPerHost, icmpSem)
             : TcpCheckMulti(ip, portList, timeoutMs);
     }
 
@@ -480,9 +554,11 @@ public class PingWorkerService(
         catch (Exception ex) { return (false, null, ex.GetType().Name); }
     }
 
-    // ICMP ping — fallback para equipos sin puerto TCP conocido
+    // ICMP ping — fallback para equipos sin puerto TCP conocido.
+    // El socket raw se limita con icmpSem (ver comentario en ExecuteAsync) para no
+    // tener decenas abiertos a la vez en estaciones con muchos equipos.
     private static async Task<(string estado, double? latencia, string? detalle)> IcmpPing(
-        string ip, int timeoutMs, int count)
+        string ip, int timeoutMs, int count, SemaphoreSlim icmpSem)
     {
         double total = 0;
         int    ok    = 0;
@@ -490,6 +566,7 @@ public class PingWorkerService(
 
         for (int i = 0; i < count; i++)
         {
+            await icmpSem.WaitAsync();
             try
             {
                 using var ping  = new Ping();
@@ -498,6 +575,7 @@ public class PingWorkerService(
                 else ultimoDetalle = reply.Status.ToString();
             }
             catch (Exception ex) { ultimoDetalle = ex.GetType().Name; }
+            finally { icmpSem.Release(); }
         }
 
         return ok == 0 ? ("DOWN", null, ultimoDetalle ?? "TimedOut") : ("UP", total / ok, null);

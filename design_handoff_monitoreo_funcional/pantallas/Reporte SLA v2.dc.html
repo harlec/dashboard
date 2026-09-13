@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0d13; }
+  a { color: oklch(0.80 0.11 200); text-decoration: none; }
+  a:hover { color: oklch(0.88 0.10 200); }
+  @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.86); } }
+</style>
+</helmet>
+
+<div data-screen-label="Reporte SLA v2" style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 22px 30px 24px; display: flex; flex-direction: column; gap: 13px; font-family: Manrope, system-ui, sans-serif; color: oklch(0.96 0.004 265); overflow: hidden; background-color: #0a0d13; background-image: radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%), radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%), linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%);">
+
+  <div style="height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="width: 40px; height: 40px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; background: oklch(0.30 0.02 250 / 0.60); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+      </div>
+      <div style="font-size: 23px; font-weight: 700; letter-spacing: 0.2em; color: oklch(0.84 0.11 195);">PULSO<span style="font-weight: 300; color: oklch(0.94 0.005 265);">VIAL</span></div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+          <div style="padding: 8px 15px; border-radius: 11px; font-size: 16px; font-weight: {{ n.peso }}; cursor: pointer; white-space: nowrap; color: {{ n.fg }}; background: {{ n.bg }}; box-shadow: {{ n.sh }};">{{ n.txt }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 7px 15px 7px 12px; border-radius: 999px; background: oklch(0.45 0.09 168 / 0.16); box-shadow: inset 0 0 0 1px oklch(0.60 0.10 168 / 0.28);">
+        <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.82 0.13 168); animation: breathe 2.6s ease-in-out infinite;"></div>
+        <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: oklch(0.84 0.10 168);">EN VIVO</span>
+      </div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.62 0.015 265);">Administrador</div>
+      <div style="font-size: 32px; font-weight: 300; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: oklch(0.95 0.004 265);">{{ reloj }}</div>
+    </div>
+  </div>
+
+  <div style="height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.015em;">Reporte SLA</div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.56 0.015 265);">disponibilidad por equipo · 14/08 – 13/09/2026 · 726 h 30 m de ventana</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 7px 15px; border-radius: 11px; font-size: 15px; font-weight: 500; cursor: pointer; color: oklch(0.82 0.012 265); background: oklch(0.28 0.02 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+        <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.54 0.015 265);">Período</span>14/08 – 13/09/2026
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; padding: 7px 15px; border-radius: 11px; font-size: 15px; font-weight: 500; cursor: pointer; color: oklch(0.82 0.012 265); background: oklch(0.28 0.02 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+        <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.54 0.015 265);">Peaje</span>Todos
+      </div>
+      <div style="padding: 8px 18px; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; color: oklch(0.18 0.04 200); background: linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200));">Consultar</div>
+    </div>
+  </div>
+
+  <div style="height: 106px; flex: 0 0 auto; display: grid; grid-template-columns: 1.45fr repeat(5, 1fr); gap: 13px;">
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.84 0.09 62);">Uptime global</div>
+      <div style="display: flex; align-items: baseline; gap: 12px;">
+        <div style="font-size: 42px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.90 0.11 62);">{{ global.pct }}</div>
+        <div style="font-size: 17px; font-weight: 400; color: oklch(0.68 0.05 62);">{{ global.brecha }}</div>
+      </div>
+      <div style="height: 6px; border-radius: 999px; background: oklch(1 0 0 / 0.08); overflow: hidden;">
+        <div style="width: {{ global.barra }}; height: 100%; border-radius: 999px; background: linear-gradient(90deg, oklch(0.74 0.13 85), oklch(0.84 0.13 62));"></div>
+      </div>
+    </div>
+
+    <sc-for list="{{ estaciones }}" as="e" hint-placeholder-count="5">
+      <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 12px 34px oklch(0 0 0 / 0.30);">
+        <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: {{ e.color }};">{{ e.nombre }}</div>
+        <div style="font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; color: {{ e.pctFg }};">{{ e.pct }}</div>
+        <div style="height: 5px; border-radius: 999px; background: oklch(1 0 0 / 0.07); overflow: hidden;">
+          <div style="width: {{ e.barra }}; height: 100%; border-radius: 999px; background: {{ e.barraColor }};"></div>
+        </div>
+        <div style="font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.54 0.015 265);">{{ e.nota }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="height: 236px; flex: 0 0 auto; display: grid; grid-template-columns: 1.25fr 1fr 1.15fr; gap: 13px;">
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Equipos fuera de SLA</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">{{ incumpleNota }}</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; padding-top: 6px;">
+        <sc-for list="{{ incumplen }}" as="i" hint-placeholder-count="6">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 132px; flex: 0 0 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 600;">{{ i.equipo }}</div>
+            <div style="width: 78px; flex: 0 0 auto; font-size: 13px; font-weight: 600; color: {{ i.color }};">{{ i.est }}</div>
+            <div style="flex: 1 1 auto; min-width: 0; height: 9px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ i.ancho }}; height: 100%; border-radius: 999px; background: linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22));"></div>
+            </div>
+            <div style="width: 66px; flex: 0 0 auto; text-align: right; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.58 0.015 265);">{{ i.caido }}</div>
+            <div style="width: 62px; flex: 0 0 auto; text-align: right; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: oklch(0.84 0.13 22);">{{ i.pct }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Por tipo de equipo</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">uptime medio</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; padding-top: 6px;">
+        <sc-for list="{{ tipos }}" as="t" hint-placeholder-count="6">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 15px; font-weight: 500; color: oklch(0.84 0.01 265);">{{ t.nombre }}</span>
+              <div style="display: flex; align-items: baseline; gap: 10px;">
+                <span style="font-size: 13px; font-weight: 500; color: oklch(0.50 0.015 265);">{{ t.n }}</span>
+                <span style="font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ t.fg }};">{{ t.pct }}</span>
+              </div>
+            </div>
+            <div style="height: 7px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ t.ancho }}; height: 100%; border-radius: 999px; background: {{ t.barra }};"></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">A qué se fue el tiempo caído</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">{{ motivoNota }}</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; padding-top: 6px;">
+        <sc-for list="{{ motivos }}" as="m" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+              <span style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 500; color: {{ m.fg }};">{{ m.nombre }}</span>
+              <div style="flex: 0 0 auto; display: flex; align-items: baseline; gap: 10px;">
+                <span style="font-size: 13px; font-weight: 500; color: oklch(0.50 0.015 265);">{{ m.share }}</span>
+                <span style="font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ m.fg }};">{{ m.horas }}</span>
+              </div>
+            </div>
+            <div style="height: 7px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ m.ancho }}; height: 100%; border-radius: 999px; background: {{ m.barra }};"></div>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-radius: 11px; font-size: 14px; font-weight: 500; line-height: 1.4; color: oklch(0.80 0.06 200); background: oklch(0.32 0.04 210 / 0.45); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06); text-wrap: pretty;">{{ motivoInsight }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1 1 auto; min-height: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 24px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+    <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: baseline; gap: 13px;">
+        <div style="font-size: 19px; font-weight: 600;">Detalle por equipo</div>
+        <div style="font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.52 0.015 265);">200 equipos · ordenado por uptime ascendente</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <sc-for list="{{ orden }}" as="o" hint-placeholder-count="3">
+          <div onClick="{{ o.on }}" style="padding: 7px 15px; border-radius: 11px; font-size: 15px; font-weight: {{ o.peso }}; cursor: pointer; white-space: nowrap; color: {{ o.fg }}; background: {{ o.bg }}; box-shadow: {{ o.sh }};">{{ o.txt }}</div>
+        </sc-for>
+        <div style="padding: 8px 16px; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; color: oklch(0.90 0.10 160); background: oklch(0.38 0.08 165 / 0.40); box-shadow: inset 0 0 0 1px oklch(0.65 0.10 165 / 0.30);">Descargar CSV</div>
+      </div>
+    </div>
+
+    <div style="flex: 0 0 auto; display: grid; grid-template-columns: 0.85fr 1.15fr 1fr 60px 1.35fr 80px 88px 1.6fr; gap: 12px; padding: 11px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.50 0.015 265); border-bottom: 1px solid oklch(1 0 0 / 0.07);">
+      <div>Peaje</div><div>Equipo</div><div>Tipo</div><div>Vía</div><div>Uptime</div><div>Caído</div><div>Eventos</div><div>Motivo principal</div>
+    </div>
+
+    <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around;">
+      <sc-for list="{{ filas }}" as="f" hint-placeholder-count="9">
+        <div style="display: grid; grid-template-columns: 0.85fr 1.15fr 1fr 60px 1.35fr 80px 88px 1.6fr; gap: 12px; align-items: center; font-size: 15px; font-variant-numeric: tabular-nums;">
+          <div style="font-weight: 600; color: {{ f.estFg }};">{{ f.est }}</div>
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;">{{ f.equipo }}</div>
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: oklch(0.64 0.015 265);">{{ f.tipo }}</div>
+          <div style="color: oklch(0.70 0.015 265);">{{ f.via }}</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="flex: 1 1 auto; min-width: 0; height: 7px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ f.ancho }}; height: 100%; border-radius: 999px; background: {{ f.barra }};"></div>
+            </div>
+            <span style="flex: 0 0 auto; width: 62px; text-align: right; font-weight: 600; color: {{ f.pctFg }};">{{ f.pct }}</span>
+          </div>
+          <div style="text-align: right; font-weight: 500; color: {{ f.caidoFg }};">{{ f.caido }}</div>
+          <div style="text-align: right; color: oklch(0.60 0.015 265);">{{ f.eventos }}</div>
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: oklch(0.58 0.015 265);">{{ f.motivo }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  state = { reloj: '', orden: null };
+
+  componentDidMount() {
+    const tick = () => this.setState({ reloj: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) });
+    tick();
+    this._t = setInterval(tick, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  renderVals() {
+    const EST_COLOR = {
+      'KM 402': 'oklch(0.78 0.11 205)', 'VIRU': 'oklch(0.84 0.12 95)', 'FORTALEZA': 'oklch(0.78 0.13 160)',
+      'HUARMEY': 'oklch(0.78 0.13 45)', 'SANTA': 'oklch(0.76 0.10 300)'
+    };
+    const META = 99.5;
+    const nav = ['Dashboard', 'NOC', 'Incidentes', 'Reporte SLA', 'Reportes', 'Discrepancias', 'OCR Placas', 'Admin'].map((t) => t === 'Reporte SLA'
+      ? { txt: t, peso: 600, fg: 'oklch(0.95 0.01 265)', bg: 'oklch(0.34 0.045 210 / 0.75)', sh: 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' }
+      : { txt: t, peso: 500, fg: 'oklch(0.66 0.015 265)', bg: 'transparent', sh: 'none' });
+
+    // el uptime vive entre 90 y 100: la barra mapea ese rango, no 0–100
+    const barraPct = (p) => Math.max(0, Math.min(100, (p - 90) / 10 * 100)) + '%';
+    const fgPct = (p) => p >= META ? 'oklch(0.86 0.11 160)' : p >= 97 ? 'oklch(0.88 0.12 62)' : 'oklch(0.84 0.14 22)';
+    const barraColor = (p) => p >= META
+      ? 'linear-gradient(90deg, oklch(0.60 0.12 165), oklch(0.78 0.13 160))'
+      : p >= 97
+        ? 'linear-gradient(90deg, oklch(0.68 0.12 70), oklch(0.82 0.13 62))'
+        : 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))';
+
+    const EST = [['FORTALEZA', 99.93, 40], ['HUARMEY', 96.38, 40], ['KM 402', 97.69, 42], ['SANTA', 93.49, 37], ['VIRU', 97.20, 41]];
+    const equiposTotal = EST.reduce((a, e) => a + e[2], 0);
+    const globalPct = EST.reduce((a, e) => a + e[1] * e[2], 0) / equiposTotal;
+    const estaciones = EST.map(([n, p, eq]) => ({
+      nombre: n, color: EST_COLOR[n], pct: p.toFixed(2) + '%', pctFg: fgPct(p),
+      barra: barraPct(p), barraColor: barraColor(p),
+      nota: eq + ' equipos · ' + (p >= META ? 'cumple' : (META - p).toFixed(2) + ' pp bajo meta')
+    }));
+    const global = {
+      pct: globalPct.toFixed(2) + '%',
+      brecha: 'meta ' + META + '% · faltan ' + (META - globalPct).toFixed(2) + ' pp · ' + equiposTotal + ' equipos',
+      barra: barraPct(globalPct)
+    };
+
+    const INC = [
+      ['PMV Sur SANTA', 'SANTA', 88.4, '84 h 12 m'], ['PC vía 806', 'SANTA', 91.2, '63 h 50 m'],
+      ['Cám OCR 501', 'HUARMEY', 92.6, '53 h 45 m'], ['PMV Norte KM402', 'KM 402', 93.1, '50 h 06 m'],
+      ['PC OCR 803', 'SANTA', 94.8, '37 h 46 m'], ['Cám valid. 703', 'VIRU', 95.9, '29 h 46 m']
+    ];
+    const incumplen = INC.map(([equipo, est, pct, caido]) => ({
+      equipo: equipo, est: est, color: EST_COLOR[est], pct: pct.toFixed(1) + '%', caido: caido,
+      ancho: Math.round((100 - pct) / (100 - INC[0][2]) * 100) + '%'
+    }));
+    const incumpleNota = '17 de 200 bajo ' + META + '%';
+
+    const TIPOS = [['PC de vía', 40, 98.9], ['PC OCR', 40, 98.4], ['Display tarifario', 40, 99.1], ['Cámara OCR', 40, 97.6], ['Cámara validación', 32, 98.2], ['PMV', 8, 91.3]];
+    const tipos = TIPOS.map(([nombre, n, pct]) => ({
+      nombre: nombre, n: n + ' equipos', pct: pct.toFixed(1) + '%', fg: fgPct(pct),
+      ancho: barraPct(pct), barra: barraColor(pct)
+    }));
+
+    const MOT = [
+      ['Modo mantenimiento · cambio de UPS', 402, 'oklch(0.82 0.11 200)', 'linear-gradient(90deg, oklch(0.56 0.09 215), oklch(0.74 0.11 205))'],
+      ['Caída de enlace (ráfagas de red)', 186, 'oklch(0.86 0.13 22)', 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))'],
+      ['Falla de equipo en sitio', 121, 'oklch(0.88 0.12 62)', 'linear-gradient(90deg, oklch(0.68 0.12 70), oklch(0.82 0.13 62))'],
+      ['Sin clasificar', 57, 'oklch(0.70 0.015 265)', 'linear-gradient(90deg, oklch(0.42 0.015 265), oklch(0.56 0.015 265))']
+    ];
+    const totalHoras = MOT.reduce((a, m) => a + m[1], 0);
+    const motivos = MOT.map(([nombre, h, fg, barra]) => ({
+      nombre: nombre, horas: h + ' h', fg: fg, barra: barra,
+      share: Math.round(h / totalHoras * 100) + '%',
+      ancho: Math.round(h / MOT[0][1] * 100) + '%'
+    }));
+    const motivoNota = totalHoras + ' h acumuladas';
+    const motivoInsight = 'El 52% del tiempo caído es mantenimiento programado — si se excluye, el uptime global sube a 98.4% y solo 6 equipos siguen fuera de SLA.';
+
+    const ORDEN = ['Peores primero', 'Por peaje', 'Por tipo'];
+    const ordenActivo = this.state.orden || ORDEN[0];
+    const orden = ORDEN.map((t) => t === ordenActivo
+      ? { txt: t, peso: 600, fg: 'oklch(0.95 0.01 265)', bg: 'oklch(0.32 0.04 210 / 0.70)', sh: 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.32)', on: () => this.setState({ orden: t }) }
+      : { txt: t, peso: 500, fg: 'oklch(0.62 0.015 265)', bg: 'transparent', sh: 'none', on: () => this.setState({ orden: t }) });
+
+    const FILAS = [
+      ['SANTA', 'PMV Sur SANTA', 'PMV', '—', 88.40, '84 h 12 m', 31, 'Falla de equipo en sitio'],
+      ['SANTA', 'PC vía 806', 'PC de vía', '806', 91.20, '63 h 50 m', 24, 'Caída de enlace'],
+      ['HUARMEY', 'Cám OCR 501', 'Cámara OCR', '501', 92.60, '53 h 45 m', 19, 'Falla de equipo en sitio'],
+      ['KM 402', 'PMV Norte KM402', 'PMV', '—', 93.10, '50 h 06 m', 28, 'Caída de enlace'],
+      ['SANTA', 'PC OCR 803', 'PC OCR', '803', 94.80, '37 h 46 m', 16, 'Modo mantenimiento · cambio de UPS'],
+      ['VIRU', 'Cám valid. 703', 'Cámara validación', '703', 95.90, '29 h 46 m', 14, 'Modo mantenimiento · cambio de UPS'],
+      ['HUARMEY', 'Display 508', 'Display tarifario', '508', 97.10, '21 h 03 m', 11, 'Modo mantenimiento · cambio de UPS'],
+      ['KM 402', 'PC vía 607', 'PC de vía', '607', 98.35, '11 h 58 m', 9, 'Caída de enlace'],
+      ['FORTALEZA', 'PC vía 401', 'PC de vía', '401', 99.63, '2 h 41 m', 5, 'Modo mantenimiento · cambio de UPS']
+    ];
+    const filas = FILAS.map(([est, equipo, tipo, via, pct, caido, eventos, motivo]) => ({
+      est: est, estFg: EST_COLOR[est], equipo: equipo, tipo: tipo, via: via,
+      pct: pct.toFixed(2) + '%', pctFg: fgPct(pct), ancho: barraPct(pct), barra: barraColor(pct),
+      caido: caido, caidoFg: pct >= META ? 'oklch(0.62 0.015 265)' : 'oklch(0.84 0.13 22)',
+      eventos: eventos, motivo: motivo
+    }));
+
+    return {
+      reloj: this.state.reloj, nav: nav, global: global, estaciones: estaciones,
+      incumplen: incumplen, incumpleNota: incumpleNota, tipos: tipos,
+      motivos: motivos, motivoNota: motivoNota, motivoInsight: motivoInsight,
+      orden: orden, filas: filas
+    };
+  }
+}
+</script>
+</body>
+</html>

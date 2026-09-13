@@ -63,7 +63,7 @@ function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
             return (
               <tr key={ri}>
                 <td style={{ padding: '2px 8px 2px 0', whiteSpace: 'nowrap' }}>
-                  <span style={{ color: ESTACION_COLOR[row.estacion] ?? '#a09890', fontSize: 9, marginRight: 4 }}>●</span>
+                  <span style={{ color: ESTACION_COLOR[row.estacion] ?? '#8d94a3', fontSize: 9, marginRight: 4 }}>●</span>
                   <span style={{ color: '#ccd0d8' }}>{row.via}</span>
                 </td>
                 <td style={{ padding: '2px 4px', textAlign: 'right', color: row.tasaVia >= 30 ? '#ef4b54' : row.tasaVia >= 15 ? '#e0991f' : '#3fb978', fontWeight: 700 }}>
@@ -285,7 +285,7 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
               const tasaError  = v.total > 0 ? errores / v.total * 100 : 0
               const tasaNoRec  = v.total > 0 ? v.noReconocidas / v.total * 100 : 0
               const tasaConf   = v.total > 0 ? v.confusiones   / v.total * 100 : 0
-              const eColor     = ESTACION_COLOR[v.estacion] ?? '#a09890'
+              const eColor     = ESTACION_COLOR[v.estacion] ?? '#8d94a3'
               const errColor   = tasaError >= 30 ? '#ef4b54' : tasaError >= 15 ? '#e0991f' : '#facc15'
               return (
                 <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
@@ -712,7 +712,7 @@ export function OcrDashboard() {
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <div style={{ width: 20, height: 2.5, background: LINEA_COLORS[i], borderRadius: 2, flexShrink: 0 }} />
                             <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#ccd0d8' }}>{v.via}</span>
-                            <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? '#a09890', marginLeft: 2 }}>{v.estacion}</span>
+                            <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? '#8d94a3', marginLeft: 2 }}>{v.estacion}</span>
                             <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3fb978', marginLeft: 'auto' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
                           </div>
                         ))}

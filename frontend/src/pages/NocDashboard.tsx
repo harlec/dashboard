@@ -83,7 +83,7 @@ export function NocDashboard() {
 
           {/* SignalR */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, border: '1px solid rgba(63,185,120,.4)', borderRadius: 20, padding: '5px 14px', color: '#3fb978', fontSize: 13 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: signalStatus === 'ok' ? '#3fb978' : signalStatus === 'error' ? '#ef4b54' : '#a09890', boxShadow: signalStatus === 'ok' ? '0 0 8px #3fb978' : 'none', display: 'inline-block' }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: signalStatus === 'ok' ? '#3fb978' : signalStatus === 'error' ? '#ef4b54' : '#8d94a3', boxShadow: signalStatus === 'ok' ? '0 0 8px #3fb978' : 'none', display: 'inline-block' }} />
             {signalStatus === 'ok' ? 'En vivo' : signalStatus === 'error' ? 'Sin conexión' : 'En espera'}
           </div>
         </div>

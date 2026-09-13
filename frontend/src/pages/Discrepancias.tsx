@@ -63,7 +63,7 @@ function EfectGauge({ pct }: { pct: number }) {
     <svg width="104" height="62" viewBox="0 0 104 62">
       {/* track */}
       <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none" stroke="#252220" strokeWidth="12" strokeLinecap="round" />
+        fill="none" stroke="#262c3a" strokeWidth="12" strokeLinecap="round" />
       {/* arc */}
       <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
         fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
@@ -72,7 +72,7 @@ function EfectGauge({ pct }: { pct: number }) {
         fontSize="17" fontWeight="800" fontFamily="var(--app-font)">
         {pct.toFixed(1)}%
       </text>
-      <text x={cx} y={cy + 13} textAnchor="middle" fill="#7a7470"
+      <text x={cx} y={cy + 13} textAnchor="middle" fill="#656d7d"
         fontSize="9" fontFamily="var(--app-font)">EFECTIVIDAD</text>
     </svg>
   )
@@ -83,7 +83,7 @@ function TrendTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const total = payload.reduce((s: number, p: any) => s + (p.value ?? 0), 0)
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
+    <div className="bg-[#191c26] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
       <div className="text-muted mb-1">{label}</div>
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-2">
@@ -103,7 +103,7 @@ function ParTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem] max-w-[260px]">
+    <div className="bg-[#191c26] border border-border rounded-lg px-3 py-2 text-[0.8rem] max-w-[260px]">
       <div className="text-warn font-semibold mb-0.5">{d?.desde}</div>
       <div className="text-[#00BBE7] font-semibold mb-1">→ {d?.hasta}</div>
       <div className="text-[#eae7e4] font-bold text-base">{d?.total} discrepancias</div>
@@ -140,9 +140,9 @@ function TopViasPanel({ vias, loading }: { vias: ViaConteo[]; loading: boolean }
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
                     <div className="h-full rounded-full"
-                      style={{ width: `${Math.round(v.pct / maxPct * 100)}%`, background: COLORS[v.estacion] ?? '#a09890' }} />
+                      style={{ width: `${Math.round(v.pct / maxPct * 100)}%`, background: COLORS[v.estacion] ?? '#8d94a3' }} />
                   </div>
-                  <span className="text-[0.7rem] flex-shrink-0" style={{ color: COLORS[v.estacion] ?? '#a09890' }}>
+                  <span className="text-[0.7rem] flex-shrink-0" style={{ color: COLORS[v.estacion] ?? '#8d94a3' }}>
                     {v.estacion}
                   </span>
                   <span className="text-[0.68rem] text-dim flex-shrink-0">
@@ -163,7 +163,7 @@ function EvolucionTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
+    <div className="bg-[#191c26] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
       <div className="text-muted mb-1">{label}</div>
       <div className="text-[#eae7e4]">{d.discrepancias.toLocaleString('es-PE')} / {d.total.toLocaleString('es-PE')} tránsitos</div>
       <div className="font-bold" style={{ color: tasaColor(d.pct) }}>{d.pct.toFixed(1)}%</div>
@@ -179,9 +179,9 @@ function ViaEvolucionChart({ data, loading }: { data: ViaEvolucion | null; loadi
   return (
     <ResponsiveContainer width="100%" height={170}>
       <LineChart data={data.diaria} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-        <XAxis dataKey="fecha" tick={{ fill: '#a09890', fontSize: 10 }} tickLine={false} axisLine={false}
+        <XAxis dataKey="fecha" tick={{ fill: '#8d94a3', fontSize: 10 }} tickLine={false} axisLine={false}
           tickFormatter={f => f.slice(5)} interval="preserveStartEnd" />
-        <YAxis tick={{ fill: '#a09890', fontSize: 10 }} tickLine={false} axisLine={false}
+        <YAxis tick={{ fill: '#8d94a3', fontSize: 10 }} tickLine={false} axisLine={false}
           tickFormatter={v => `${v}%`} width={34} domain={[0, (max: number) => Math.max(5, Math.ceil(Math.max(max, promedio) * 1.2))]} />
         <Tooltip content={<EvolucionTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)' }} />
         <Line type="monotone" dataKey="pct" stroke="#00BBE7" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
@@ -200,7 +200,7 @@ function MiniEstGauge({ est }: { est: EstacionConteo }) {
     <div className="flex flex-col items-center">
       <svg width="104" height="62" viewBox="0 0 104 62">
         <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-          fill="none" stroke="#252220" strokeWidth="12" strokeLinecap="round" />
+          fill="none" stroke="#262c3a" strokeWidth="12" strokeLinecap="round" />
         <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
           fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
           strokeDasharray={`${arc} ${circ}`} />
@@ -209,7 +209,7 @@ function MiniEstGauge({ est }: { est: EstacionConteo }) {
           {est.efectividad.toFixed(0)}%
         </text>
       </svg>
-      <span className="text-[0.85rem] font-bold -mt-0.5" style={{ color: COLORS[est.estacion] ?? '#a09890' }}>
+      <span className="text-[0.85rem] font-bold -mt-0.5" style={{ color: COLORS[est.estacion] ?? '#8d94a3' }}>
         {est.estacion}
       </span>
       <span className="text-[0.75rem] text-dim">{est.total.toLocaleString('es-PE')} disc.</span>
@@ -222,7 +222,7 @@ function tasaColor(t: number): string {
   if (t > 20) return '#F04545'
   if (t > 15) return '#F99B1C'
   if (t > 10) return '#FACC15'
-  return '#a09890'
+  return '#8d94a3'
 }
 
 // ── Badge estado sensor ───────────────────────────────────────
@@ -245,7 +245,7 @@ function HoraTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const d = payload[0]?.payload
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
+    <div className="bg-[#191c26] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
       <div className="text-muted mb-1">{String(label).padStart(2,'0')}:00 – {String(label).padStart(2,'0')}:59</div>
       <div className="flex flex-col gap-0.5">
         <div className="text-[#eae7e4]">Transacciones: <b>{d?.transacciones?.toLocaleString('es-PE')}</b></div>
@@ -425,7 +425,7 @@ th.c{text-align:center}
                   v.estado === 'ALERTA'  ? 'bg-warn/[0.03]' : ''}`}>
                   <td className="py-1.5 px-2 text-[#eae7e4] font-semibold whitespace-nowrap">{v.via}</td>
                   <td className="py-1.5 px-2">
-                    <span className="font-semibold" style={{ color: COLORS[v.estacion] ?? '#a09890' }}>
+                    <span className="font-semibold" style={{ color: COLORS[v.estacion] ?? '#8d94a3' }}>
                       {v.estacion}
                     </span>
                   </td>
@@ -463,10 +463,10 @@ th.c{text-align:center}
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={analisis.porHora} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-              <XAxis dataKey="hora" tick={{ fill: '#a09890', fontSize: 10 }}
+              <XAxis dataKey="hora" tick={{ fill: '#8d94a3', fontSize: 10 }}
                 tickLine={false} axisLine={false}
                 tickFormatter={h => `${String(h).padStart(2,'0')}h`} />
-              <YAxis tick={{ fill: '#a09890', fontSize: 10 }} tickLine={false} axisLine={false}
+              <YAxis tick={{ fill: '#8d94a3', fontSize: 10 }} tickLine={false} axisLine={false}
                 tickFormatter={v => `${v}%`} domain={[0, Math.ceil(maxTasa * 1.15)]} />
               <Tooltip content={<HoraTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Bar dataKey="tasaError" radius={[3, 3, 0, 0]} maxBarSize={28}>
@@ -633,14 +633,14 @@ export function Discrepancias() {
 
   const totalPaginas = detalle ? Math.ceil(detalle.total / detalle.porPagina) : 1
   const ef = resumen?.efectividad ?? null
+  const efGlowHex = ef !== null ? efectColor(ef) : '#8d94a3'
 
   return (
     <div className="px-5 py-4 pb-10">
 
       {/* ── Topbar ─────────────────────────────────────────── */}
       <div className="bg-surface rounded-xl px-6 py-4 mb-3.5">
-        {/* Fila 1: título + signal */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="text-[1.05rem] font-extrabold text-[#eae7e4]">Discrepancias DAC</div>
             <div className="text-[0.75rem] text-muted">
@@ -648,71 +648,74 @@ export function Discrepancias() {
               {' · '}refresco cada 60s
             </div>
           </div>
-          <div className={`flex items-center gap-1.5 text-[0.75rem] text-white/70
-            bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              signal === 'ok' ? 'bg-brand animate-ping-pulse' :
-              signal === 'error' ? 'bg-danger' : 'bg-[#a09890]'}`} />
-            <span>{signal === 'ok' ? 'En vivo' : signal === 'error' ? 'Sin conexión' : 'En espera'}</span>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Tabs de período */}
+            <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 flex-wrap">
+              {PERIODOS.map(({ key, label }) => (
+                <button key={key} onClick={() => { setPeriodo(key); setPagina(1) }}
+                  className={`px-3 py-1 rounded-md text-[0.78rem] font-semibold transition-all whitespace-nowrap ${
+                    periodo === key
+                      ? 'bg-warn text-[#0a0d13]'
+                      : 'text-white/50 hover:text-white/80'
+                  }`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className={`flex items-center gap-1.5 text-[0.75rem] text-white/70
+              bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10`}>
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                signal === 'ok' ? 'bg-brand animate-ping-pulse' :
+                signal === 'error' ? 'bg-danger' : 'bg-[#8d94a3]'}`} />
+              <span>{signal === 'ok' ? 'En vivo' : signal === 'error' ? 'Sin conexión' : 'En espera'}</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Fila 2: tabs + KPIs */}
-        <div className="flex items-center gap-6 flex-wrap">
-          {/* Tabs de período */}
-          <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 flex-wrap">
-            {PERIODOS.map(({ key, label }) => (
-              <button key={key} onClick={() => { setPeriodo(key); setPagina(1) }}
-                className={`px-3 py-1 rounded-md text-[0.78rem] font-semibold transition-all whitespace-nowrap ${
-                  periodo === key
-                    ? 'bg-warn text-[#0f0d0c]'
-                    : 'text-white/50 hover:text-white/80'
-                }`}>
-                {label}
-              </button>
-            ))}
-          </div>
+      {/* ── KPIs — tarjetas con degradado, estilo Muro NOC ─── */}
+      <div className="grid grid-cols-[1.1fr_1fr_1fr_1.8fr] gap-3.5 mb-3.5 max-[900px]:grid-cols-2">
+        {/* Efectividad global */}
+        <div className="rounded-2xl p-4 flex flex-col items-center justify-center"
+          style={{
+            background: `linear-gradient(160deg, ${efGlowHex}40 0%, #191c26 75%)`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -14px ${efGlowHex}80`,
+          }}>
+          {ef !== null ? <EfectGauge pct={ef} /> : <div className="text-muted text-sm">—</div>}
+          <div className="text-[0.66rem] text-dim -mt-1">meta 99.5%</div>
+        </div>
 
-          {/* Separador */}
-          <div className="w-px h-10 bg-border hidden sm:block" />
+        {/* Discrepancias */}
+        <div className="rounded-2xl p-4 flex flex-col justify-center gap-0.5"
+          style={{
+            background: 'linear-gradient(160deg, #F99B1C40 0%, #191c26 75%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -14px #F99B1C80',
+          }}>
+          <span className="text-[1.9rem] font-extrabold text-warn leading-none">
+            {resumen?.total?.toLocaleString('es-PE') ?? '—'}
+          </span>
+          <span className="text-[0.68rem] text-muted uppercase tracking-wide font-bold">discrepancias</span>
+        </div>
 
-          {/* Gauge efectividad */}
-          <div className="flex flex-col items-center">
-            {ef !== null
-              ? <EfectGauge pct={ef} />
-              : <div className="text-muted text-sm">—</div>
-            }
-            <div className="text-[0.66rem] text-dim -mt-1">meta 99.5%</div>
-          </div>
+        {/* Transacciones */}
+        <div className="rounded-2xl p-4 flex flex-col justify-center gap-0.5"
+          style={{
+            background: 'linear-gradient(160deg, #00BBE740 0%, #191c26 75%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -14px #00BBE780',
+          }}>
+          <span className="text-[1.9rem] font-extrabold text-[#00BBE7] leading-none">
+            {resumen?.totalTransacciones?.toLocaleString('es-PE') ?? '—'}
+          </span>
+          <span className="text-[0.68rem] text-muted uppercase tracking-wide font-bold">transacciones</span>
+        </div>
 
-          {/* Separador */}
-          <div className="w-px h-10 bg-border hidden sm:block" />
-
-          {/* Totales */}
-          <div className="flex gap-5">
-            <div className="flex flex-col items-center">
-              <span className="text-[1.8rem] font-extrabold text-warn leading-none">
-                {resumen?.total?.toLocaleString('es-PE') ?? '—'}
-              </span>
-              <span className="text-[0.68rem] text-muted uppercase tracking-wide">discrepancias</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[1.8rem] font-extrabold text-[#d4cec9] leading-none">
-                {resumen?.totalTransacciones?.toLocaleString('es-PE') ?? '—'}
-              </span>
-              <span className="text-[0.68rem] text-muted uppercase tracking-wide">transacciones</span>
-            </div>
-          </div>
-
-          {/* Separador */}
-          <div className="w-px h-10 bg-border hidden lg:block" />
-
-          {/* Efectividad por estación */}
-          <div className="flex gap-7 ml-auto flex-wrap">
-            {(resumen?.porEstacion ?? []).map(e => (
-              <MiniEstGauge key={e.estacion} est={e} />
-            ))}
-          </div>
+        {/* Efectividad por estación */}
+        <div className="rounded-2xl p-4 bg-surface flex items-center justify-around gap-4 flex-wrap max-[900px]:col-span-2">
+          {(resumen?.porEstacion ?? []).map(e => (
+            <MiniEstGauge key={e.estacion} est={e} />
+          ))}
         </div>
       </div>
 
@@ -725,12 +728,12 @@ export function Discrepancias() {
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.82rem] font-semibold
                 border transition-all ${
                 estacion === e.estacion
-                  ? 'border-transparent text-[#0f0d0c]'
+                  ? 'border-transparent text-[#0a0d13]'
                   : 'border-border text-[#eae7e4] bg-surface hover:bg-surface-2'}`}
               style={estacion === e.estacion ? { background: COLORS[e.estacion] ?? '#72BF44' } : {}}>
               <div className="w-2 h-2 rounded-full" style={{ background: COLORS[e.estacion] ?? '#888' }} />
               {e.estacion}
-              <span className={`font-extrabold ${estacion === e.estacion ? 'text-[#0f0d0c]' : 'text-warn'}`}>
+              <span className={`font-extrabold ${estacion === e.estacion ? 'text-[#0a0d13]' : 'text-warn'}`}>
                 {e.total.toLocaleString('es-PE')}
               </span>
             </button>
@@ -757,7 +760,7 @@ export function Discrepancias() {
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(220, paresData.length * 26)}>
               <BarChart data={paresData} layout="vertical" margin={{ left: 8, right: 36, top: 4, bottom: 4 }}>
-                <XAxis type="number" tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <XAxis type="number" tick={{ fill: '#8d94a3', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <YAxis type="category" dataKey="label" width={108}
                   tick={{ fill: '#d4cec9', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<ParTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
@@ -789,9 +792,9 @@ export function Discrepancias() {
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={trendPivot} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                <XAxis dataKey="bucket" tick={{ fill: '#a09890', fontSize: 10 }}
+                <XAxis dataKey="bucket" tick={{ fill: '#8d94a3', fontSize: 10 }}
                   tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#8d94a3', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
                   formatter={v => <span style={{ color: '#d4cec9' }}>{v}</span>} />
@@ -857,7 +860,7 @@ export function Discrepancias() {
                   <div className="flex items-baseline justify-between">
                     <div>
                       <div className="text-[0.92rem] font-bold text-[#eae7e4]">{v.via}</div>
-                      <div className="text-[0.75rem]" style={{ color: COLORS[v.estacion] ?? '#a09890' }}>{v.estacion}</div>
+                      <div className="text-[0.75rem]" style={{ color: COLORS[v.estacion] ?? '#8d94a3' }}>{v.estacion}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-[1.35rem] font-extrabold leading-none" style={{ color }}>{v.pct.toFixed(1)}%</div>
@@ -992,7 +995,7 @@ export function Discrepancias() {
                   <tr key={i} className="border-b border-border/40 hover:bg-white/[0.02] transition-colors">
                     <td className="py-1.5 px-2.5 text-dim whitespace-nowrap">{item.fecha}</td>
                     <td className="py-1.5 px-2.5">
-                      <span className="font-semibold" style={{ color: COLORS[item.unidad] ?? '#a09890' }}>
+                      <span className="font-semibold" style={{ color: COLORS[item.unidad] ?? '#8d94a3' }}>
                         {item.unidad}
                       </span>
                     </td>

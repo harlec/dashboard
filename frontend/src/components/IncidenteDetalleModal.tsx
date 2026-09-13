@@ -47,11 +47,11 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-surface-2 rounded-2xl w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-[#38332F]"
+        className="bg-surface-2 rounded-2xl w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-[#232733]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#38332F]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#232733]">
           <div className="font-bold text-[1rem] text-[#eae7e4]">
             {inc ? `${inc.equipoNombre} — ${inc.estacion} (Vía ${inc.via})` : 'Detalle del incidente'}
           </div>
@@ -135,7 +135,7 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
                 <thead>
                   <tr>
                     {['Hora', 'Estado', 'Latencia', 'Detalle'].map(h => (
-                      <th key={h} className="text-left px-2 py-1.5 border-b-2 border-[#38332F] text-[0.7rem] text-muted">{h}</th>
+                      <th key={h} className="text-left px-2 py-1.5 border-b-2 border-[#232733] text-[0.7rem] text-muted">{h}</th>
                     ))}
                   </tr>
                 </thead>

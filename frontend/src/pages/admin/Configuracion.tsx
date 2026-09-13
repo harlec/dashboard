@@ -8,6 +8,10 @@ const LABELS: Record<string, { label: string; desc: string; type?: string }> = {
   alertas_activas:  { label: 'Alertas activas',   desc: '1 = activado, 0 = desactivado' },
   email_alertas:    { label: 'Email de alertas',   desc: 'Destinatario de alertas DOWN/UP' },
   email_reporte_semanal: { label: 'Email reporte semanal', desc: 'Destinatarios del reporte de disponibilidad de equipos críticos (separados por coma) — se envía lunes 8am' },
+  email_reporte_discrepancias: { label: 'Email reporte diario de discrepancias', desc: 'Destinatarios del reporte diario de discrepancias por vía (separados por coma), ordenado de mayor a menor % — se envía a la hora configurada abajo' },
+  hora_reporte_discrepancias:  { label: 'Hora reporte diario de discrepancias', desc: 'Hora del día en formato HH:mm (ej. 08:00) en que se envía el reporte' },
+  email_alerta_discrepancias:  { label: 'Email alerta de discrepancias', desc: 'Destinatarios de la alerta cuando una vía supera el umbral (separados por coma) — se revisa cada hora en punto' },
+  umbral_alerta_discrepancias: { label: 'Umbral de alerta de discrepancias (%)', desc: 'Si alguna vía supera este % de discrepancia en la última hora, se envía una alerta' },
   intervalo_min:    { label: 'Intervalo ping (min)', desc: 'Cada cuántos minutos se hace ping' },
   pings_por_ciclo:  { label: 'Pings por host',     desc: 'Cantidad de pings por equipo por ciclo' },
   timeout_ping_s:   { label: 'Timeout ping (seg)', desc: 'Segundos antes de considerar timeout' },
@@ -44,6 +48,10 @@ export function AdminConfiguracion() {
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [testingReporte, setTestingReporte] = useState(false)
   const [testReporteResult, setTestReporteResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [testingReporteDisc, setTestingReporteDisc] = useState(false)
+  const [testReporteDiscResult, setTestReporteDiscResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [testingAlertaDisc, setTestingAlertaDisc] = useState(false)
+  const [testAlertaDiscResult, setTestAlertaDiscResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [tonoFiles,   setTonoFiles]   = useState<Record<string, File | null>>({})
   const [tonoBusy,    setTonoBusy]    = useState<string | null>(null)
   const [tonoError,   setTonoError]   = useState<Record<string, string>>({})
@@ -180,6 +188,34 @@ export function AdminConfiguracion() {
     }
   }
 
+  const testReporteDiscrepancias = async () => {
+    setTestingReporteDisc(true)
+    setTestReporteDiscResult(null)
+    try {
+      const r = await fetch('/api/discrepancias/reporte-diario/test', { method: 'POST', credentials: 'include' })
+      const data = await r.json()
+      setTestReporteDiscResult({ ok: r.ok, message: data.message ?? (r.ok ? 'Enviado.' : 'Error al enviar.') })
+    } catch {
+      setTestReporteDiscResult({ ok: false, message: 'No se pudo contactar al servidor.' })
+    } finally {
+      setTestingReporteDisc(false)
+    }
+  }
+
+  const testAlertaDiscrepancias = async () => {
+    setTestingAlertaDisc(true)
+    setTestAlertaDiscResult(null)
+    try {
+      const r = await fetch('/api/discrepancias/alerta-umbral/test', { method: 'POST', credentials: 'include' })
+      const data = await r.json()
+      setTestAlertaDiscResult({ ok: r.ok, message: data.message ?? (r.ok ? 'Enviado.' : 'Error al enviar.') })
+    } catch {
+      setTestAlertaDiscResult({ ok: false, message: 'No se pudo contactar al servidor.' })
+    } finally {
+      setTestingAlertaDisc(false)
+    }
+  }
+
   if (loading) return <div className="text-center py-12 text-muted">Cargando…</div>
 
   return (
@@ -298,6 +334,52 @@ export function AdminConfiguracion() {
             {testReporteResult && (
               <div className={`text-xs mt-2 ${testReporteResult.ok ? 'text-green-500' : 'text-red-500'}`}>
                 {testReporteResult.ok ? '✓ ' : '✗ '}{testReporteResult.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {rows.some(r => r.clave === 'email_reporte_discrepancias') && (
+          <div className="bg-surface rounded-xl p-4 border border-border">
+            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar reporte diario de discrepancias</div>
+            <div className="text-xs text-muted mb-2">
+              Guarda los destinatarios primero, luego envía ahora mismo el reporte de discrepancias
+              de las últimas 24 horas, ordenado por % de mayor a menor (se envía automático a la hora configurada arriba).
+            </div>
+            <button
+              onClick={testReporteDiscrepancias}
+              disabled={testingReporteDisc}
+              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
+                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
+            >
+              {testingReporteDisc ? 'Enviando…' : 'Enviar reporte ahora'}
+            </button>
+            {testReporteDiscResult && (
+              <div className={`text-xs mt-2 ${testReporteDiscResult.ok ? 'text-green-500' : 'text-red-500'}`}>
+                {testReporteDiscResult.ok ? '✓ ' : '✗ '}{testReporteDiscResult.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {rows.some(r => r.clave === 'email_alerta_discrepancias') && (
+          <div className="bg-surface rounded-xl p-4 border border-border">
+            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar alerta de umbral de discrepancias</div>
+            <div className="text-xs text-muted mb-2">
+              Guarda destinatarios y umbral primero, luego revisa ahora mismo si alguna vía superó el umbral
+              en la última hora y envía el correo si corresponde (se revisa automático cada hora en punto).
+            </div>
+            <button
+              onClick={testAlertaDiscrepancias}
+              disabled={testingAlertaDisc}
+              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
+                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
+            >
+              {testingAlertaDisc ? 'Revisando…' : 'Revisar y enviar ahora'}
+            </button>
+            {testAlertaDiscResult && (
+              <div className={`text-xs mt-2 ${testAlertaDiscResult.ok ? 'text-green-500' : 'text-red-500'}`}>
+                {testAlertaDiscResult.ok ? '✓ ' : '✗ '}{testAlertaDiscResult.message}
               </div>
             )}
           </div>

@@ -172,4 +172,159 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
             return (false, $"Error SMTP: {ex.Message}");
         }
     }
+
+    // Badge redondeado de %, coloreado según severidad — reutilizado por los
+    // dos correos de discrepancias de abajo.
+    private static string PctBadge(double pct, string colorOk, string colorWarn, string colorBad, decimal umbralWarn, decimal umbralBad)
+    {
+        var (fg, bg) = pct >= (double)umbralBad ? (colorBad, "#FDECEA")
+                     : pct >= (double)umbralWarn ? (colorWarn, "#FFF4E5")
+                     : (colorOk, "#EAF6EC");
+        return $"<span style='display:inline-block;padding:3px 10px;border-radius:999px;font-weight:800;font-size:12.5px;color:{fg};background:{bg};'>{pct}%</span>";
+    }
+
+    // ── Reporte diario de discrepancias — vías ordenadas por % de error ───
+    public async Task<(bool ok, string message)> SendReporteDiscrepanciasDiarioAsync(
+        List<ViaConteoDto> vias, DateTime desde, DateTime hasta, string destinatarios)
+    {
+        var lista = destinatarios.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        if (lista.Count == 0)
+            return (false, "No hay destinatarios configurados (clave 'email_reporte_discrepancias').");
+        if (vias.Count == 0)
+            return (false, "No hay tránsitos en el período — nada que reportar.");
+
+        const string brand  = "#0F6F5A";
+        const string ink    = "#242120";
+        const string muted  = "#7a7470";
+        const string border = "#e6e2dd";
+        var font = "font-family:Segoe UI,Arial,sans-serif;";
+
+        int totalDisc = vias.Sum(v => v.Total);
+        int totalTx   = vias.Sum(v => v.TotalTransitos);
+        double globalPct = totalTx > 0 ? Math.Round(totalDisc * 100.0 / totalTx, 2) : 0;
+        var peor = vias[0]; // ya viene ordenado desc por Pct
+
+        string GlobalColor(double p) => p >= 15 ? "#C62828" : p >= 5 ? "#B26A00" : "#2E7D32";
+        string GlobalBg(double p)    => p >= 15 ? "#FDECEA" : p >= 5 ? "#FFF4E5" : "#EAF6EC";
+
+        var sb = new StringBuilder();
+        sb.Append($"<div style='{font}background:#f4f2ef;padding:24px 12px;'>");
+        sb.Append("<div style='max-width:680px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid " + border + ";'>");
+
+        // Header
+        sb.Append($"<div style='background:#ffffff;padding:24px 28px 18px;border-bottom:3px solid {brand};'>");
+        sb.Append($"<img src='cid:{LogoContentId}' alt='Pulso Vial' height='34' style='display:block;height:34px;' />");
+        sb.Append($"<div style='color:{muted};font-size:13px;font-weight:600;margin-top:10px;'>📊 Reporte diario de discrepancias · últimas 24 horas</div>");
+        sb.Append("</div>");
+
+        sb.Append("<div style='padding:24px 28px;'>");
+        sb.Append($"<div style='{font}color:{muted};font-size:13px;margin-bottom:20px;'>Período: <b style='color:{ink}'>{desde:dd/MM/yyyy HH:mm}</b> — <b style='color:{ink}'>{hasta:dd/MM/yyyy HH:mm}</b></div>");
+
+        // KPI global + peor vía, lado a lado
+        sb.Append("<table width='100%' cellpadding='0' cellspacing='0' style='margin-bottom:24px;'><tr>");
+        sb.Append($"<td width='50%' style='padding-right:8px;'><div style='background:{GlobalBg(globalPct)};border-radius:8px;padding:16px 18px;'>" +
+                   $"<div style='font-size:28px;font-weight:800;color:{GlobalColor(globalPct)};line-height:1;'>{globalPct}%</div>" +
+                   $"<div style='{font}font-size:11px;color:{muted};text-transform:uppercase;font-weight:700;letter-spacing:0.5px;margin-top:6px;'>Discrepancia global · {totalTx} tránsitos</div></div></td>");
+        sb.Append($"<td width='50%' style='padding-left:8px;'><div style='background:#faf9f7;border:1px solid {border};border-radius:8px;padding:16px 18px;'>" +
+                   $"<div style='font-size:16px;font-weight:800;color:{ink};line-height:1.3;'>{peor.Via} <span style='color:{muted};font-weight:600;font-size:12px;'>· {peor.Estacion}</span></div>" +
+                   $"<div style='margin-top:6px;'>{PctBadge(peor.Pct, "#2E7D32", "#B26A00", "#C62828", 5, 15)}<span style='{font}font-size:11px;color:{muted};margin-left:8px;'>peor vía del período</span></div></div></td>");
+        sb.Append("</tr></table>");
+
+        sb.Append($"<div style='{font}font-size:15px;font-weight:700;color:{ink};margin-bottom:8px;'>Vías ordenadas por % de discrepancia</div>");
+        sb.Append($"<table width='100%' cellpadding='0' cellspacing='0' style='{font}font-size:13px;border-collapse:collapse;'>");
+        sb.Append("<tr style='background:#faf9f7;'>" +
+                   string.Join("", new[] { "#", "Estación", "Vía", "% Discrepancia", "Discrepancias", "Tránsitos" }
+                       .Select(h => $"<th style='text-align:left;padding:8px 10px;color:{muted};font-size:10.5px;text-transform:uppercase;border-bottom:2px solid {border};'>{h}</th>")) +
+                   "</tr>");
+        for (int i = 0; i < vias.Count; i++)
+        {
+            var v = vias[i];
+            var rowBg = i % 2 == 1 ? "background:#fbfaf9;" : "";
+            sb.Append($"<tr style='{rowBg}'>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};font-weight:700;'>{i + 1}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};'>{v.Estacion}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};font-weight:600;'>{v.Via}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};'>{PctBadge(v.Pct, "#2E7D32", "#B26A00", "#C62828", 5, 15)}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};'>{v.Total}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};'>{v.TotalTransitos}</td></tr>");
+        }
+        sb.Append("</table>");
+        sb.Append("</div>"); // padding wrapper
+
+        sb.Append($"<div style='background:#faf9f7;border-top:1px solid {border};padding:14px 28px;{font}font-size:11px;color:{muted};'>");
+        sb.Append($"Generado automáticamente por <b style='color:{brand}'>Pulso Vial</b> — dashboard de monitoreo de red vial.");
+        sb.Append("</div>");
+
+        sb.Append("</div></div>");
+
+        var (ok, error) = await SendAsync("📊 [Pulso Vial] Reporte diario de discrepancias", sb.ToString(), lista);
+        return ok
+            ? (true, $"Enviado a {string.Join(", ", lista)}.")
+            : (false, error ?? "Error al enviar — revisa la configuración SMTP y los logs del servidor.");
+    }
+
+    // ── Alerta: alguna vía superó el umbral de % de discrepancia ──────────
+    public async Task<(bool ok, string message)> SendAlertaDiscrepanciasAsync(
+        List<ViaConteoDto> vias, double umbral, string destinatarios)
+    {
+        var lista = destinatarios.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        if (lista.Count == 0)
+            return (false, "No hay destinatarios configurados (clave 'email_alerta_discrepancias').");
+
+        const string brand  = "#C62828";
+        const string ink    = "#242120";
+        const string muted  = "#7a7470";
+        const string border = "#e6e2dd";
+        var font = "font-family:Segoe UI,Arial,sans-serif;";
+        var peor = vias[0];
+
+        var sb = new StringBuilder();
+        sb.Append($"<div style='{font}background:#f4f2ef;padding:24px 12px;'>");
+        sb.Append("<div style='max-width:680px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid " + border + ";'>");
+
+        // Header — banda roja de alerta
+        sb.Append($"<div style='background:{brand};padding:20px 28px;'>");
+        sb.Append($"<img src='cid:{LogoContentId}' alt='Pulso Vial' height='30' style='display:block;height:30px;filter:brightness(0) invert(1);' />");
+        sb.Append($"<div style='color:#ffffff;font-size:15px;font-weight:800;margin-top:12px;'>⚠ {vias.Count} vía{(vias.Count == 1 ? "" : "s")} sobre el {umbral}% de discrepancia</div>");
+        sb.Append($"<div style='color:#ffe8e6;font-size:12.5px;margin-top:2px;'>Detectado en la última hora</div>");
+        sb.Append("</div>");
+
+        sb.Append("<div style='padding:24px 28px;'>");
+
+        // Callout de la peor vía
+        sb.Append($"<div style='background:#FDECEA;border-radius:8px;padding:16px 18px;margin-bottom:20px;'>" +
+                   $"<div style='font-size:16px;font-weight:800;color:{ink};line-height:1.3;'>{peor.Via} <span style='color:{muted};font-weight:600;font-size:12px;'>· {peor.Estacion}</span></div>" +
+                   $"<div style='margin-top:6px;'>{PctBadge(peor.Pct, "#2E7D32", "#B26A00", brand, 5, (decimal)umbral)}<span style='{font}font-size:11px;color:{muted};margin-left:8px;'>la más crítica de este grupo</span></div></div>");
+
+        sb.Append($"<table width='100%' cellpadding='0' cellspacing='0' style='{font}font-size:13px;border-collapse:collapse;'>");
+        sb.Append("<tr style='background:#faf9f7;'>" +
+                   string.Join("", new[] { "#", "Estación", "Vía", "% Discrepancia", "Discrepancias", "Tránsitos" }
+                       .Select(h => $"<th style='text-align:left;padding:8px 10px;color:{muted};font-size:10.5px;text-transform:uppercase;border-bottom:2px solid {border};'>{h}</th>")) +
+                   "</tr>");
+        for (int i = 0; i < vias.Count; i++)
+        {
+            var v = vias[i];
+            var rowBg = i % 2 == 1 ? "background:#fbfaf9;" : "";
+            sb.Append($"<tr style='{rowBg}'>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};font-weight:700;'>{i + 1}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};'>{v.Estacion}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};font-weight:600;'>{v.Via}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};'>{PctBadge(v.Pct, "#2E7D32", "#B26A00", brand, 5, (decimal)umbral)}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};'>{v.Total}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};'>{v.TotalTransitos}</td></tr>");
+        }
+        sb.Append("</table>");
+        sb.Append("</div>"); // padding wrapper
+
+        sb.Append($"<div style='background:#faf9f7;border-top:1px solid {border};padding:14px 28px;{font}font-size:11px;color:{muted};'>");
+        sb.Append($"Generado automáticamente por <b style='color:{brand}'>Pulso Vial</b> — dashboard de monitoreo de red vial.");
+        sb.Append("</div>");
+
+        sb.Append("</div></div>");
+
+        var (ok, error) = await SendAsync($"⚠ [Pulso Vial] {vias.Count} vía(s) sobre {umbral}% de discrepancia", sb.ToString(), lista);
+        return ok
+            ? (true, $"Enviado a {string.Join(", ", lista)}.")
+            : (false, error ?? "Error al enviar — revisa la configuración SMTP y los logs del servidor.");
+    }
 }

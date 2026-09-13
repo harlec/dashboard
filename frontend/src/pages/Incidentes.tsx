@@ -34,18 +34,18 @@ const EST_COLORS: Record<string, string> = {
   KM402: '#00BBE7', VIRU: '#FFDD00', SANTA: '#D3DF4E',
 }
 const RANK_COLORS = ['#F04545', '#F99B1C', '#FACC15', '#00BBE7', '#72BF44',
-                     '#D3DF4E', '#0DB14B', '#a09890', '#7a7470', '#00BBE7']
+                     '#D3DF4E', '#0DB14B', '#8d94a3', '#656d7d', '#00BBE7']
 
 function estColor(name: string) {
   const key = Object.keys(EST_COLORS).find(k => name.toUpperCase().includes(k))
-  return key ? EST_COLORS[key] : '#a09890'
+  return key ? EST_COLORS[key] : '#8d94a3'
 }
 
 // ── Tooltip tendencia ─────────────────────────────────────────
 function TendTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-[#1e1c1a] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
+    <div className="bg-[#191c26] border border-border rounded-lg px-3 py-2 text-[0.8rem]">
       <div className="text-muted mb-1">{label}</div>
       <div className="font-bold text-danger">{payload[0]?.value} incidentes</div>
     </div>
@@ -244,13 +244,13 @@ export function Incidentes() {
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={estData} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                <XAxis dataKey="name" tick={{ fill: '#a09890', fontSize: 10 }}
+                <XAxis dataKey="name" tick={{ fill: '#8d94a3', fontSize: 10 }}
                   tickLine={false} axisLine={false}
                   tickFormatter={v => v.length > 7 ? v.slice(0, 7) : v} />
-                <YAxis tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#8d94a3', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip
                   cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                  contentStyle={{ background: '#1e1c1a', border: '1px solid #252220', borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{ background: '#191c26', border: '1px solid #262c3a', borderRadius: 8, fontSize: 12 }}
                   labelStyle={{ color: '#d4cec9' }}
                   itemStyle={{ color: '#F04545' }}
                 />
@@ -279,9 +279,9 @@ export function Incidentes() {
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={resumen?.tendencia} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                <XAxis dataKey="fecha" tick={{ fill: '#a09890', fontSize: 10 }}
+                <XAxis dataKey="fecha" tick={{ fill: '#8d94a3', fontSize: 10 }}
                   tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#8d94a3', fontSize: 11 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<TendTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
                 <Bar dataKey="total" fill="#F04545" radius={[4, 4, 0, 0]} maxBarSize={32} />
               </BarChart>
@@ -316,13 +316,13 @@ export function Incidentes() {
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={resumen?.porHora} margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
-                <XAxis dataKey="hora" tick={{ fill: '#a09890', fontSize: 10 }}
+                <XAxis dataKey="hora" tick={{ fill: '#8d94a3', fontSize: 10 }}
                   tickLine={false} axisLine={false} interval={1}
                   tickFormatter={h => String(h).padStart(2, '0')} />
-                <YAxis tick={{ fill: '#a09890', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <YAxis tick={{ fill: '#8d94a3', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip
                   cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                  contentStyle={{ background: '#1e1c1a', border: '1px solid #252220', borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{ background: '#191c26', border: '1px solid #262c3a', borderRadius: 8, fontSize: 12 }}
                   labelFormatter={h => `${String(h).padStart(2, '0')}:00`}
                   labelStyle={{ color: '#d4cec9' }}
                   itemStyle={{ color: '#F04545' }}

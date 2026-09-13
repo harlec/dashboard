@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0d13; }
+  a { color: oklch(0.80 0.11 200); text-decoration: none; }
+  a:hover { color: oklch(0.88 0.10 200); }
+  @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.86); } }
+</style>
+</helmet>
+
+<div data-screen-label="Discrepancias DAC v2" style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 22px 30px 24px; display: flex; flex-direction: column; gap: 14px; font-family: Manrope, system-ui, sans-serif; color: oklch(0.96 0.004 265); overflow: hidden; background-color: #0a0d13; background-image: radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%), radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%), linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%);">
+
+  <div style="height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="width: 40px; height: 40px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; background: oklch(0.30 0.02 250 / 0.60); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);" style-hover="background: oklch(0.36 0.03 250 / 0.75);">
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+      </div>
+      <div style="font-size: 23px; font-weight: 700; letter-spacing: 0.2em; color: oklch(0.84 0.11 195);">PULSO<span style="font-weight: 300; color: oklch(0.94 0.005 265);">VIAL</span></div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+          <div style="padding: 8px 15px; border-radius: 11px; font-size: 16px; font-weight: {{ n.peso }}; letter-spacing: 0.01em; cursor: pointer; white-space: nowrap; color: {{ n.fg }}; background: {{ n.bg }}; box-shadow: {{ n.sh }};">{{ n.txt }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 7px 15px 7px 12px; border-radius: 999px; background: oklch(0.45 0.09 168 / 0.16); box-shadow: inset 0 0 0 1px oklch(0.60 0.10 168 / 0.28);">
+        <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.82 0.13 168); animation: breathe 2.6s ease-in-out infinite;"></div>
+        <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: oklch(0.84 0.10 168);">EN VIVO</span>
+      </div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.62 0.015 265);">Administrador</div>
+      <div style="font-size: 32px; font-weight: 300; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: oklch(0.95 0.004 265);">{{ reloj }}</div>
+    </div>
+  </div>
+
+  <div style="height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.015em;">Discrepancias DAC</div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.56 0.015 265);">tabulado del cobrador vs. clasificación automática · refresco 60 s</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 5px; padding: 4px; border-radius: 13px; background: oklch(0.24 0.018 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.05);">
+      <sc-for list="{{ rangos }}" as="r" hint-placeholder-count="6">
+        <div style="padding: 7px 15px; border-radius: 10px; font-size: 15px; font-weight: {{ r.peso }}; cursor: pointer; white-space: nowrap; color: {{ r.fg }}; background: {{ r.bg }};">{{ r.txt }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="height: 112px; flex: 0 0 auto; display: grid; grid-template-columns: 1.05fr 0.78fr 0.78fr 2.1fr; gap: 14px;">
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.84 0.09 62);">Efectividad</div>
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div style="font-size: 42px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.90 0.11 62);">{{ kpi.efectividad }}<span style="font-size: 24px;">%</span></div>
+        <div style="font-size: 17px; font-weight: 400; color: oklch(0.68 0.05 62);">meta 99.5% · faltan {{ kpi.brecha }} pp</div>
+      </div>
+      <div style="height: 6px; border-radius: 999px; background: oklch(1 0 0 / 0.08); overflow: hidden;">
+        <div style="width: {{ kpi.barra }}; height: 100%; border-radius: 999px; background: linear-gradient(90deg, oklch(0.74 0.13 85), oklch(0.84 0.13 62)); box-shadow: 0 0 12px oklch(0.82 0.13 62 / 0.50);"></div>
+      </div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.30 0.04 265 / 0.60) 0%, oklch(0.21 0.022 265 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.72 0.03 265);">Discrepancias</div>
+      <div style="font-size: 42px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.95 0.01 265);">{{ kpi.discrepancias }}</div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.58 0.02 265);">{{ kpi.deltaDisc }}</div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.30 0.045 200 / 0.55) 0%, oklch(0.22 0.025 250 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.76 0.06 200);">Tránsitos</div>
+      <div style="font-size: 42px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.92 0.06 200);">{{ kpi.transacciones }}</div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.60 0.03 200);">base del cálculo</div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 12px 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.62 0.02 265);">Por estación</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">% efectividad · discrepancias del período</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+        <sc-for list="{{ porEstacion }}" as="e" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 16px; font-weight: 600; letter-spacing: 0.01em; color: {{ e.color }};">{{ e.nombre }}</span>
+              <span style="font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.92 0.01 265);">{{ e.pct }}</span>
+            </div>
+            <div style="height: 5px; border-radius: 999px; background: oklch(1 0 0 / 0.07); overflow: hidden;">
+              <div style="width: {{ e.barra }}; height: 100%; border-radius: 999px; background: {{ e.color }};"></div>
+            </div>
+            <div style="font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.54 0.015 265);">{{ e.disc }} disc.</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 350px; flex: 0 0 auto; display: grid; grid-template-columns: 1fr 1.7fr 1.05fr; gap: 14px;">
+
+    <div style="box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; min-width: 0; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex: 0 0 auto;">
+        <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">Top confusiones</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">tabulada → detectada</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding-top: 12px;">
+        <sc-for list="{{ confusiones }}" as="c" hint-placeholder-count="12">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 104px; flex: 0 0 auto; text-align: right; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.70 0.015 265);">{{ c.par }}</div>
+            <div style="flex: 1 1 auto; min-width: 0; height: 13px; border-radius: 5px; background: oklch(1 0 0 / 0.05);">
+              <div style="width: {{ c.ancho }}; height: 100%; border-radius: 5px; background: {{ c.color }};"></div>
+            </div>
+            <div style="width: 34px; flex: 0 0 auto; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; color: oklch(0.62 0.015 265);">{{ c.n }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; min-width: 0; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex: 0 0 auto;">
+        <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">Tendencia por estación</div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <sc-for list="{{ leyenda }}" as="l" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; color: oklch(0.64 0.015 265);">
+              <div style="width: 11px; height: 11px; border-radius: 4px; background: {{ l.color }};"></div>{{ l.nombre }}
+            </div>
+          </sc-for>
+          <div style="font-size: 14px; font-weight: 500; color: oklch(0.48 0.015 265);">cada 30 min</div>
+        </div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; gap: 10px; padding-top: 14px;">
+        <div style="width: 30px; flex: 0 0 auto; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; margin: -8px 0 -8px 0; font-size: 13px; font-weight: 500; line-height: 16px; font-variant-numeric: tabular-nums; color: oklch(0.48 0.015 265);">
+          <span>80</span><span>60</span><span>40</span><span>20</span><span>0</span>
+        </div>
+        <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;">
+          <div style="flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; gap: 3px; border-bottom: 1px solid oklch(1 0 0 / 0.10);">
+            <sc-for list="{{ tendencia }}" as="col" hint-placeholder-count="25">
+              <div style="flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; border-radius: 4px 4px 0 0; overflow: hidden;">
+                <sc-for list="{{ col.segs }}" as="s" hint-placeholder-count="5">
+                  <div style="height: {{ s.alto }}; background: {{ s.color }};"></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="height: 20px; flex: 0 0 auto; display: flex; gap: 3px; padding-top: 5px;">
+            <sc-for list="{{ tendencia }}" as="col" hint-placeholder-count="25">
+              <div style="flex: 1 1 0; min-width: 0; overflow: hidden; text-align: center; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; color: {{ col.fg }};">{{ col.hora }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; min-width: 0; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex: 0 0 auto;">
+        <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">Vías críticas</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">{{ viasNota }}</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding-top: 10px;">
+        <sc-for list="{{ vias }}" as="v" hint-placeholder-count="7">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 18px; flex: 0 0 auto; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: oklch(0.44 0.015 265);">{{ v.rank }}</div>
+            <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 5px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                <div style="display: flex; align-items: baseline; gap: 9px;">
+                  <span style="font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums;">{{ v.via }}</span>
+                  <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.01em; color: {{ v.color }};">{{ v.est }}</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 9px;">
+                  <span style="font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.50 0.015 265);">{{ v.ratio }}</span>
+                  <span style="font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ v.pctFg }};">{{ v.pct }}</span>
+                </div>
+              </div>
+              <div style="height: 7px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+                <div style="width: {{ v.ancho }}; height: 100%; border-radius: 999px; background: {{ v.color }};"></div>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1.45fr 1fr; gap: 14px;">
+
+    <div style="box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; min-width: 0; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex: 0 0 auto;">
+        <div style="display: flex; align-items: baseline; gap: 13px;">
+          <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">{{ panel.titulo }}</div>
+          <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">{{ panel.sub }}</div>
+        </div>
+        <div style="padding: 6px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; color: oklch(0.80 0.08 200); background: oklch(0.35 0.05 210 / 0.45); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">Exportar PDF</div>
+      </div>
+
+      <div style="flex: 0 0 auto; display: grid; grid-template-columns: {{ panel.cols }}; gap: 12px; padding: 12px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.50 0.015 265); border-bottom: 1px solid oklch(1 0 0 / 0.07);">
+        <sc-for list="{{ panel.encabezados }}" as="h" hint-placeholder-count="7">
+          <div style="min-width: 0; white-space: nowrap; overflow: hidden;">{{ h }}</div>
+        </sc-for>
+      </div>
+
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around;">
+        <sc-for list="{{ panel.filas }}" as="f" hint-placeholder-count="9">
+          <div style="display: grid; grid-template-columns: {{ panel.cols }}; gap: 12px; align-items: center; font-size: 15px; font-variant-numeric: tabular-nums;">
+            <sc-for list="{{ f }}" as="c" hint-placeholder-count="7">
+              <div style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: {{ c.peso }}; color: {{ c.fg }};">{{ c.txt }}</div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; min-width: 0; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex: 0 0 auto;">
+        <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">Tasa de error por hora</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">últimos 7 días</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; gap: 10px; padding-top: 12px;">
+        <div style="width: 26px; flex: 0 0 auto; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-bottom: 60px; margin: -8px 0 -8px 0; font-size: 13px; font-weight: 500; line-height: 16px; font-variant-numeric: tabular-nums; color: oklch(0.48 0.015 265);">
+          <span>10%</span><span>7.5%</span><span>5%</span><span>2.5%</span><span>0%</span>
+        </div>
+        <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;">
+          <div style="flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; gap: 3px; border-bottom: 1px solid oklch(1 0 0 / 0.10);">
+            <sc-for list="{{ horas }}" as="h" hint-placeholder-count="24">
+              <div style="flex: 1 1 0; min-width: 0; height: {{ h.alto }}; border-radius: 4px 4px 0 0; background: {{ h.color }};"></div>
+            </sc-for>
+          </div>
+          <div style="height: 18px; flex: 0 0 auto; display: flex; gap: 3px; padding-top: 4px;">
+            <sc-for list="{{ horas }}" as="h" hint-placeholder-count="24">
+              <div style="flex: 1 1 0; min-width: 0; overflow: hidden; text-align: center; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; color: {{ h.fg }};">{{ h.txt }}</div>
+            </sc-for>
+          </div>
+          <div style="height: 34px; flex: 0 0 auto; margin-top: 8px; display: flex; align-items: center; gap: 9px; padding: 0 14px; border-radius: 11px; font-size: 14px; font-weight: 500; color: oklch(0.80 0.06 200); background: oklch(0.32 0.04 210 / 0.45); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: oklch(0.72 0.17 25);"></div>{{ picoNota }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080},&quot;rango&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Última hora&quot;,&quot;4 h&quot;,&quot;12 h&quot;,&quot;24 h&quot;,&quot;Ayer&quot;,&quot;Mes actual&quot;],&quot;default&quot;:&quot;12 h&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;panelInferior&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Prioridad de mantenimiento&quot;,&quot;Detalle de discrepancias&quot;],&quot;default&quot;:&quot;Prioridad de mantenimiento&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;}}">
+class Component extends DCLogic {
+  state = { reloj: '' };
+
+  componentDidMount() {
+    const tick = () => this.setState({ reloj: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) });
+    tick();
+    this._t = setInterval(tick, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  renderVals() {
+    const EST = [
+      { nombre: '402', color: 'oklch(0.78 0.11 205)', disc: 291, pct: 92.0 },
+      { nombre: 'VIRU', color: 'oklch(0.84 0.12 95)', disc: 288, pct: 95.0 },
+      { nombre: 'FORTALEZA', color: 'oklch(0.78 0.13 160)', disc: 254, pct: 92.0 },
+      { nombre: 'HUARMEY', color: 'oklch(0.78 0.13 45)', disc: 238, pct: 91.0 },
+      { nombre: 'SANTA', color: 'oklch(0.76 0.10 300)', disc: 190, pct: 92.0 }
+    ];
+
+    const NAV = ['Dashboard', 'NOC', 'Incidentes', 'Reporte SLA', 'Reportes', 'Discrepancias', 'OCR Placas', 'Admin'];
+    const activo = 'Discrepancias';
+    const nav = NAV.map((t) => t === activo
+      ? { txt: t, peso: 600, fg: 'oklch(0.95 0.01 265)', bg: 'oklch(0.34 0.045 210 / 0.75)', sh: 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' }
+      : { txt: t, peso: 500, fg: 'oklch(0.66 0.015 265)', bg: 'transparent', sh: 'none' });
+
+    const RANGOS = ['Última hora', '4 h', '12 h', '24 h', 'Ayer', 'Mes actual'];
+    const rangoActivo = this.props.rango || '12 h';
+    const rangos = RANGOS.map((t) => t === rangoActivo
+      ? { txt: t, peso: 600, fg: 'oklch(0.22 0.04 62)', bg: 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' }
+      : { txt: t, peso: 500, fg: 'oklch(0.64 0.015 265)', bg: 'transparent' });
+
+    const disc = EST.reduce((a, e) => a + e.disc, 0);
+    const transacciones = 17695;
+    const efect = Math.round((1 - disc / transacciones) * 1000) / 10;
+    const kpi = {
+      efectividad: efect.toFixed(1),
+      brecha: (99.5 - efect).toFixed(1),
+      barra: Math.max(0, Math.min(100, (efect - 85) / 15 * 100)) + '%',
+      discrepancias: disc.toLocaleString('en-US'),
+      deltaDisc: '+8.4% vs. período anterior',
+      transacciones: transacciones.toLocaleString('en-US')
+    };
+
+    const porEstacion = EST.map((e) => ({
+      nombre: e.nombre, color: e.color, disc: e.disc,
+      pct: e.pct.toFixed(0) + '%',
+      barra: ((e.pct - 85) / 15 * 100) + '%'
+    }));
+
+    const CONF = [
+      ['P6 → P5', 231], ['P2 → Liviano', 178], ['P6 → P7', 162], ['Liviano → P3', 150],
+      ['P3 → P4', 118], ['P5 → P4', 96], ['P2 → P3', 84], ['P5 → P6', 81],
+      ['P3 → P2', 76], ['Liviano → P2', 70], ['Liviano → P4', 62], ['P4 → P3', 55],
+      ['P6 → P8', 44]
+    ];
+    const maxConf = CONF[0][1];
+    const confusiones = CONF.map(([par, n]) => ({
+      par: par, n: n,
+      ancho: Math.round(n / maxConf * 100) + '%',
+      color: n >= 150
+        ? 'linear-gradient(90deg, oklch(0.58 0.15 20), oklch(0.70 0.17 22))'
+        : n >= 80
+          ? 'linear-gradient(90deg, oklch(0.66 0.12 62), oklch(0.80 0.14 62))'
+          : 'linear-gradient(90deg, oklch(0.52 0.09 210), oklch(0.68 0.11 205))'
+    }));
+
+    const leyenda = EST.map((e) => ({ nombre: e.nombre, color: e.color }));
+
+    // 25 cortes de 30 min; alturas en % del área de trazado, tope 80
+    const TOPE = 80;
+    const tendencia = [];
+    for (let i = 0; i < 25; i++) {
+      const h = 12 + Math.floor(i / 2);
+      const media = i < 2 ? 0.22 : i < 10 ? 0.92 - i * 0.012 : 1.05 - i * 0.035;
+      const segs = EST.map((e, k) => {
+        const v = Math.max(1.5, (7 + ((i * 13 + k * 29) % 9)) * media);
+        return { alto: (Math.round(v / TOPE * 1000) / 10) + '%', color: e.color };
+      });
+      tendencia.push({
+        hora: (h % 24) + 'h',
+        fg: i % 2 ? 'transparent' : 'oklch(0.50 0.015 265)',
+        segs: segs
+      });
+    }
+
+    const VIAS = [
+      ['508', 'HUARMEY', 17.9, '94/525'], ['609', '402', 16.5, '61/369'],
+      ['407', 'FORTALEZA', 12.7, '66/519'], ['601', '402', 10.7, '88/820'],
+      ['401', 'FORTALEZA', 9.8, '59/601'], ['805', 'SANTA', 9.3, '62/667'],
+      ['709', 'VIRU', 8.1, '73/904']
+    ];
+    const colorEst = {}; EST.forEach((e) => { colorEst[e.nombre] = e.color; });
+    const vias = VIAS.map(([via, est, pct, ratio], i) => ({
+      rank: i + 1, via: via, est: est, ratio: ratio,
+      pct: pct.toFixed(1) + '%',
+      pctFg: pct >= 15 ? 'oklch(0.80 0.15 22)' : pct >= 10 ? 'oklch(0.86 0.13 62)' : 'oklch(0.88 0.02 265)',
+      ancho: Math.round(pct / 20 * 100) + '%',
+      color: colorEst[est] || 'oklch(0.70 0.02 265)'
+    }));
+    const viasNota = '28 vías · % sobre tránsitos propios';
+
+    const tx = (txt, fg, peso) => ({ txt: txt, fg: fg || 'oklch(0.88 0.008 265)', peso: peso || 500 });
+    const gris = 'oklch(0.62 0.015 265)';
+
+    const MANT = [
+      ['401', 'FORTALEZA', '7.0%', '8.4%', '+1.4', 656], ['508', 'HUARMEY', '9.1%', '10.4%', '+1.3', 847],
+      ['406', 'FORTALEZA', '8.7%', '9.9%', '+1.2', 584], ['803', 'SANTA', '6.7%', '7.7%', '+0.9', 671],
+      ['609', '402', '11.6%', '12.2%', '+0.6', 533], ['805', 'SANTA', '8.6%', '9.2%', '+0.6', 662],
+      ['709', 'VIRU', '6.0%', '6.7%', '+0.6', 904], ['506', 'HUARMEY', '6.2%', '6.6%', '+0.5', 283],
+      ['403', 'FORTALEZA', '5.4%', '5.7%', '+0.3', 391]
+    ];
+    const DET = [
+      ['16:26', 'FORTALEZA', '407', '—', 'P4', 'P3', 'T1Y914'], ['16:25', 'FORTALEZA', '403', '666608', 'P5', 'P7', 'CDR833'],
+      ['16:24', 'VIRU', '708', '1286143', 'P6', 'P5', 'CFO841'], ['16:24', 'FORTALEZA', '407', '974094', 'P6', 'P7', 'D9J946'],
+      ['16:23', 'VIRU', '708', '—', 'P2', 'Liviano', 'CCS771'], ['16:21', 'SANTA', '805', '168396', 'Liviano', 'P2', 'J452ZH'],
+      ['16:21', 'HUARMEY', '508', '964166', 'P6', 'P9', 'ADY860'], ['16:21', '402', '608', '1356149', 'P4', 'P6', 'CEI774'],
+      ['16:20', 'FORTALEZA', '406', '679506', 'Liviano', 'P2', 'CMW742']
+    ];
+
+    const verDetalle = this.props.panelInferior === 'Detalle de discrepancias';
+    const panel = verDetalle
+      ? {
+          titulo: 'Detalle de discrepancias',
+          sub: '1,404 registros · últimos primero',
+          cols: '68px 1.2fr 62px 1fr 0.9fr 0.9fr 1fr',
+          encabezados: ['Hora', 'Estación', 'Vía', 'Ticket', 'Tabulada', 'Detectada', 'Placa'],
+          filas: DET.map((r) => [
+            tx(r[0], gris), tx(r[1], colorEst[r[1]], 600), tx(r[2], null, 600), tx(r[3], gris),
+            tx(r[4], 'oklch(0.86 0.12 62)', 600), tx(r[5], 'oklch(0.82 0.11 205)', 600), tx(r[6], gris)
+          ])
+        }
+      : {
+          titulo: 'Prioridad de mantenimiento',
+          sub: 'últimas 2 semanas por vía · ordenado por variación',
+          cols: '62px 1.3fr 1fr 1fr 0.9fr 0.9fr',
+          encabezados: ['Vía', 'Estación', 'Sem. anterior', 'Sem. actual', 'Δ variación', 'Discr. 7 d'],
+          filas: MANT.map((r) => [
+            tx(r[0], null, 600), tx(r[1], colorEst[r[1]], 600), tx(r[2], gris), tx(r[3], null, 600),
+            tx(r[4] + ' pp', Number(r[4]) >= 1 ? 'oklch(0.80 0.14 25)' : 'oklch(0.86 0.12 62)', 600),
+            tx(String(r[5]), gris)
+          ])
+        };
+
+    const HORAS = [5.4, 5.2, 4.8, 5.6, 5.9, 6.1, 6.3, 5.8, 6.0, 6.2, 6.6, 6.9, 7.4, 7.7, 8.4, 7.6, 7.2, 7.0, 6.8, 6.6, 6.5, 7.3, 6.4, 6.0];
+    const maxH = 10;
+    const minV = Math.min.apply(null, HORAS);
+    const horas = HORAS.map((v, i) => ({
+      txt: (i < 10 ? '0' : '') + i,
+      fg: i % 2 ? 'transparent' : 'oklch(0.48 0.015 265)',
+      alto: Math.round(v / maxH * 100) + '%',
+      color: v >= 7.3
+        ? 'linear-gradient(180deg, oklch(0.70 0.17 22), oklch(0.58 0.16 20))'
+        : v === minV
+          ? 'linear-gradient(180deg, oklch(0.76 0.11 205), oklch(0.62 0.10 205))'
+          : 'linear-gradient(180deg, oklch(0.82 0.13 62), oklch(0.70 0.12 62))'
+    }));
+    const picoNota = 'Pico 14:00 con 8.4% — revisar calibración por volumen · valle 02:00 con 4.8%';
+
+    return {
+      reloj: this.state.reloj, nav: nav, rangos: rangos, kpi: kpi, porEstacion: porEstacion,
+      confusiones: confusiones, leyenda: leyenda, tendencia: tendencia,
+      vias: vias, viasNota: viasNota, panel: panel, horas: horas, picoNota: picoNota
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -128,6 +128,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ConsolidadoConnectionProvider>();
 builder.Services.AddSingleton<DiscrepanciasService>();
 builder.Services.AddSingleton<OcrPlacasService>();
+builder.Services.AddSingleton<ReporteDiscrepanciasDiarioService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteDiscrepanciasDiarioService>());
+builder.Services.AddSingleton<AlertaDiscrepanciasService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<AlertaDiscrepanciasService>());
 
 // ── Reportes PDF ────────────────────────────────────────────
 PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new PdfFontResolver();

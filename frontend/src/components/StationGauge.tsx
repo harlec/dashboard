@@ -29,7 +29,7 @@ export function StationGauge({ pct, up, down, enlace }: Props) {
         </defs>
 
         {/* Track gris */}
-        <path d={d} fill="none" stroke="#252220" strokeWidth="11" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="#262c3a" strokeWidth="11" strokeLinecap="round" />
 
         {/* Arco coloreado */}
         <path

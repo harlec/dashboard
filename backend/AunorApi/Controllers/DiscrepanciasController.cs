@@ -7,7 +7,11 @@ namespace AunorApi.Controllers;
 [ApiController]
 [Route("api/discrepancias")]
 [Authorize]
-public class DiscrepanciasController(DiscrepanciasService svc) : ControllerBase
+public class DiscrepanciasController(
+    DiscrepanciasService svc,
+    ReporteDiscrepanciasDiarioService reporteDiario,
+    AlertaDiscrepanciasService alertaUmbral,
+    ILogger<DiscrepanciasController> log) : ControllerBase
 {
     [HttpGet("resumen")]
     public async Task<IActionResult> Resumen([FromQuery] string periodo = "12h")
@@ -61,5 +65,39 @@ public class DiscrepanciasController(DiscrepanciasService svc) : ControllerBase
         pagina    = Math.Max(1, pagina);
         porPagina = Math.Clamp(porPagina, 10, 100);
         return Ok(await svc.GetDetalleAsync(periodo, estacion, placa, pagina, porPagina));
+    }
+
+    [HttpPost("reporte-diario/test")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> ReporteDiarioTest()
+    {
+        try
+        {
+            var hasta = DateTime.Now;
+            var desde = hasta.AddDays(-1);
+            var (ok, message) = await reporteDiario.EnviarAsync(desde, hasta);
+            return ok ? Ok(new { ok, message }) : BadRequest(new { ok, message });
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error en prueba de reporte diario de discrepancias");
+            return StatusCode(500, new { ok = false, message = $"Error interno: {ex.Message}" });
+        }
+    }
+
+    [HttpPost("alerta-umbral/test")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> AlertaUmbralTest()
+    {
+        try
+        {
+            var (ok, message) = await alertaUmbral.RevisarAsync();
+            return ok ? Ok(new { ok, message }) : BadRequest(new { ok, message });
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error en prueba de alerta de umbral de discrepancias");
+            return StatusCode(500, new { ok = false, message = $"Error interno: {ex.Message}" });
+        }
     }
 }

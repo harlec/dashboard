@@ -323,6 +323,16 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'email_reporte_discrepancias')
+BEGIN
+    INSERT INTO configuracion (clave, valor) VALUES
+    ('email_reporte_discrepancias', ''),
+    ('hora_reporte_discrepancias',  '08:00'),
+    ('email_alerta_discrepancias',  ''),
+    ('umbral_alerta_discrepancias', '20');
+END
+GO
+
 IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'consolidado_conn')
 BEGIN
     INSERT INTO configuracion (clave, valor) VALUES

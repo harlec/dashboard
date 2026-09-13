@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0d13; }
+  a { color: oklch(0.80 0.11 200); text-decoration: none; }
+  a:hover { color: oklch(0.88 0.10 200); }
+  @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.86); } }
+</style>
+</helmet>
+
+<div data-screen-label="Reportes v2" style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 22px 30px 24px; display: flex; flex-direction: column; gap: 13px; font-family: Manrope, system-ui, sans-serif; color: oklch(0.96 0.004 265); overflow: hidden; background-color: #0a0d13; background-image: radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%), radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%), linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%);">
+
+  <div style="height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="width: 40px; height: 40px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; background: oklch(0.30 0.02 250 / 0.60); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+      </div>
+      <div style="font-size: 23px; font-weight: 700; letter-spacing: 0.2em; color: oklch(0.84 0.11 195);">PULSO<span style="font-weight: 300; color: oklch(0.94 0.005 265);">VIAL</span></div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+          <div style="padding: 8px 15px; border-radius: 11px; font-size: 16px; font-weight: {{ n.peso }}; cursor: pointer; white-space: nowrap; color: {{ n.fg }}; background: {{ n.bg }}; box-shadow: {{ n.sh }};">{{ n.txt }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 7px 15px 7px 12px; border-radius: 999px; background: oklch(0.45 0.09 168 / 0.16); box-shadow: inset 0 0 0 1px oklch(0.60 0.10 168 / 0.28);">
+        <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.82 0.13 168); animation: breathe 2.6s ease-in-out infinite;"></div>
+        <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: oklch(0.84 0.10 168);">EN VIVO</span>
+      </div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.62 0.015 265);">Administrador</div>
+      <div style="font-size: 32px; font-weight: 300; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: oklch(0.95 0.004 265);">{{ reloj }}</div>
+    </div>
+  </div>
+
+  <div style="height: 40px; flex: 0 0 auto; display: flex; align-items: baseline; gap: 14px;">
+    <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.015em;">Reportes</div>
+    <div style="font-size: 15px; font-weight: 500; color: oklch(0.56 0.015 265);">arma el informe, revisa qué va a salir y descárgalo en CSV o PDF</div>
+  </div>
+
+  <div style="flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 0.92fr 1.15fr 1fr; gap: 13px;">
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; gap: 12px;">
+        <div style="font-size: 19px; font-weight: 600;">1 · Qué reporte</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">un informe por vez</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding-top: 12px;">
+        <sc-for list="{{ tipos }}" as="t" hint-placeholder-count="4">
+          <div onClick="{{ t.on }}" style="box-sizing: border-box; padding: 15px 18px; border-radius: 16px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; background: {{ t.bg }}; box-shadow: {{ t.sh }};">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em; color: {{ t.titFg }};">{{ t.nombre }}</div>
+              <div style="width: 19px; height: 19px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: oklch(0.18 0.04 200); background: {{ t.puntoBg }}; box-shadow: {{ t.puntoSh }};">{{ t.check }}</div>
+            </div>
+            <div style="font-size: 14px; font-weight: 500; line-height: 1.45; color: oklch(0.64 0.015 265); text-wrap: pretty;">{{ t.desc }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; gap: 12px;">
+        <div style="font-size: 19px; font-weight: 600;">2 · Qué período y filtros</div>
+      </div>
+
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding-top: 14px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.52 0.015 265);">Período</div>
+          <div style="display: flex; gap: 6px;">
+            <sc-for list="{{ presets }}" as="p" hint-placeholder-count="5">
+              <div onClick="{{ p.on }}" style="padding: 8px 14px; border-radius: 11px; font-size: 15px; font-weight: {{ p.peso }}; cursor: pointer; white-space: nowrap; color: {{ p.fg }}; background: {{ p.bg }}; box-shadow: {{ p.sh }};">{{ p.txt }}</div>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; border-radius: 12px; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; background: oklch(0.28 0.02 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+              <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.52 0.015 265);">Desde</span>{{ periodo.desde }}
+            </div>
+            <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; border-radius: 12px; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; background: oklch(0.28 0.02 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+              <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.52 0.015 265);">Hasta</span>{{ periodo.hasta }}
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.52 0.015 265);">Estaciones</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <sc-for list="{{ estaciones }}" as="e" hint-placeholder-count="6">
+              <div onClick="{{ e.on }}" style="padding: 8px 14px; border-radius: 11px; font-size: 15px; font-weight: {{ e.peso }}; cursor: pointer; white-space: nowrap; color: {{ e.fg }}; background: {{ e.bg }}; box-shadow: {{ e.sh }};">{{ e.txt }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.52 0.015 265);">Opciones de {{ seleccion.nombre }}</div>
+          <sc-for list="{{ opciones }}" as="o" hint-placeholder-count="3">
+            <div onClick="{{ o.on }}" style="display: flex; align-items: center; gap: 12px; padding: 11px 15px; border-radius: 12px; cursor: pointer; background: oklch(0.26 0.02 262 / 0.55); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.05);">
+              <div style="width: 34px; height: 19px; flex: 0 0 auto; border-radius: 999px; display: flex; align-items: center; padding: 2px; justify-content: {{ o.justify }}; background: {{ o.pistaBg }};">
+                <div style="width: 15px; height: 15px; border-radius: 50%; background: {{ o.perilla }};"></div>
+              </div>
+              <div style="min-width: 0; font-size: 15px; font-weight: 500; color: {{ o.fg }};">{{ o.txt }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 16px 22px; display: flex; flex-direction: column; background: linear-gradient(160deg, oklch(0.26 0.035 210 / 0.75) 0%, oklch(0.19 0.018 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.08), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; gap: 12px;">
+        <div style="font-size: 19px; font-weight: 600;">3 · Qué vas a descargar</div>
+      </div>
+
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding-top: 14px;">
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 13px 16px; border-radius: 14px; background: oklch(0.24 0.02 262 / 0.70); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);">
+            <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.56 0.02 265);">Filas</div>
+            <div style="font-size: 28px; font-weight: 300; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: oklch(0.94 0.01 265);">{{ resumen.filas }}</div>
+          </div>
+          <div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 13px 16px; border-radius: 14px; background: oklch(0.24 0.02 262 / 0.70); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);">
+            <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.56 0.02 265);">Columnas</div>
+            <div style="font-size: 28px; font-weight: 300; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: oklch(0.94 0.01 265);">{{ resumen.nCols }}</div>
+          </div>
+          <div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 13px 16px; border-radius: 14px; background: oklch(0.24 0.02 262 / 0.70); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);">
+            <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.56 0.02 265);">Tamaño aprox.</div>
+            <div style="font-size: 28px; font-weight: 300; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: oklch(0.94 0.01 265);">{{ resumen.peso }}</div>
+          </div>
+        </div>
+
+        <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: oklch(0.56 0.02 265);">Columnas incluidas</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <sc-for list="{{ columnas }}" as="c" hint-placeholder-count="8">
+              <div style="padding: 7px 13px; border-radius: 10px; font-size: 14px; font-weight: 500; white-space: nowrap; color: oklch(0.84 0.012 265); background: oklch(0.30 0.025 250 / 0.60); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);">{{ c }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-radius: 12px; font-size: 14px; font-weight: 500; line-height: 1.4; color: oklch(0.82 0.06 200); background: oklch(0.30 0.04 210 / 0.45); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06); text-wrap: pretty;">{{ resumen.aviso }}</div>
+
+        <div style="flex: 0 0 auto; display: flex; gap: 10px;">
+          <div style="flex: 1 1 0; padding: 13px 18px; border-radius: 13px; text-align: center; font-size: 16px; font-weight: 600; cursor: pointer; color: oklch(0.18 0.04 165); background: linear-gradient(180deg, oklch(0.84 0.13 165), oklch(0.74 0.13 163));">Descargar CSV</div>
+          <div style="flex: 1 1 0; padding: 13px 18px; border-radius: 13px; text-align: center; font-size: 16px; font-weight: 600; cursor: pointer; color: oklch(0.90 0.10 22); background: oklch(0.38 0.10 22 / 0.40); box-shadow: inset 0 0 0 1px oklch(0.65 0.13 22 / 0.32);">Descargar PDF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 262px; flex: 0 0 auto; box-sizing: border-box; border-radius: 22px; padding: 15px 24px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+    <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+      <div style="display: flex; align-items: baseline; gap: 13px;">
+        <div style="font-size: 19px; font-weight: 600;">Descargas recientes</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">se conservan 30 días · vuelve a descargar sin regenerar</div>
+      </div>
+    </div>
+    <div style="flex: 0 0 auto; display: grid; grid-template-columns: 1.5fr 1.4fr 1fr 0.8fr 0.8fr 1fr 130px; gap: 12px; padding: 11px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.50 0.015 265); border-bottom: 1px solid oklch(1 0 0 / 0.07);">
+      <div>Reporte</div><div>Período</div><div>Filtros</div><div>Formato</div><div>Filas</div><div>Generado</div><div></div>
+    </div>
+    <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around;">
+      <sc-for list="{{ recientes }}" as="r" hint-placeholder-count="5">
+        <div style="display: grid; grid-template-columns: 1.5fr 1.4fr 1fr 0.8fr 0.8fr 1fr 130px; gap: 12px; align-items: center; font-size: 15px; font-variant-numeric: tabular-nums;">
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;">{{ r.nombre }}</div>
+          <div style="color: oklch(0.62 0.015 265);">{{ r.periodo }}</div>
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: oklch(0.62 0.015 265);">{{ r.filtros }}</div>
+          <div><span style="padding: 3px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: {{ r.fmtFg }}; background: {{ r.fmtBg }};">{{ r.formato }}</span></div>
+          <div style="color: oklch(0.80 0.012 265);">{{ r.filas }}</div>
+          <div style="color: oklch(0.58 0.015 265);">{{ r.generado }}</div>
+          <div style="padding: 7px 14px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; color: oklch(0.84 0.08 200); background: oklch(0.30 0.04 210 / 0.50); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);">Descargar</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  state = { reloj: '', tipo: null, preset: 'Últimos 30 días', ests: {}, opts: {} };
+
+  componentDidMount() {
+    const tick = () => this.setState({ reloj: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) });
+    tick();
+    this._t = setInterval(tick, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  renderVals() {
+    const nav = ['Dashboard', 'NOC', 'Incidentes', 'Reporte SLA', 'Reportes', 'Discrepancias', 'OCR Placas', 'Admin'].map((t) => t === 'Reportes'
+      ? { txt: t, peso: 600, fg: 'oklch(0.95 0.01 265)', bg: 'oklch(0.34 0.045 210 / 0.75)', sh: 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' }
+      : { txt: t, peso: 500, fg: 'oklch(0.66 0.015 265)', bg: 'transparent', sh: 'none' });
+
+    const chip = (activo) => activo
+      ? { peso: 600, fg: 'oklch(0.18 0.04 200)', bg: 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))', sh: 'none' }
+      : { peso: 500, fg: 'oklch(0.68 0.015 265)', bg: 'oklch(0.28 0.02 262 / 0.75)', sh: 'inset 0 0 0 1px oklch(1 0 0 / 0.06)' };
+
+    const TIPOS = [
+      {
+        nombre: 'Incidentes', desc: 'Cada caída de equipo con inicio, fin, duración y causa. Para auditoría y reclamos.',
+        filas: 2026, peso: '412 KB',
+        cols: ['Fecha', 'Equipo', 'Estación', 'Vía', 'Inicio', 'Fin', 'Duración', 'Tipo', 'Causa', 'Ráfaga'],
+        opciones: ['Solo incidentes activos', 'Agrupar ráfagas en un evento', 'Excluir falsos positivos'],
+        aviso: 'Con ráfagas agrupadas el archivo baja de 2,026 a 615 filas — es la forma en que conviene leerlo.'
+      },
+      {
+        nombre: 'Reporte SLA', desc: 'Uptime por equipo contra la meta de 99.5%, con tiempo caído y motivo principal.',
+        filas: 200, peso: '48 KB',
+        cols: ['Peaje', 'Equipo', 'Tipo', 'Vía', 'Uptime %', 'Caído', 'Total', 'Eventos', 'Motivo', 'Cumple SLA'],
+        opciones: ['Excluir mantenimiento programado', 'Solo equipos fuera de SLA', 'Incluir detalle por evento'],
+        aviso: 'Excluyendo mantenimiento programado el uptime global pasa de 97.00% a 98.4%: define cuál cifra es la contractual antes de enviarlo.'
+      },
+      {
+        nombre: 'Discrepancias DAC', desc: 'Tabulado del cobrador contra la clasificación automática, transacción por transacción.',
+        filas: 1404, peso: '286 KB',
+        cols: ['Fecha', 'Estación', 'Vía', 'Ticket', 'Tabulada', 'Detectada', 'Placa tab.', 'Placa det.', 'Cobrador'],
+        opciones: ['Solo vías fuera de rango', 'Incluir tránsitos sin ticket', 'Agregar % por vía'],
+        aviso: 'El archivo trae el detalle crudo; para la conversación con operaciones suele bastar el agregado por vía.'
+      },
+      {
+        nombre: 'OCR de placas', desc: 'Placa del cajero contra placa de cámara, con el tipo de error y el carácter confundido.',
+        filas: 7907, peso: '1.2 MB',
+        cols: ['Fecha', 'Estación', 'Vía', 'Ticket', 'Placa cajero', 'Placa OCR', 'Diferencia', 'Tipo error', 'Posición'],
+        opciones: ['Solo no detectadas', 'Solo sustituciones', 'Incluir análisis de caracteres'],
+        aviso: 'Con 7,907 filas el PDF pierde sentido: para este informe usa CSV y analiza fuera.'
+      }
+    ];
+    const tipoActivo = this.state.tipo || TIPOS[0].nombre;
+    const seleccion = TIPOS.filter((t) => t.nombre === tipoActivo)[0];
+
+    const tipos = TIPOS.map((t) => {
+      const on = t.nombre === tipoActivo;
+      return {
+        nombre: t.nombre, desc: t.desc,
+        bg: on ? 'oklch(0.32 0.045 210 / 0.70)' : 'oklch(0.26 0.02 262 / 0.50)',
+        sh: on ? 'inset 0 0 0 1px oklch(0.72 0.10 200 / 0.45)' : 'inset 0 0 0 1px oklch(1 0 0 / 0.05)',
+        titFg: on ? 'oklch(0.95 0.01 265)' : 'oklch(0.80 0.012 265)',
+        check: on ? '✓' : '',
+        puntoBg: on ? 'oklch(0.82 0.11 200)' : 'transparent',
+        puntoSh: on ? 'none' : 'inset 0 0 0 1px oklch(0.40 0.015 265)',
+        on: () => this.setState({ tipo: t.nombre, opts: {} })
+      };
+    });
+
+    const PRESETS = ['Hoy', 'Últimos 7 días', 'Últimos 30 días', 'Mes anterior', 'Personalizado'];
+    const presetActivo = this.state.preset;
+    const presets = PRESETS.map((t) => Object.assign({ txt: t, on: () => this.setState({ preset: t }) }, chip(t === presetActivo)));
+
+    const hoy = new Date(2026, 8, 13);
+    const fmt = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+    const diasPreset = { 'Hoy': 0, 'Últimos 7 días': 7, 'Últimos 30 días': 30, 'Mes anterior': 30, 'Personalizado': 30 };
+    const desde = new Date(2026, 8, 13 - diasPreset[presetActivo]);
+    const periodo = { desde: fmt(desde), hasta: fmt(hoy) };
+
+    const ESTS = ['Todas', 'KM 402', 'VIRU', 'FORTALEZA', 'HUARMEY', 'SANTA'];
+    const marcadas = this.state.ests;
+    const ningunaMarcada = Object.keys(marcadas).length === 0;
+    const estaciones = ESTS.map((t) => {
+      const on = t === 'Todas' ? ningunaMarcada : !!marcadas[t];
+      return Object.assign({ txt: t, on: () => this.setState((s) => {
+        if (t === 'Todas') return { ests: {} };
+        const n = Object.assign({}, s.ests);
+        if (n[t]) { delete n[t]; } else { n[t] = true; }
+        return { ests: n };
+      }) }, chip(on));
+    });
+
+    const opts = this.state.opts;
+    const opciones = seleccion.opciones.map((txt) => {
+      const on = !!opts[txt];
+      return {
+        txt: txt, fg: on ? 'oklch(0.94 0.01 265)' : 'oklch(0.70 0.015 265)',
+        justify: on ? 'flex-end' : 'flex-start',
+        pistaBg: on ? 'oklch(0.74 0.11 200)' : 'oklch(0.34 0.015 265)',
+        perilla: on ? 'oklch(0.20 0.04 200)' : 'oklch(0.62 0.015 265)',
+        on: () => this.setState((s) => {
+          const n = Object.assign({}, s.opts);
+          if (n[txt]) { delete n[txt]; } else { n[txt] = true; }
+          return { opts: n };
+        })
+      };
+    });
+
+    const factorEst = ningunaMarcada ? 1 : Math.min(1, Object.keys(marcadas).length / 5 + 0.05);
+    const factorDias = presetActivo === 'Hoy' ? 0.04 : presetActivo === 'Últimos 7 días' ? 0.25 : 1;
+    const filasN = Math.max(1, Math.round(seleccion.filas * factorEst * factorDias));
+    const resumen = {
+      filas: filasN.toLocaleString('en-US'),
+      nCols: seleccion.cols.length,
+      peso: filasN > 3000 ? '1.2 MB' : filasN > 900 ? Math.round(filasN * 0.2) + ' KB' : Math.round(filasN * 0.24) + ' KB',
+      aviso: seleccion.aviso
+    };
+
+    const RECIENTES = [
+      ['Incidentes', '14/08 – 13/09/2026', 'Todas', 'CSV', '2,026', 'hoy 01:32'],
+      ['Reporte SLA', '01/08 – 31/08/2026', 'Todas', 'PDF', '200', 'ayer 18:04'],
+      ['OCR de placas', '06/09 – 13/09/2026', 'VIRU · SANTA', 'CSV', '3,118', 'ayer 09:47'],
+      ['Discrepancias DAC', '01/08 – 31/08/2026', 'KM 402', 'CSV', '412', '11/09 16:20'],
+      ['Reporte SLA', '01/07 – 31/07/2026', 'Todas', 'PDF', '198', '02/09 08:15']
+    ];
+    const recientes = RECIENTES.map(([nombre, periodoTxt, filtros, formato, filas, generado]) => ({
+      nombre: nombre, periodo: periodoTxt, filtros: filtros, formato: formato, filas: filas, generado: generado,
+      fmtFg: formato === 'CSV' ? 'oklch(0.88 0.11 160)' : 'oklch(0.86 0.11 22)',
+      fmtBg: formato === 'CSV' ? 'oklch(0.40 0.09 165 / 0.32)' : 'oklch(0.42 0.11 22 / 0.30)'
+    }));
+
+    return {
+      reloj: this.state.reloj, nav: nav, tipos: tipos, seleccion: seleccion,
+      presets: presets, periodo: periodo, estaciones: estaciones, opciones: opciones,
+      columnas: seleccion.cols, resumen: resumen, recientes: recientes
+    };
+  }
+}
+</script>
+</body>
+</html>

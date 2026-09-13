@@ -14,7 +14,7 @@ const STAGGER  = 400
 
 // Verde si 100% operativo · Ámbar si algo down · Rojo si mayoría down
 function statusColor(up: number, total: number): string {
-  if (total === 0 || up === total) return '#4CAF75'
+  if (total === 0 || up === total) return '#72BF44'
   return up / total >= 0.5 ? '#F59E0B' : '#EF4444'
 }
 
@@ -122,12 +122,12 @@ export function NetworkTopology({ estaciones }: Props) {
   }, [])
 
   return (
-    <div className="bg-[#070d12] rounded-xl border border-[#0F6F5A]/30 overflow-hidden h-full flex flex-col">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#0F6F5A]/20 flex-shrink-0">
+    <div className="bg-[#070d12] rounded-xl border border-[#72BF44]/30 overflow-hidden h-full flex flex-col">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#72BF44]/20 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4CAF75] opacity-70" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#4CAF75]" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#72BF44] opacity-70" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#72BF44]" />
           </span>
           <span className="text-[0.7rem] text-[#3a7060] font-bold uppercase tracking-[0.18em]">
             Topología de Red · Heartbeat en Vivo
@@ -141,7 +141,7 @@ export function NetworkTopology({ estaciones }: Props) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full flex-1 min-h-0" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <pattern id="nt-g" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0F6F5A" strokeWidth="0.35" opacity="0.15" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#72BF44" strokeWidth="0.35" opacity="0.15" />
           </pattern>
           <filter id="f-gn" x="-200%" y="-200%" width="500%" height="500%">
             <feGaussianBlur stdDeviation="13" result="b"/>
@@ -170,7 +170,7 @@ export function NetworkTopology({ estaciones }: Props) {
 
         {/* Anillo guía */}
         <circle cx={HUB.x} cy={HUB.y} r={R_RING}
-          fill="none" stroke="#0F6F5A" strokeWidth="0.5"
+          fill="none" stroke="#72BF44" strokeWidth="0.5"
           strokeDasharray="4 14" opacity="0.13" />
 
         {/* Líneas y paquetes (debajo de nodos) */}
@@ -203,9 +203,9 @@ export function NetworkTopology({ estaciones }: Props) {
           const col   = statusColor(est.up, total)
           const lat   = avgLat(est)
           const pct   = Math.round(upPct * 100)
-          const glowF = col === '#4CAF75' ? 'f-gn' : col === '#F59E0B' ? 'f-am' : 'f-rd'
-          const lblFill = col === '#4CAF75' ? '#ccc8c4' : col === '#F59E0B' ? '#F5C56A' : '#FF8888'
-          const lblFill2 = col === '#4CAF75' ? '#1e4040' : col === '#F59E0B' ? '#6a4208' : '#5a1a1a'
+          const glowF = col === '#72BF44' ? 'f-gn' : col === '#F59E0B' ? 'f-am' : 'f-rd'
+          const lblFill = col === '#72BF44' ? '#ccc8c4' : col === '#F59E0B' ? '#F5C56A' : '#FF8888'
+          const lblFill2 = col === '#72BF44' ? '#1e4040' : col === '#F59E0B' ? '#6a4208' : '#5a1a1a'
 
           return (
             <g key={`node-${est.id}`}>
@@ -248,14 +248,14 @@ export function NetworkTopology({ estaciones }: Props) {
 
         {/* Hub — PULSO VIAL */}
         <circle cx={HUB.x} cy={HUB.y} r={R_HUB}
-          fill="#0F6F5A" opacity="0.50" filter="url(#f-hub)" />
+          fill="#72BF44" opacity="0.50" filter="url(#f-hub)" />
         <circle cx={HUB.x} cy={HUB.y} r={R_HUB + 9}
-          fill="none" stroke="#4CAF75" strokeWidth="0.5"
+          fill="none" stroke="#72BF44" strokeWidth="0.5"
           strokeDasharray="2 8" opacity="0.18" />
         <circle cx={HUB.x} cy={HUB.y} r={R_HUB}
-          fill="#0F6F5A" stroke="#4CAF75" strokeWidth="1.5" opacity="0.88" />
+          fill="#72BF44" stroke="#72BF44" strokeWidth="1.5" opacity="0.88" />
         <circle cx={HUB.x} cy={HUB.y} r={R_HUB - 7}
-          fill="none" stroke="#4CAF75" strokeWidth="0.6" opacity="0.35" />
+          fill="none" stroke="#72BF44" strokeWidth="0.6" opacity="0.35" />
         <text x={HUB.x} y={HUB.y - 3} textAnchor="middle"
           fill="#DAFFF0" fontSize="7.5" fontWeight="900"
           fontFamily="var(--app-font)" letterSpacing="1">

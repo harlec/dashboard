@@ -16,11 +16,11 @@ export function FormModal({ title, open, onClose, onSubmit, loading, children, s
   return (
     <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4"
       onClick={onClose}>
-      <div className="bg-surface-2 rounded-2xl w-full max-w-lg shadow-2xl border border-[#38332F]"
+      <div className="bg-surface-2 rounded-2xl w-full max-w-lg shadow-2xl border border-[#232733]"
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#38332F]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#232733]">
           <h2 className="font-bold text-[1rem] text-[#eae7e4]">{title}</h2>
           <button onClick={onClose}
             className="text-muted hover:text-danger px-2 py-1 rounded-md transition-colors">✕</button>
@@ -32,7 +32,7 @@ export function FormModal({ title, open, onClose, onSubmit, loading, children, s
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#38332F]">
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#232733]">
           <button onClick={onClose}
             className="px-4 py-2 rounded-lg bg-surface-3 text-muted text-sm font-bold hover:bg-surface-2 transition-colors">
             Cancelar

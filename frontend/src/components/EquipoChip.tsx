@@ -4,10 +4,10 @@ interface Props { equipo: EquipoLive; onClick: (eq: EquipoLive) => void }
 
 function chipClasses(eq: EquipoLive): string {
   if (!eq.monitorear) return 'bg-transparent text-[#5a5450] cursor-default'
-  if (!eq.ultimoEstado) return 'bg-[#38332F] text-[#a09890]'
+  if (!eq.ultimoEstado) return 'bg-[#232733] text-[#8d94a3]'
   if (eq.ultimoEstado === 'UP')   return 'bg-[#2d7a2d] text-white'
   if (eq.ultimoEstado === 'DOWN') return 'bg-[#8B1A1A] text-white animate-blink-down'
-  return 'bg-[#38332F] text-[#a09890]'
+  return 'bg-[#232733] text-[#8d94a3]'
 }
 
 function tooltip(eq: EquipoLive): string {

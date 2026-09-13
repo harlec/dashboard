@@ -25,7 +25,7 @@ export function DonutChart({ ups, downs, incActivos, total }: Props) {
         </filter>
       </defs>
       {/* track */}
-      <circle cx="65" cy="65" r="52" fill="none" stroke="#252220" strokeWidth="16" />
+      <circle cx="65" cy="65" r="52" fill="none" stroke="#262c3a" strokeWidth="16" />
       {/* UP */}
       <circle cx="65" cy="65" r="52" fill="none" stroke="#72BF44" strokeWidth="16"
         strokeDasharray={`${arcUp} ${C}`} strokeDashoffset={offUp}
@@ -41,7 +41,7 @@ export function DonutChart({ ups, downs, incActivos, total }: Props) {
       {/* texto central */}
       <text x="65" y="61" textAnchor="middle" fill="#72BF44" fontSize="20" fontWeight="800"
         fontFamily="var(--app-font)">{uptimePct}%</text>
-      <text x="65" y="77" textAnchor="middle" fill="#a09890" fontSize="10"
+      <text x="65" y="77" textAnchor="middle" fill="#8d94a3" fontSize="10"
         fontFamily="var(--app-font)">UPTIME</text>
     </svg>
   )

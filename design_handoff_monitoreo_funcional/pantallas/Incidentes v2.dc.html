@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0d13; }
+  a { color: oklch(0.80 0.11 200); text-decoration: none; }
+  a:hover { color: oklch(0.88 0.10 200); }
+  @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.86); } }
+</style>
+</helmet>
+
+<div data-screen-label="Incidentes v2" style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 22px 30px 24px; display: flex; flex-direction: column; gap: 13px; font-family: Manrope, system-ui, sans-serif; color: oklch(0.96 0.004 265); overflow: hidden; background-color: #0a0d13; background-image: radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%), radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%), linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%);">
+
+  <div style="height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="width: 40px; height: 40px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; background: oklch(0.30 0.02 250 / 0.60); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+        <div style="width: 17px; height: 2px; border-radius: 2px; background: oklch(0.84 0.06 200);"></div>
+      </div>
+      <div style="font-size: 23px; font-weight: 700; letter-spacing: 0.2em; color: oklch(0.84 0.11 195);">PULSO<span style="font-weight: 300; color: oklch(0.94 0.005 265);">VIAL</span></div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+          <div style="padding: 8px 15px; border-radius: 11px; font-size: 16px; font-weight: {{ n.peso }}; cursor: pointer; white-space: nowrap; color: {{ n.fg }}; background: {{ n.bg }}; box-shadow: {{ n.sh }};">{{ n.txt }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 7px 15px 7px 12px; border-radius: 999px; background: oklch(0.45 0.09 168 / 0.16); box-shadow: inset 0 0 0 1px oklch(0.60 0.10 168 / 0.28);">
+        <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.82 0.13 168); animation: breathe 2.6s ease-in-out infinite;"></div>
+        <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: oklch(0.84 0.10 168);">EN VIVO</span>
+      </div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.62 0.015 265);">Administrador</div>
+      <div style="font-size: 32px; font-weight: 300; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: oklch(0.95 0.004 265);">{{ reloj }}</div>
+    </div>
+  </div>
+
+  <div style="height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.015em;">Incidentes de red</div>
+      <div style="font-size: 15px; font-weight: 500; color: oklch(0.56 0.015 265);">caídas de equipo detectadas por el monitoreo · agrupadas por ráfaga</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 5px; padding: 4px; border-radius: 13px; background: oklch(0.24 0.018 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.05);">
+      <sc-for list="{{ rangos }}" as="r" hint-placeholder-count="3">
+        <div onClick="{{ r.on }}" style="padding: 7px 16px; border-radius: 10px; font-size: 15px; font-weight: {{ r.peso }}; cursor: pointer; white-space: nowrap; color: {{ r.fg }}; background: {{ r.bg }};">{{ r.txt }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="height: 98px; flex: 0 0 auto; display: grid; grid-template-columns: 0.85fr 0.85fr 0.85fr 2.2fr; gap: 13px;">
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.36 0.10 20 / 0.55) 0%, oklch(0.22 0.03 265 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.80 0.10 22);">En el período</div>
+      <div style="font-size: 40px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.86 0.13 22);">{{ kpi.total }}</div>
+      <div style="font-size: 14px; font-weight: 500; color: oklch(0.62 0.035 22);">{{ kpi.notaTotal }}</div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: oklch(0.80 0.14 62); animation: breathe 1.8s ease-in-out infinite;"></div>
+        <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.84 0.09 62);">Activos ahora</div>
+      </div>
+      <div style="font-size: 40px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.90 0.12 62);">{{ kpi.activos }}</div>
+      <div style="font-size: 14px; font-weight: 500; color: oklch(0.64 0.035 62);">sin cerrar en este momento</div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.30 0.045 200 / 0.55) 0%, oklch(0.22 0.025 250 / 0.55) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.76 0.06 200);">MTTR</div>
+      <div style="font-size: 40px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; color: oklch(0.92 0.06 200);">{{ kpi.mttr }}</div>
+      <div style="font-size: 14px; font-weight: 500; color: oklch(0.60 0.03 200);">mediana de recuperación</div>
+    </div>
+
+    <div style="box-sizing: border-box; border-radius: 20px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(160deg, oklch(0.32 0.05 25 / 0.45) 0%, oklch(0.21 0.022 265 / 0.60) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.82 0.11 25);">Ráfaga dominante</div>
+        <div style="padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; color: oklch(0.22 0.05 25); background: oklch(0.78 0.14 25);">{{ rafaga.share }} del período</div>
+      </div>
+      <div style="font-size: 20px; font-weight: 500; letter-spacing: -0.01em; color: oklch(0.94 0.01 265); text-wrap: pretty;">{{ rafaga.titulo }}</div>
+      <div style="font-size: 14px; font-weight: 500; color: oklch(0.64 0.02 265);">{{ rafaga.detalle }}</div>
+    </div>
+  </div>
+
+  <div style="height: 288px; flex: 0 0 auto; display: grid; grid-template-columns: 1fr 1.5fr 1.05fr; gap: 13px;">
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Por estación</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">{{ estacionNota }}</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; padding-top: 8px;">
+        <sc-for list="{{ porEstacion }}" as="e" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 16px; font-weight: 600; color: {{ e.color }};">{{ e.nombre }}</span>
+              <div style="display: flex; align-items: baseline; gap: 10px;">
+                <span style="font-size: 13px; font-weight: 500; color: oklch(0.50 0.015 265);">{{ e.share }}</span>
+                <span style="font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums;">{{ e.n }}</span>
+              </div>
+            </div>
+            <div style="height: 9px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ e.ancho }}; height: 100%; border-radius: 999px; background: {{ e.color }};"></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Tendencia diaria</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">escala logarítmica · la ráfaga aplasta cualquier eje lineal</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding-top: 10px;">
+        <div style="flex: 1 1 auto; min-height: 0; display: flex; gap: 10px;">
+          <div style="width: 42px; flex: 0 0 auto; position: relative;">
+            <sc-for list="{{ ejeY }}" as="t" hint-placeholder-count="4">
+              <div style="position: absolute; right: 0; top: {{ t.top }}; transform: translateY(-50%); font-size: 13px; font-weight: 500; line-height: 16px; font-variant-numeric: tabular-nums; color: oklch(0.48 0.015 265);">{{ t.txt }}</div>
+            </sc-for>
+          </div>
+          <div style="flex: 1 1 auto; min-width: 0; display: flex; align-items: flex-end; gap: 10px; border-bottom: 1px solid oklch(1 0 0 / 0.10);">
+            <sc-for list="{{ tendencia }}" as="d" hint-placeholder-count="8">
+              <div style="flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px;">
+                <div style="font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ d.fg }};">{{ d.n }}</div>
+                <div style="width: 100%; height: {{ d.alto }}; border-radius: 6px 6px 0 0; background: {{ d.color }};"></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="height: 22px; flex: 0 0 auto; display: flex; gap: 10px; padding: 6px 0 0 52px;">
+          <sc-for list="{{ tendencia }}" as="d" hint-placeholder-count="8">
+            <div style="flex: 1 1 0; min-width: 0; overflow: hidden; text-align: center; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.50 0.015 265);">{{ d.dia }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Vías más afectadas</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">top 10</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; padding-top: 6px;">
+        <sc-for list="{{ topVias }}" as="v" hint-placeholder-count="10">
+          <div style="display: flex; align-items: center; gap: 11px;">
+            <div style="width: 26px; flex: 0 0 auto; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ v.rankFg }};">{{ v.rank }}</div>
+            <div style="width: 44px; flex: 0 0 auto; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;">{{ v.via }}</div>
+            <div style="width: 74px; flex: 0 0 auto; font-size: 13px; font-weight: 600; color: {{ v.color }};">{{ v.est }}</div>
+            <div style="flex: 1 1 auto; min-width: 0; height: 8px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ v.ancho }}; height: 100%; border-radius: 999px; background: {{ v.color }};"></div>
+            </div>
+            <div style="width: 34px; flex: 0 0 auto; text-align: right; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: oklch(0.88 0.01 265);">{{ v.n }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 196px; flex: 0 0 auto; display: grid; grid-template-columns: 1.5fr 1fr; gap: 13px;">
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Por hora del día</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">{{ horasNota }}</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding-top: 8px;">
+        <div style="flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid oklch(1 0 0 / 0.10);">
+          <sc-for list="{{ horas }}" as="h" hint-placeholder-count="24">
+            <div style="flex: 1 1 0; min-width: 0; height: {{ h.alto }}; border-radius: 4px 4px 0 0; background: {{ h.color }};"></div>
+          </sc-for>
+        </div>
+        <div style="height: 16px; flex: 0 0 auto; display: flex; gap: 4px; padding-top: 4px;">
+          <sc-for list="{{ horas }}" as="h" hint-placeholder-count="24">
+            <div style="flex: 1 1 0; min-width: 0; overflow: hidden; text-align: center; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; color: {{ h.fg }};">{{ h.txt }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="min-width: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 22px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+      <div style="flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 19px; font-weight: 600;">Causas</div>
+        <div style="font-size: 14px; font-weight: 500; color: oklch(0.52 0.015 265);">mensaje del agente</div>
+      </div>
+      <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; padding-top: 6px;">
+        <sc-for list="{{ causas }}" as="c" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px;">
+              <span style="font-size: 15px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: {{ c.fg }};">{{ c.txt }}</span>
+              <span style="flex: 0 0 auto; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ c.fg }};">{{ c.n }}</span>
+            </div>
+            <div style="height: 8px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden;">
+              <div style="width: {{ c.ancho }}; height: 100%; border-radius: 999px; background: {{ c.barra }};"></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1 1 auto; min-height: 0; box-sizing: border-box; border-radius: 22px; padding: 15px 24px; display: flex; flex-direction: column; background: linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32);">
+    <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: baseline; gap: 13px;">
+        <div style="font-size: 19px; font-weight: 600;">Historial</div>
+        <div style="font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: oklch(0.52 0.015 265);">2,026 registros · últimos primero</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="padding: 8px 15px; border-radius: 11px; font-size: 15px; font-weight: 500; cursor: pointer; color: oklch(0.80 0.012 265); background: oklch(0.28 0.02 262 / 0.80); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);">Todas las estaciones ▾</div>
+        <div onClick="{{ toggleSoloActivos }}" style="padding: 8px 15px; border-radius: 11px; font-size: 15px; font-weight: {{ soloActivos.peso }}; cursor: pointer; color: {{ soloActivos.fg }}; background: {{ soloActivos.bg }}; box-shadow: {{ soloActivos.sh }};">Solo activos</div>
+        <div onClick="{{ etiquetar }}" style="padding: 8px 16px; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; color: {{ accion.fg }}; background: {{ accion.bg }}; box-shadow: {{ accion.sh }};">{{ accion.txt }}</div>
+      </div>
+    </div>
+
+    <div style="flex: 0 0 auto; display: grid; grid-template-columns: 34px 1.25fr 0.9fr 60px 1.15fr 1.15fr 88px 92px 2fr; gap: 12px; padding: 11px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.50 0.015 265); border-bottom: 1px solid oklch(1 0 0 / 0.07);">
+      <div></div><div>Equipo</div><div>Estación</div><div>Vía</div><div>Inicio</div><div>Fin</div><div>Duración</div><div>Tipo</div><div>Causa</div>
+    </div>
+
+    <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around;">
+      <sc-for list="{{ historial }}" as="r" hint-placeholder-count="8">
+        <div onClick="{{ r.on }}" style="display: grid; grid-template-columns: 34px 1.25fr 0.9fr 60px 1.15fr 1.15fr 88px 92px 2fr; gap: 12px; align-items: center; cursor: pointer; font-size: 15px; font-variant-numeric: tabular-nums;">
+          <div style="width: 19px; height: 19px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: {{ r.checkFg }}; background: {{ r.checkBg }}; box-shadow: {{ r.checkSh }};">{{ r.check }}</div>
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;">{{ r.equipo }}</div>
+          <div style="font-weight: 600; color: {{ r.estFg }};">{{ r.est }}</div>
+          <div style="color: oklch(0.70 0.015 265);">{{ r.via }}</div>
+          <div style="color: oklch(0.60 0.015 265);">{{ r.inicio }}</div>
+          <div style="color: oklch(0.60 0.015 265);">{{ r.fin }}</div>
+          <div style="font-weight: 600; color: {{ r.durFg }};">{{ r.duracion }}</div>
+          <div><span style="padding: 3px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: {{ r.tipoFg }}; background: {{ r.tipoBg }};">{{ r.tipo }}</span></div>
+          <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: oklch(0.58 0.015 265);">{{ r.causa }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080},&quot;rango&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Hoy&quot;,&quot;7 días&quot;,&quot;30 días&quot;],&quot;default&quot;:&quot;7 días&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;}}">
+class Component extends DCLogic {
+  state = { reloj: '', rango: null, sel: {}, soloActivos: false };
+
+  componentDidMount() {
+    const tick = () => this.setState({ reloj: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) });
+    tick();
+    this._t = setInterval(tick, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  renderVals() {
+    const EST_COLOR = {
+      'KM 402': 'oklch(0.78 0.11 205)', 'VIRU': 'oklch(0.84 0.12 95)', 'FORTALEZA': 'oklch(0.78 0.13 160)',
+      'HUARMEY': 'oklch(0.78 0.13 45)', 'SANTA': 'oklch(0.76 0.10 300)'
+    };
+    const pill = (activo) => activo
+      ? { peso: 600, fg: 'oklch(0.22 0.04 62)', bg: 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' }
+      : { peso: 500, fg: 'oklch(0.64 0.015 265)', bg: 'transparent' };
+
+    const nav = ['Dashboard', 'NOC', 'Incidentes', 'Reporte SLA', 'Reportes', 'Discrepancias', 'OCR Placas', 'Admin'].map((t) => t === 'Incidentes'
+      ? { txt: t, peso: 600, fg: 'oklch(0.95 0.01 265)', bg: 'oklch(0.34 0.045 210 / 0.75)', sh: 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' }
+      : { txt: t, peso: 500, fg: 'oklch(0.66 0.015 265)', bg: 'transparent', sh: 'none' });
+
+    const rangoActivo = this.state.rango || this.props.rango || '7 días';
+    const rangos = ['Hoy', '7 días', '30 días'].map((t) => Object.assign(
+      { txt: t, on: () => this.setState({ rango: t }) }, pill(t === rangoActivo)));
+
+    const EST = [['KM 402', 812], ['VIRU', 601], ['FORTALEZA', 498], ['HUARMEY', 68], ['SANTA', 51]];
+    const total = EST.reduce((a, e) => a + e[1], 0);
+    const maxEst = EST[0][1];
+    const porEstacion = EST.map(([n, v]) => ({
+      nombre: n, n: v.toLocaleString('en-US'), color: EST_COLOR[n],
+      share: Math.round(v / total * 100) + '%',
+      ancho: Math.round(v / maxEst * 100) + '%'
+    }));
+    const estacionNota = 'KM 402 concentra el ' + Math.round(EST[0][1] / total * 100) + '%';
+
+    const kpi = {
+      total: total.toLocaleString('en-US'),
+      notaTotal: 'equipos caídos en ' + rangoActivo.toLowerCase(),
+      activos: '10', mttr: '5 m'
+    };
+
+    const DIAS = [['06/09', 12], ['07/09', 38], ['08/09', 175], ['09/09', 131], ['10/09', 66], ['11/09', 5], ['12/09', 1411], ['13/09', 192]];
+    const logAlto = (v) => {
+      if (v <= 0) return '1%';
+      const p = Math.log10(v + 1) / Math.log10(2001);
+      return Math.max(2, Math.round(p * 100)) + '%';
+    };
+    const maxDia = Math.max.apply(null, DIAS.map((d) => d[1]));
+    // cada tick se posiciona por su propio valor bajo la misma función que las barras
+    const ejeY = [2000, 200, 20, 0].map((v) => ({
+      txt: v.toLocaleString('en-US'),
+      top: (100 - Math.log10(v + 1) / Math.log10(2001) * 100).toFixed(2) + '%'
+    }));
+    const tendencia = DIAS.map(([dia, n]) => ({
+      dia: dia, n: n.toLocaleString('en-US'),
+      alto: logAlto(n),
+      fg: n === maxDia ? 'oklch(0.86 0.14 25)' : 'oklch(0.58 0.015 265)',
+      color: n === maxDia
+        ? 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.56 0.16 22))'
+        : n >= 100
+          ? 'linear-gradient(180deg, oklch(0.80 0.13 62), oklch(0.66 0.12 62))'
+          : 'linear-gradient(180deg, oklch(0.60 0.07 220), oklch(0.48 0.06 225))'
+    }));
+
+    const rafaga = {
+      share: Math.round(maxDia / total * 100) + '%',
+      titulo: 'Una sola caída de enlace el 12/09 explica ' + maxDia.toLocaleString('en-US') + ' de los ' + total.toLocaleString('en-US') + ' incidentes',
+      detalle: '01:28–01:29 · 7 estaciones a la vez · tratar como un evento, no como 1,411 fallas'
+    };
+
+    const VIAS = [
+      ['607', 'KM 402', 116], ['600', 'KM 402', 102], ['601', 'KM 402', 99], ['606', 'KM 402', 97],
+      ['608', 'KM 402', 96], ['603', 'KM 402', 95], ['609', 'KM 402', 95], ['602', 'KM 402', 93],
+      ['708', 'VIRU', 91], ['703', 'VIRU', 79]
+    ];
+    const topVias = VIAS.map(([via, est, n], i) => ({
+      rank: '#' + (i + 1), via: via, est: est, n: n,
+      rankFg: i < 3 ? 'oklch(0.72 0.16 22)' : 'oklch(0.44 0.015 265)',
+      color: EST_COLOR[est],
+      ancho: Math.round(n / VIAS[0][2] * 100) + '%'
+    }));
+
+    // sin la ráfaga: total − 1,411 = 619 incidentes repartidos en el período
+    const HORAS = [22, 40, 8, 11, 3, 4, 1, 4, 8, 32, 58, 26, 52, 50, 38, 41, 74, 30, 19, 12, 9, 24, 26, 27];
+    const horasNota = HORAS.reduce((a, v) => a + v, 0).toLocaleString('en-US') + ' incidentes · excluye la ráfaga del 12/09';
+    const maxH = Math.max.apply(null, HORAS);
+    const horas = HORAS.map((v, i) => ({
+      txt: (i < 10 ? '0' : '') + i, fg: i % 2 ? 'transparent' : 'oklch(0.48 0.015 265)',
+      alto: Math.round(v / maxH * 100) + '%',
+      color: v === maxH
+        ? 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.56 0.16 22))'
+        : v >= maxH * 0.55
+          ? 'linear-gradient(180deg, oklch(0.80 0.13 62), oklch(0.66 0.12 62))'
+          : 'linear-gradient(180deg, oklch(0.60 0.07 220), oklch(0.48 0.06 225))'
+    }));
+
+    const CAUSAS = [
+      ['Paquete salió, nadie contestó — pérdida en camino o equipo muerto', 1932, 'oklch(0.86 0.13 22)', 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))'],
+      ['PlatformNotSupportedException en el agente', 98, 'oklch(0.88 0.12 62)', 'linear-gradient(90deg, oklch(0.68 0.12 70), oklch(0.82 0.13 62))']
+    ];
+    const causas = CAUSAS.map(([txt, n, fg, barra]) => ({
+      txt: txt, n: n.toLocaleString('en-US'), fg: fg, barra: barra,
+      ancho: Math.round(n / CAUSAS[0][1] * 100) + '%'
+    }));
+
+    const REG = [
+      ['PMV Norte KM402', 'KM 402', 'NOR', '01:28:42', '01:29:00', '18 s', 'Real'],
+      ['Cám OCR 608', 'KM 402', '608', '01:28:42', '01:29:15', '33 s', 'Real'],
+      ['Display 609', 'KM 402', '609', '01:28:42', '01:29:00', '18 s', 'Real'],
+      ['Display 602', 'KM 402', '602', '01:28:42', '01:29:00', '18 s', 'Real'],
+      ['PC OCR 608', 'KM 402', '608', '01:28:42', '01:29:00', '18 s', 'Real'],
+      ['Cám valid. 703', 'VIRU', '703', '01:28:42', '—', 'activo', 'Real'],
+      ['PC vía 501', 'HUARMEY', '501', '01:26:10', '01:31:48', '5 m 38 s', 'Real'],
+      ['Display 806', 'SANTA', '806', '01:19:03', '01:19:21', '18 s', 'Falso']
+    ];
+    const sel = this.state.sel;
+    const historial = REG.map((r, i) => {
+      const marcado = !!sel[i];
+      const activo = r[5] === 'activo';
+      const real = r[6] === 'Real';
+      return {
+        equipo: r[0], est: r[1], estFg: EST_COLOR[r[1]], via: r[2],
+        inicio: '13/09 ' + r[3], fin: r[4] === '—' ? '—' : '13/09 ' + r[4],
+        duracion: r[5], durFg: activo ? 'oklch(0.86 0.13 62)' : 'oklch(0.80 0.012 265)',
+        tipo: r[6],
+        tipoFg: real ? 'oklch(0.86 0.13 22)' : 'oklch(0.72 0.015 265)',
+        tipoBg: real ? 'oklch(0.45 0.13 22 / 0.28)' : 'oklch(0.35 0.01 265 / 0.45)',
+        causa: 'Paquete salió, nadie contestó',
+        check: marcado ? '✓' : '',
+        checkFg: 'oklch(0.18 0.04 200)',
+        checkBg: marcado ? 'oklch(0.80 0.11 200)' : 'transparent',
+        checkSh: marcado ? 'none' : 'inset 0 0 0 1px oklch(0.40 0.015 265)',
+        on: () => this.setState((s) => {
+          const n = Object.assign({}, s.sel);
+          if (n[i]) { delete n[i]; } else { n[i] = true; }
+          return { sel: n };
+        })
+      };
+    });
+
+    const nSel = Object.keys(sel).length;
+    const accion = nSel > 0
+      ? { txt: 'Etiquetar seleccionados (' + nSel + ')', fg: 'oklch(0.18 0.04 200)', bg: 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))', sh: 'none' }
+      : { txt: 'Etiquetar seleccionados', fg: 'oklch(0.48 0.015 265)', bg: 'oklch(0.24 0.016 262 / 0.80)', sh: 'inset 0 0 0 1px oklch(1 0 0 / 0.05)' };
+
+    const saOn = this.state.soloActivos;
+    const soloActivos = saOn
+      ? { peso: 600, fg: 'oklch(0.20 0.05 62)', bg: 'linear-gradient(180deg, oklch(0.86 0.13 68), oklch(0.78 0.13 62))', sh: 'none' }
+      : { peso: 500, fg: 'oklch(0.66 0.015 265)', bg: 'oklch(0.26 0.02 262 / 0.80)', sh: 'inset 0 0 0 1px oklch(1 0 0 / 0.06)' };
+
+    return {
+      reloj: this.state.reloj, nav: nav, rangos: rangos, kpi: kpi, rafaga: rafaga,
+      porEstacion: porEstacion, estacionNota: estacionNota, tendencia: tendencia, ejeY: ejeY, topVias: topVias,
+      horas: horas, horasNota: horasNota, causas: causas, historial: historial, accion: accion,
+      etiquetar: () => {}, soloActivos: soloActivos,
+      toggleSoloActivos: () => this.setState({ soloActivos: !saOn })
+    };
+  }
+}
+</script>
+</body>
+</html>

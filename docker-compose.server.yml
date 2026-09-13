@@ -22,6 +22,10 @@ services:
     build: ./backend
     # Sin publicar puerto al host: el frontend (nginx) lo alcanza internamente
     # vía "backend:5000" — no hace falta exponerlo fuera del servidor.
+    # Probado quitar NET_RAW para forzar sockets ICMP sin privilegios (evitaría
+    # el fan-out de sockets raw, ver PingWorkerService.cs) — pero el .NET de esta
+    # imagen no cae a SOCK_DGRAM, lanza PlatformNotSupportedException en cada
+    # intento y deja TODOS los equipos ICMP en DOWN permanente. Revertido.
     cap_add:
       - NET_RAW
     volumes:

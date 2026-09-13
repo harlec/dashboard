@@ -27,7 +27,7 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f0d0c] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0d13] px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src={logo} alt="Pulso Vial" className="h-14 mx-auto mb-3" />

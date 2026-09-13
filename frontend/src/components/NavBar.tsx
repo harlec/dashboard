@@ -9,7 +9,7 @@ export function NavBar({ signalStatus }: Props) {
   const { pathname } = useLocation()
 
   const dotColor = {
-    idle:  'bg-[#a09890]',
+    idle:  'bg-[#8d94a3]',
     ok:    'bg-brand-light animate-ping-pulse',
     error: 'bg-danger',
   }[signalStatus]

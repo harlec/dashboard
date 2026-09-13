@@ -33,7 +33,7 @@ export function StationMatrix({ estaciones, onEquipoClick, estacionesEnMtto }: P
                     ? 'bg-blue-500/15 ring-1 ring-blue-400/50'
                     : est.enlace === 'STARLINK'
                     ? 'bg-orange-500/15 ring-1 ring-orange-500/40'
-                    : 'bg-[#242120]'
+                    : 'bg-[#1f2330]'
                 }`}>
                   <div className="relative flex flex-col items-center gap-0.5 px-3 pt-2.5 pb-2">
                     {enMtto ? (
