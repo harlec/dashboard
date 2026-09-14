@@ -5,6 +5,8 @@
 :root {
   /* Default antes de que useFontScale.ts la fije según Admin → Configuración */
   --app-font: 'Manrope', 'Segoe UI', Arial, sans-serif;
+  /* Placas OCR — comparación carácter a carácter, sistema-visual.md */
+  --app-font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
 }
 
 @layer base {
@@ -15,4 +17,18 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+}
+
+/* Fondo de página del rediseño "monitoreo funcional" (sistema-visual.md) —
+   2 radiales + gradiente lineal sobre el mismo tono base que el resto de la
+   app. Se aplica por página (Discrepancias/Incidentes/OCR/SLA/Reportes), no
+   a body, para no afectar Admin/Login que no son parte del rediseño. */
+@keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.86); } }
+
+.page-bg {
+  background-color: #0a0d13;
+  background-image:
+    radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%),
+    radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%),
+    linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%);
 }

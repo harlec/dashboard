@@ -36,9 +36,11 @@ public record CamaraStatusDto(int Id, byte Camara, DateTime? UltimoEmail, int? M
 public record SlaEquipoDto(
     int EquipoId, string Nombre, string TipoNombre,
     int EstacionId, string Estacion, string Via,
-    decimal UptimePct, int TotalMin, int DownMin, string? Motivos);
+    decimal UptimePct, int TotalMin, int DownMin, string? Motivos, int Eventos);
 
 public record SlaEstacionDto(int EstacionId, string Estacion, decimal UptimePct, int Total);
+public record SlaTipoDto(string Tipo, decimal UptimePct, int Total);
+public record MotivoDowntimeDto(string Causa, int Minutos, decimal Pct);
 
 public record DiaDisponibilidadDto(string Fecha, decimal Pct);
 public record DisponibilidadDiariaDto(List<DiaDisponibilidadDto> Dias, decimal MtbfDias, int Caidas);
@@ -52,14 +54,22 @@ public record ViaIncDto(string Via, string Estacion, int Total);
 public record TendenciaIncDto(string Fecha, int Total);
 public record HoraIncDto(int Hora, int Total);
 public record CausaIncDto(string Causa, int Total);
+
+// Ráfaga: incidentes que arrancaron en el mismo minuto en >=3 estaciones a la
+// vez — es una caída de enlace, no N fallas independientes.
+public record RafagaDto(DateTime Minuto, int Total, decimal PctDelPeriodo, int Estaciones);
+
 public record IncidenteResumenDto(
     int Total, int Activos,
     List<EstacionIncDto> PorEstacion,
     List<ViaIncDto> TopVias,
     List<TendenciaIncDto> Tendencia,
+    List<TendenciaIncDto> TendenciaAgrupada,
     int? MttrMin,
     List<HoraIncDto> PorHora,
-    List<CausaIncDto> PorCausa
+    List<CausaIncDto> PorCausa,
+    RafagaDto? RafagaDominante,
+    int TotalAgrupado
 );
 
 public record EnlaceEventoDto(DateTime Inicio, DateTime? Fin, string Enlace, double? LatenciaMs);

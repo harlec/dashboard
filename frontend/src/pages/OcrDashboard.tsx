@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { api } from '../api/client'
 import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion } from '../api/client'
+import { ScaledStage } from '../components/ScaledStage'
+import { WallTopbar } from '../components/WallTopbar'
 
 const PERIODOS = ['1h', '4h', '12h', '24h', 'ayer', 'mes'] as const
 const ESTACIONES = ['', 'FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA']
@@ -286,7 +288,8 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
               const tasaNoRec  = v.total > 0 ? v.noReconocidas / v.total * 100 : 0
               const tasaConf   = v.total > 0 ? v.confusiones   / v.total * 100 : 0
               const eColor     = ESTACION_COLOR[v.estacion] ?? '#8d94a3'
-              const errColor   = tasaError >= 30 ? '#ef4b54' : tasaError >= 15 ? '#e0991f' : '#facc15'
+              // Umbrales de vía (sistema-visual.md): >=30 rojo intenso, >=20 rojo, >=12 ámbar, resto verde
+              const errColor   = tasaError >= 30 ? '#c0392b' : tasaError >= 20 ? '#ef4b54' : tasaError >= 12 ? '#e0991f' : '#3fb978'
               return (
                 <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -325,12 +328,13 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
   )
 }
 
-// Resalta caracteres distintos entre dos placas
+// Resalta caracteres distintos entre dos placas — monoespaciada: la comparación
+// carácter a carácter es el propósito de esta tabla (sistema-visual.md)
 function PlacaDiff({ cajero, ocr }: { cajero: string; ocr: string }) {
-  if (!ocr) return <span style={{ color: '#ef4b54', fontFamily: 'var(--app-font)', fontSize: 14 }}>—</span>
+  if (!ocr) return <span style={{ color: '#ef4b54', fontFamily: 'var(--app-font-mono)', fontSize: 14 }}>—</span>
   const maxLen = Math.max(cajero.length, ocr.length)
   return (
-    <span style={{ fontFamily: 'var(--app-font)', fontSize: 14, letterSpacing: '.06em' }}>
+    <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 14, letterSpacing: '.06em' }}>
       {Array.from({ length: maxLen }, (_, i) => {
         const c = cajero[i] ?? ''
         const o = ocr[i]    ?? ''
@@ -354,7 +358,7 @@ export function OcrDashboard() {
   const [detalle,    setDetalle]    = useState<OcrDetalle | null>(null)
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
-  const [tab,        setTab]        = useState<'confusion' | 'tendencias' | 'porvia' | 'detalle'>('confusion')
+  const [tab,        setTab]        = useState<'ranking' | 'confusion' | 'tendencias' | 'porvia' | 'detalle'>('ranking')
   const [soloPrepago, setSoloPrepago] = useState(false)
 
   // Evolución por vía
@@ -437,78 +441,85 @@ export function OcrDashboard() {
 
   useEffect(() => { if (tab === 'porvia') loadViaEvolucion() }, [tab, loadViaEvolucion])
 
-  return (
-    <div className="p-7 space-y-6" style={{ background: '#06090e', minHeight: 'calc(100vh - 60px)' }}>
+  const PERIODO_LABEL: Record<string, string> = { '1h': '1 h', '4h': '4 h', '12h': '12 h', '24h': '24 h', ayer: 'Ayer', mes: 'Mes' }
 
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#e6edf3' }}>OCR · Efectividad de Lectura de Placas</h1>
-          <p style={{ fontSize: 12, color: '#9aa7b6', marginTop: 4, fontFamily: 'var(--app-font)' }}>
-            Comparación placa cajero vs. placa detectada por cámara · últimos 30 días para análisis de caracteres
-          </p>
+  return (
+    <ScaledStage>
+      <WallTopbar activo="OCR Placas" />
+
+      {/* ── Título ─────────────────────────────────────────── */}
+      <div style={{ height: 40, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+          <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.015em' }}>OCR · Lectura de placas</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.56 0.015 265)' }}>placa del cajero vs. placa de cámara · 30 días para análisis de caracteres</div>
         </div>
-        <div className="flex gap-2 items-center">
-          <button onClick={() => { setSoloPrepago(v => !v); setPagina(1) }}
-            title="Filtrar solo tránsitos prepago (tra_subfp = 1)"
-            style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: soloPrepago ? '#F99B1C' : 'rgba(255,255,255,.1)', background: soloPrepago ? 'rgba(249,155,28,.14)' : 'transparent', color: soloPrepago ? '#F99B1C' : '#6b7a8c', marginRight: 4 }}>
-            {soloPrepago ? '✓ ' : ''}Solo prepago
-          </button>
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,.1)', margin: '0 4px' }} />
-          {PERIODOS.map(p => (
-            <button key={p} onClick={() => { setPeriodo(p); setPagina(1) }}
-              style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: periodo === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: periodo === p ? 'rgba(45,212,167,.12)' : 'transparent', color: periodo === p ? '#2dd4a7' : '#6b7a8c' }}>
-              {p}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div onClick={() => { setSoloPrepago(v => !v); setPagina(1) }} style={{
+            padding: '8px 15px', borderRadius: 11, fontSize: 15, fontWeight: soloPrepago ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
+            color: soloPrepago ? 'oklch(0.20 0.05 62)' : 'oklch(0.64 0.015 265)',
+            background: soloPrepago ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+          }}>Solo prepago</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'oklch(0.24 0.018 262 / 0.80)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.05)' }}>
+            {PERIODOS.map(p => (
+              <div key={p} onClick={() => { setPeriodo(p); setPagina(1) }} style={{
+                padding: '7px 15px', borderRadius: 10, fontSize: 15, fontWeight: periodo === p ? 600 : 500, cursor: 'pointer',
+                color: periodo === p ? 'oklch(0.22 0.04 62)' : 'oklch(0.64 0.015 265)',
+                background: periodo === p ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+              }}>{PERIODO_LABEL[p] ?? p}</div>
+            ))}
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#9aa7b6' }}>Cargando datos OCR…</div>
+        <div style={{ textAlign: 'center', padding: 80, color: 'oklch(0.62 0.015 265)' }}>Cargando datos OCR…</div>
       ) : error ? (
-        <div style={{ background: 'rgba(239,75,84,.08)', border: '1px solid rgba(239,75,84,.3)', borderRadius: 12, padding: '24px 28px' }}>
-          <div style={{ color: '#ff9ba0', fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Error al cargar datos OCR</div>
-          <pre style={{ fontFamily: 'var(--app-font)', fontSize: 12, color: '#ef4b54', whiteSpace: 'pre-wrap', margin: 0 }}>{error}</pre>
-          <button onClick={loadResumen} style={{ marginTop: 16, padding: '8px 20px', background: 'rgba(239,75,84,.15)', border: '1px solid rgba(239,75,84,.4)', borderRadius: 8, color: '#ff9ba0', cursor: 'pointer', fontFamily: 'var(--app-font)', fontSize: 12 }}>
+        <div style={{ background: 'oklch(0.45 0.13 22 / 0.10)', border: '1px solid oklch(0.55 0.15 22 / 0.35)', borderRadius: 16, padding: '24px 28px' }}>
+          <div style={{ color: 'oklch(0.80 0.14 22)', fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Error al cargar datos OCR</div>
+          <pre style={{ fontFamily: 'var(--app-font)', fontSize: 13, color: 'oklch(0.72 0.16 22)', whiteSpace: 'pre-wrap', margin: 0 }}>{error}</pre>
+          <button onClick={loadResumen} style={{ marginTop: 16, padding: '8px 20px', background: 'oklch(0.45 0.13 22 / 0.18)', border: '1px solid oklch(0.55 0.15 22 / 0.40)', borderRadius: 11, color: 'oklch(0.80 0.14 22)', cursor: 'pointer', fontFamily: 'var(--app-font)', fontSize: 14 }}>
             Reintentar
           </button>
         </div>
       ) : resumen && (
         <>
-          {/* ── KPIs ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+          {/* ── KPI ────────────────────────────────────────── */}
+          <div style={{ height: 100, flex: '0 0 auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 13 }}>
             {[
-              { label: 'TOTAL CON PLACA',  val: resumen.totalConPlaca.toLocaleString(), color: '#e6edf3', border: 'rgba(255,255,255,.1)' },
-              { label: 'ACIERTOS',         val: resumen.aciertos.toLocaleString(),       color: '#3fb978', border: 'rgba(63,185,120,.3)' },
-              { label: 'NO DETECTADAS',    val: resumen.sinDetectar.toLocaleString(),    color: '#ef4b54', border: 'rgba(239,75,84,.3)' },
-              { label: 'ERRORES OCR',      val: resumen.errores.toLocaleString(),        color: '#e0991f', border: 'rgba(224,153,31,.3)' },
-              { label: 'EFECTIVIDAD',      val: `${resumen.tasaEfectividad}%`,           color: colorTasa(resumen.tasaEfectividad), border: `rgba(${resumen.tasaEfectividad >= 95 ? '63,185,120' : resumen.tasaEfectividad >= 85 ? '224,153,31' : '239,75,84'},.35)` },
-            ].map(({ label, val, color, border }) => (
-              <div key={label} style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: `1px solid ${border}`, borderRadius: 12, padding: '16px 20px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--app-font)', fontSize: 28, fontWeight: 700, color }}>{val}</div>
-                <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.14em', color: '#9aa7b6', marginTop: 6 }}>{label}</div>
+              { label: 'Total con placa', val: resumen.totalConPlaca.toLocaleString('es-PE'), fg: 'oklch(0.90 0.01 265)', etFg: 'oklch(0.62 0.02 265)', bg: 'linear-gradient(160deg, oklch(0.30 0.04 265 / 0.60) 0%, oklch(0.21 0.022 265 / 0.55) 100%)' },
+              { label: 'Aciertos', val: resumen.aciertos.toLocaleString('es-PE'), fg: 'oklch(0.86 0.14 160)', etFg: 'oklch(0.76 0.10 160)', bg: 'linear-gradient(160deg, oklch(0.36 0.10 160 / 0.45) 0%, oklch(0.22 0.03 265 / 0.55) 100%)' },
+              { label: 'No detectadas', val: resumen.sinDetectar.toLocaleString('es-PE'), fg: 'oklch(0.84 0.14 22)', etFg: 'oklch(0.80 0.10 22)', bg: 'linear-gradient(160deg, oklch(0.36 0.10 20 / 0.55) 0%, oklch(0.22 0.03 265 / 0.55) 100%)' },
+              { label: 'Errores OCR', val: resumen.errores.toLocaleString('es-PE'), fg: 'oklch(0.90 0.11 62)', etFg: 'oklch(0.84 0.09 62)', bg: 'linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%)' },
+              { label: 'Efectividad', val: `${resumen.tasaEfectividad}%`, fg: resumen.tasaEfectividad >= 95 ? 'oklch(0.86 0.14 160)' : resumen.tasaEfectividad >= 85 ? 'oklch(0.90 0.11 62)' : 'oklch(0.84 0.14 22)', etFg: 'oklch(0.76 0.06 200)', bg: 'linear-gradient(160deg, oklch(0.30 0.045 200 / 0.55) 0%, oklch(0.22 0.025 250 / 0.55) 100%)' },
+            ].map(k => (
+              <div key={k.label} style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: k.bg, boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: k.etFg }}>{k.label}</div>
+                <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: k.fg }}>{k.val}</div>
               </div>
             ))}
           </div>
 
-          {/* ── Ranking vías ── */}
-          <RankingVias vias={resumen.porVia} />
-
-          {/* ── Tabs ── */}
-          <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(255,255,255,.07)', paddingBottom: 0 }}>
+          {/* ── Tabs — ranking es la primera pestaña, no un bloque fijo ── */}
+          <div style={{ height: 38, flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6 }}>
             {([
+              ['ranking',    'Ranking de Vías'],
               ['confusion',  'Análisis de Caracteres'],
               ['tendencias', 'Tendencias 30d'],
               ['porvia',     'Evolución por Vía'],
               ['detalle',    'Detalle de Registros'],
             ] as const).map(([t, label]) => (
-              <button key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }}
-                style={{ padding: '8px 20px', fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: 'none', borderBottom: `2px solid ${tab === t ? '#2dd4a7' : 'transparent'}`, color: tab === t ? '#2dd4a7' : '#9aa7b6', marginBottom: -1 }}>
-                {label}
-              </button>
+              <div key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }} style={{
+                padding: '9px 18px', borderRadius: 12, fontSize: 16, fontWeight: tab === t ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                color: tab === t ? 'oklch(0.95 0.01 265)' : 'oklch(0.62 0.015 265)',
+                background: tab === t ? 'oklch(0.32 0.04 210 / 0.70)' : 'transparent',
+                boxShadow: tab === t ? 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.32)' : 'none',
+              }}>{label}</div>
             ))}
           </div>
+
+          {tab === 'ranking' && (
+            <RankingVias vias={resumen.porVia} />
+          )}
 
           {tab === 'confusion' && analisis && (
             <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 16 }}>
@@ -577,7 +588,7 @@ export function OcrDashboard() {
                     {analisis.topPares.map((p, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                         <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'rgba(255,255,255,.2)', width: 20 }}>{i + 1}</span>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 14, color: '#e6edf3', letterSpacing: '.06em', minWidth: 80 }}>{p.placaCajero}</span>
+                        <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 14, color: '#e6edf3', letterSpacing: '.06em', minWidth: 80 }}>{p.placaCajero}</span>
                         <span style={{ color: '#3a4a50', fontSize: 12 }}>→</span>
                         <PlacaDiff cajero={p.placaCajero} ocr={p.placaOcr} />
                         <span style={{ marginLeft: 'auto', fontSize: 11, color: colorError(p.tipoError), fontFamily: 'var(--app-font)', fontWeight: 600, flexShrink: 0 }}>
@@ -862,7 +873,7 @@ export function OcrDashboard() {
                           <td style={{ padding: '9px 14px', fontSize: 12, color: '#9aa7b6' }}>{item.estacion}</td>
                           <td style={{ padding: '9px 14px', fontSize: 12, color: '#9aa7b6' }}>{item.via}</td>
                           <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 11, color: '#9aa7b6' }}>{item.ticket}</td>
-                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 14, color: '#3fb978', letterSpacing: '.06em' }}>{item.placaCajero}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font-mono)', fontSize: 14, color: '#3fb978', letterSpacing: '.06em' }}>{item.placaCajero}</td>
                           <td style={{ padding: '9px 14px' }}><PlacaDiff cajero={item.placaCajero} ocr={item.placaOcr} /></td>
                           <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 12, color: '#9aa7b6' }}>
                             {item.placaOcr ? (
@@ -898,7 +909,7 @@ export function OcrDashboard() {
           )}
         </>
       )}
-    </div>
+    </ScaledStage>
   )
 }
 

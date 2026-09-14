@@ -15,11 +15,12 @@ public class ReporteController(
     public async Task<IActionResult> Sla(
         [FromQuery] int? estacionId,
         [FromQuery] DateTime? desde,
-        [FromQuery] DateTime? hasta)
+        [FromQuery] DateTime? hasta,
+        [FromQuery] bool incluirMantenimiento = false)
     {
         var desdeDate = desde ?? DateTime.Now.AddDays(-30);
         var hastaDate = hasta ?? DateTime.Now;
-        return Ok(await reporteService.ComputeSlaAsync(desdeDate, hastaDate, soloCriticos: false, estacionId: estacionId));
+        return Ok(await reporteService.ComputeSlaAsync(desdeDate, hastaDate, soloCriticos: false, estacionId: estacionId, incluirMantenimiento: incluirMantenimiento));
     }
 
     [HttpGet("disponibilidad-diaria")]
@@ -30,11 +31,30 @@ public class ReporteController(
     }
 
     [HttpGet("sla/por-estacion")]
-    public async Task<IActionResult> SlaPorEstacion([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+    public async Task<IActionResult> SlaPorEstacion(
+        [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta, [FromQuery] bool incluirMantenimiento = false)
     {
         var desdeDate = desde ?? DateTime.Now.AddDays(-30);
         var hastaDate = hasta ?? DateTime.Now;
-        return Ok(await reporteService.ComputeSlaPorEstacionAsync(desdeDate, hastaDate));
+        return Ok(await reporteService.ComputeSlaPorEstacionAsync(desdeDate, hastaDate, incluirMantenimiento: incluirMantenimiento));
+    }
+
+    [HttpGet("sla/por-tipo")]
+    public async Task<IActionResult> SlaPorTipo(
+        [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta, [FromQuery] int? estacionId)
+    {
+        var desdeDate = desde ?? DateTime.Now.AddDays(-30);
+        var hastaDate = hasta ?? DateTime.Now;
+        return Ok(await reporteService.ComputeSlaPorTipoAsync(desdeDate, hastaDate, estacionId));
+    }
+
+    [HttpGet("sla/motivos")]
+    public async Task<IActionResult> SlaMotivos(
+        [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta, [FromQuery] int? estacionId)
+    {
+        var desdeDate = desde ?? DateTime.Now.AddDays(-30);
+        var hastaDate = hasta ?? DateTime.Now;
+        return Ok(await reporteService.ComputeMotivosAsync(desdeDate, hastaDate, estacionId));
     }
 
     [HttpGet("sla/csv")]

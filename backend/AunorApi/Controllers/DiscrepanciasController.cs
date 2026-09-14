@@ -67,6 +67,25 @@ public class DiscrepanciasController(
         return Ok(await svc.GetDetalleAsync(periodo, estacion, placa, pagina, porPagina));
     }
 
+    [HttpGet("csv")]
+    public async Task<IActionResult> Csv(
+        [FromQuery] string  periodo  = "12h",
+        [FromQuery] string? estacion = null,
+        [FromQuery] string? placa    = null)
+    {
+        if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
+
+        var detalle = await svc.GetDetalleAsync(periodo, estacion, placa, 1, 100_000);
+        var csv = CsvExport.Build(
+            ["Fecha", "Via", "Ticket", "Placa Tabulada", "Placa Detectada", "Tabulada", "Cat Tabulada", "Detectada", "Cat Detectada", "Tipo Operacion", "Estacion", "Cobrador"],
+            detalle.Items.Select(i => new object?[] {
+                i.Fecha, i.Via, i.Ticket, i.PlacaTabulada, i.PlacaDetectada,
+                i.Tabulada, i.CatTabulada, i.Detectada, i.CatDetectada, i.TipoOperacion, i.Unidad, i.Cobrador }));
+
+        var nombre = $"discrepancias_{periodo}_{DateTime.Now:yyyyMMddHHmm}.csv";
+        return File(csv, "text/csv", nombre);
+    }
+
     [HttpPost("reporte-diario/test")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> ReporteDiarioTest()

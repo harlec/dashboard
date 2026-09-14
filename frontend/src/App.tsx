@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthContext, useAuthProvider } from './hooks/useAuth'
 import { useFontScale } from './hooks/useFontScale'
-import { NavBar }          from './components/NavBar'
+import { MonitorTopbar }   from './components/MonitorTopbar'
 import { Login }           from './pages/Login'
 import { Dashboard }       from './pages/Dashboard'
 import { Incidentes }      from './pages/Incidentes'
@@ -25,15 +25,10 @@ function AppLayout() {
   useFontScale()
   return (
     <>
-      <NavBar signalStatus="ok" />
+      <MonitorTopbar signalStatus="ok" />
       <Routes>
         <Route path="/"           element={<Dashboard />} />
         <Route path="/noc"        element={<NocDashboard />} />
-        <Route path="/incidentes" element={<Incidentes />} />
-        <Route path="/reporte"         element={<ReporteSLA />} />
-        <Route path="/reportes"        element={<Reportes />} />
-        <Route path="/discrepancias"   element={<Discrepancias />} />
-        <Route path="/ocr"             element={<OcrDashboard />} />
         <Route path="/admin"      element={<AdminLayout />}>
           <Route index              element={<AdminDashboard />} />
           <Route path="estaciones"  element={<AdminEstaciones />} />
@@ -57,15 +52,22 @@ export default function App() {
     <div className="flex items-center justify-center min-h-screen text-muted">Cargando…</div>
   )
 
+  // Pantallas "muro" — lienzo propio a 1920×1080 escalado (ScaledStage) con su
+  // propio topbar (WallTopbar), sin el AppLayout/MonitorTopbar de siempre.
+  const muro = (el: JSX.Element) => auth.user ? el : <Navigate to="/login" replace />
+
   return (
     <AuthContext.Provider value={auth}>
       <Routes>
         <Route path="/login" element={
           auth.user ? <Navigate to="/" replace /> : <Login />
         } />
-        <Route path="/muro/noc" element={
-          auth.user ? <NocMuro /> : <Navigate to="/login" replace />
-        } />
+        <Route path="/muro/noc"        element={muro(<NocMuro />)} />
+        <Route path="/incidentes"      element={muro(<Incidentes />)} />
+        <Route path="/reporte"         element={muro(<ReporteSLA />)} />
+        <Route path="/reportes"        element={muro(<Reportes />)} />
+        <Route path="/discrepancias"   element={muro(<Discrepancias />)} />
+        <Route path="/ocr"             element={muro(<OcrDashboard />)} />
         <Route path="/*" element={
           auth.user ? <AppLayout /> : <Navigate to="/login" replace />
         } />

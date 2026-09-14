@@ -189,7 +189,7 @@ public class ReportePdfService(AppDbContext db, ReporteService reporteService, I
         var porEstacion = await reporteService.ComputeSlaPorEstacionAsync(desde, hasta);
         if (estacionId.HasValue) porEstacion = porEstacion.Where(e => e.EstacionId == estacionId).ToList();
 
-        var uptimeGlobal = equipos.Count > 0 ? equipos.Average(e => e.UptimePct) : 100m;
+        var uptimeGlobal = ReporteService.UptimePonderado(equipos);
         var subtitulo = $"Período: {desde:dd/MM/yyyy} — {hasta:dd/MM/yyyy}" +
                          (estacionId.HasValue ? $"   ·   Estación filtrada" : "") +
                          $"   ·   Generado: {DateTime.Now:dd/MM/yyyy HH:mm}";

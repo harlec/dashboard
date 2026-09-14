@@ -7,7 +7,8 @@ namespace AunorApi.Services;
 public class ReporteService(IConnectionStringProvider cs)
 {
     public async Task<List<SlaEquipoDto>> ComputeSlaAsync(
-        DateTime desde, DateTime hasta, bool soloCriticos = false, int? estacionId = null, CancellationToken ct = default)
+        DateTime desde, DateTime hasta, bool soloCriticos = false, int? estacionId = null,
+        bool incluirMantenimiento = false, CancellationToken ct = default)
     {
         using var db = NewDb();
         var totalMin = (int)(hasta - desde).TotalMinutes;
@@ -34,10 +35,11 @@ public class ReporteService(IConnectionStringProvider cs)
                 .Select(i => new { i.Inicio, i.Fin, i.Motivo, i.Tipo })
                 .ToListAsync(ct);
 
-            // Solo excluye del uptime las caídas explícitamente autorizadas/planeadas.
-            // "Otro" (p.ej. falla de hardware confirmada) sí sigue contando — el equipo
-            // realmente no estuvo disponible aunque alguien haya anotado la causa.
-            var downMin = incidentes.Where(i => i.Tipo is not ("Mantenimiento" or "ReinicioForzado")).Sum(i =>
+            // Por defecto solo excluye del uptime las caídas explícitamente autorizadas/
+            // planeadas ("Otro", p.ej. falla de hardware confirmada, sí sigue contando —
+            // el equipo realmente no estuvo disponible). incluirMantenimiento=true las
+            // vuelve a sumar — cuál cifra es la contractual lo define el cliente.
+            var downMin = incidentes.Where(i => incluirMantenimiento || i.Tipo is not ("Mantenimiento" or "ReinicioForzado")).Sum(i =>
                 Math.Min(
                     (int)(((DateTime)(i.Fin ?? hasta)) - (i.Inicio < desde ? desde : i.Inicio)).TotalMinutes,
                     totalMin));
@@ -52,22 +54,83 @@ public class ReporteService(IConnectionStringProvider cs)
             result.Add(new SlaEquipoDto(
                 eq.Id, eq.Nombre, eq.TipoEquipo.Nombre,
                 eq.Via.EstacionId, eq.Via.Estacion.Nombre, eq.Via.Numero,
-                uptime, totalMin, downMin, string.IsNullOrEmpty(motivos) ? null : motivos));
+                uptime, totalMin, downMin, string.IsNullOrEmpty(motivos) ? null : motivos, incidentes.Count));
         }
 
         return result.OrderBy(r => r.Estacion).ThenBy(r => r.Via).ThenBy(r => r.Nombre).ToList();
     }
 
-    public async Task<List<SlaEstacionDto>> ComputeSlaPorEstacionAsync(
-        DateTime desde, DateTime hasta, bool soloCriticos = false, CancellationToken ct = default)
+    // Ponderado por minutos monitoreados, no promedio simple de los % de cada
+    // equipo — con 200 equipos repartidos desigual entre estaciones, un promedio
+    // simple le da el mismo peso a un equipo con 5 min de historia que a uno con
+    // 30 días. Mismo criterio en ComputeSlaPorEstacionAsync/PorTipoAsync/UptimeGlobal.
+    public static decimal UptimePonderado(IEnumerable<SlaEquipoDto> equipos)
     {
-        var equipos = await ComputeSlaAsync(desde, hasta, soloCriticos, null, ct);
+        var totalMin = equipos.Sum(e => e.TotalMin);
+        var downMin  = equipos.Sum(e => e.DownMin);
+        return totalMin > 0 ? Math.Round(100m - (decimal)downMin / totalMin * 100, 2) : 100m;
+    }
+
+    public async Task<List<SlaEstacionDto>> ComputeSlaPorEstacionAsync(
+        DateTime desde, DateTime hasta, bool soloCriticos = false, bool incluirMantenimiento = false, CancellationToken ct = default)
+    {
+        var equipos = await ComputeSlaAsync(desde, hasta, soloCriticos, null, incluirMantenimiento, ct);
         return equipos
             .GroupBy(e => new { e.EstacionId, e.Estacion })
-            .Select(g => new SlaEstacionDto(
-                g.Key.EstacionId, g.Key.Estacion,
-                Math.Round(g.Average(e => e.UptimePct), 2), g.Count()))
+            .Select(g => new SlaEstacionDto(g.Key.EstacionId, g.Key.Estacion, UptimePonderado(g), g.Count()))
             .OrderBy(g => g.Estacion)
+            .ToList();
+    }
+
+    public async Task<List<SlaTipoDto>> ComputeSlaPorTipoAsync(
+        DateTime desde, DateTime hasta, int? estacionId = null, bool soloCriticos = false, CancellationToken ct = default)
+    {
+        var equipos = await ComputeSlaAsync(desde, hasta, soloCriticos, estacionId, ct: ct);
+        return equipos
+            .GroupBy(e => e.TipoNombre)
+            .Select(g => new SlaTipoDto(g.Key, UptimePonderado(g), g.Count()))
+            .OrderBy(g => g.UptimePct)
+            .ToList();
+    }
+
+    // A qué se fue el tiempo caído: minutos reales por causa (no el string crudo
+    // por equipo de ComputeSlaAsync) — mantenimiento y reinicio forzado se separan
+    // igual que en el uptime, el resto usa la misma interpretación de DetalleEstado
+    // que la página de Incidentes.
+    public async Task<List<MotivoDowntimeDto>> ComputeMotivosAsync(
+        DateTime desde, DateTime hasta, int? estacionId = null, CancellationToken ct = default)
+    {
+        using var db = NewDb();
+        var q = db.Incidentes
+            .Include(i => i.Equipo).ThenInclude(e => e.Via)
+            .Where(i => i.Inicio <= hasta && (i.Fin == null || i.Fin >= desde));
+        if (estacionId.HasValue) q = q.Where(i => i.Equipo.Via.EstacionId == estacionId);
+
+        var raw = await q
+            .Select(i => new { i.Inicio, i.Fin, i.Tipo, i.Motivo, i.DetalleEstado })
+            .ToListAsync(ct);
+
+        string Causa(string tipo, string? motivo, string? detalle) => tipo switch
+        {
+            "Mantenimiento"   => "Mantenimiento programado",
+            "ReinicioForzado" => "Reinicio forzado",
+            _ => !string.IsNullOrWhiteSpace(motivo) ? motivo! : PingWorkerService.InterpretarDetalle(detalle) ?? "Sin diagnóstico",
+        };
+
+        var grouped = raw
+            .Select(i => new {
+                Causa = Causa(i.Tipo, i.Motivo, i.DetalleEstado),
+                Min = Math.Max(0, (int)(((DateTime)(i.Fin ?? hasta)) - (i.Inicio < desde ? desde : i.Inicio)).TotalMinutes),
+            })
+            .GroupBy(x => x.Causa)
+            .Select(g => new { Causa = g.Key, Min = g.Sum(x => x.Min) })
+            .Where(x => x.Min > 0)
+            .OrderByDescending(x => x.Min)
+            .ToList();
+
+        var totalMin = grouped.Sum(x => x.Min);
+        return grouped
+            .Select(x => new MotivoDowntimeDto(x.Causa, x.Min, totalMin > 0 ? Math.Round(x.Min * 100m / totalMin, 1) : 0))
             .ToList();
     }
 

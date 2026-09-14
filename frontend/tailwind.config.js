@@ -8,14 +8,20 @@ export default {
         // migrada acá para que todo el sistema comparta una sola identidad visual.
         brand:        '#72BF44',
         'brand-light': '#72BF44',
-        danger:  '#F04545',
-        warn:    '#F99B1C',
         surface: '#12141b',
         'surface-2': '#191c26',
         'surface-3': '#1f2330',
         border:  '#262c3a',
-        muted:   '#8d94a3',
-        dim:     '#656d7d',
+        // Semáforo — sistema-visual.md del rediseño "monitoreo funcional". Único
+        // set de estado para toda la app (no reasignar por pantalla).
+        ok:      'oklch(0.78 0.13 160)',
+        warn:    'oklch(0.82 0.13 62)',
+        danger:  'oklch(0.70 0.17 22)',
+        info:    'oklch(0.78 0.11 205)',
+        // Texto — primario/secundario/terciario del mismo sistema.
+        ink:   'oklch(0.96 0.004 265)',
+        muted: 'oklch(0.62 0.015 265)',
+        dim:   'oklch(0.50 0.015 265)',
       },
       fontFamily: {
         // --app-font la fija useFontScale.ts en runtime según Admin → Configuración

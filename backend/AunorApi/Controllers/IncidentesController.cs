@@ -43,22 +43,53 @@ public class IncidentesController(AppDbContext db, ReportePdfService pdf) : Cont
             .Take(10)
             .ToList();
 
-        // Para 1 día: agrupar por hora; para el resto: por día
-        List<TendenciaIncDto> tendencia;
-        if (dias == 1)
+        // Ráfaga: incidentes que arrancan en el mismo minuto en >=3 estaciones a la
+        // vez es una caída de enlace, no N fallas independientes (ver README del
+        // handoff de diseño). Se detecta agrupando por minuto exacto de Inicio.
+        static DateTime Minuto(DateTime d) => new(d.Year, d.Month, d.Day, d.Hour, d.Minute, 0);
+
+        var minutosRafaga = raw
+            .GroupBy(x => Minuto(x.Inicio))
+            .Where(g => g.Select(x => x.Estacion).Distinct().Count() >= 3)
+            .Select(g => new { Minuto = g.Key, Items = g.ToList() })
+            .ToList();
+        var minutosRafagaSet = minutosRafaga.Select(m => m.Minuto).ToHashSet();
+
+        RafagaDto? rafagaDominante = null;
+        if (minutosRafaga.Count > 0)
         {
-            tendencia = raw
-                .GroupBy(x => new DateTime(x.Inicio.Year, x.Inicio.Month, x.Inicio.Day, x.Inicio.Hour, 0, 0))
-                .OrderBy(g => g.Key)
-                .Select(g => new TendenciaIncDto(g.Key.ToString("HH:mm"), g.Count()))
-                .ToList();
+            var peor = minutosRafaga.OrderByDescending(m => m.Items.Count).First();
+            rafagaDominante = new RafagaDto(
+                peor.Minuto, peor.Items.Count,
+                raw.Count > 0 ? Math.Round(peor.Items.Count * 100m / raw.Count, 1) : 0,
+                peor.Items.Select(x => x.Estacion).Distinct().Count());
         }
-        else
+
+        int totalEnRafagas = minutosRafaga.Sum(m => m.Items.Count);
+        // Cada minuto de ráfaga cuenta como 1 solo evento agrupado
+        int totalAgrupado = raw.Count - totalEnRafagas + minutosRafaga.Count;
+
+        // Para 1 día: agrupar por hora; para el resto: por día. Se manda el conteo
+        // crudo y el agrupado (cada minuto de ráfaga = 1 evento) — el crudo con un
+        // eje lineal aplasta el resto del período bajo una ráfaga grande.
+        List<TendenciaIncDto> Tendencia(bool agrupado)
         {
-            tendencia = raw
-                .GroupBy(x => x.Inicio.Date)
+            if (dias == 1)
+            {
+                return raw.GroupBy(x => new DateTime(x.Inicio.Year, x.Inicio.Month, x.Inicio.Day, x.Inicio.Hour, 0, 0))
+                    .OrderBy(g => g.Key)
+                    .Select(g => new TendenciaIncDto(g.Key.ToString("HH:mm"), agrupado
+                        ? g.Count(x => !minutosRafagaSet.Contains(Minuto(x.Inicio)))
+                          + g.Where(x => minutosRafagaSet.Contains(Minuto(x.Inicio))).Select(x => Minuto(x.Inicio)).Distinct().Count()
+                        : g.Count()))
+                    .ToList();
+            }
+            return raw.GroupBy(x => x.Inicio.Date)
                 .OrderBy(g => g.Key)
-                .Select(g => new TendenciaIncDto(g.Key.ToString("dd/MM"), g.Count()))
+                .Select(g => new TendenciaIncDto(g.Key.ToString("dd/MM"), agrupado
+                    ? g.Count(x => !minutosRafagaSet.Contains(Minuto(x.Inicio)))
+                      + g.Where(x => minutosRafagaSet.Contains(Minuto(x.Inicio))).Select(x => Minuto(x.Inicio)).Distinct().Count()
+                    : g.Count()))
                 .ToList();
         }
 
@@ -67,7 +98,12 @@ public class IncidentesController(AppDbContext db, ReportePdfService pdf) : Cont
             ? (int)Math.Round(cerrados.Average(x => x.DuracionMin!.Value))
             : null;
 
-        var porHoraCounts = raw.GroupBy(x => x.Inicio.Hour).ToDictionary(g => g.Key, g => g.Count());
+        // Por hora del día excluye la ráfaga — si no, el histograma solo muestra
+        // el minuto de la ráfaga y esconde el patrón real del resto del período.
+        var porHoraCounts = raw
+            .Where(x => !minutosRafagaSet.Contains(Minuto(x.Inicio)))
+            .GroupBy(x => x.Inicio.Hour)
+            .ToDictionary(g => g.Key, g => g.Count());
         var porHora = Enumerable.Range(0, 24)
             .Select(h => new HoraIncDto(h, porHoraCounts.GetValueOrDefault(h)))
             .ToList();
@@ -80,7 +116,10 @@ public class IncidentesController(AppDbContext db, ReportePdfService pdf) : Cont
             .Take(8)
             .ToList();
 
-        return Ok(new IncidenteResumenDto(raw.Count, activos, porEstacion, topVias, tendencia, mttr, porHora, porCausa));
+        return Ok(new IncidenteResumenDto(
+            raw.Count, activos, porEstacion, topVias,
+            Tendencia(agrupado: false), Tendencia(agrupado: true),
+            mttr, porHora, porCausa, rafagaDominante, totalAgrupado));
     }
 
     [HttpGet]

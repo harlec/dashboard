@@ -51,4 +51,24 @@ public class OcrPlacasController(OcrPlacasService svc) : ControllerBase
         pagina    = Math.Max(1, pagina);
         return Ok(await svc.GetDetalleAsync(periodo, estacion, placa, tipoError, pagina, porPagina, soloPrepago));
     }
+
+    [HttpGet("csv")]
+    public async Task<IActionResult> Csv(
+        [FromQuery] string  periodo     = "24h",
+        [FromQuery] string? estacion    = null,
+        [FromQuery] string? placa       = null,
+        [FromQuery] string? tipoError   = null,
+        [FromQuery] bool    soloPrepago = false)
+    {
+        if (!OcrPlacasService.EsPeriodoValido(periodo))
+            return BadRequest("Período inválido");
+
+        var detalle = await svc.GetDetalleAsync(periodo, estacion, placa, tipoError, 1, 100_000, soloPrepago);
+        var csv = CsvExport.Build(
+            ["Fecha", "Estacion", "Via", "Ticket", "Placa Cajero", "Placa OCR", "Tipo Error"],
+            detalle.Items.Select(i => new object?[] { i.Fecha, i.Estacion, i.Via, i.Ticket, i.PlacaCajero, i.PlacaOcr, i.TipoError }));
+
+        var nombre = $"ocr_placas_{periodo}_{DateTime.Now:yyyyMMddHHmm}.csv";
+        return File(csv, "text/csv", nombre);
+    }
 }

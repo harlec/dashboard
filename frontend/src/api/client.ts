@@ -49,6 +49,10 @@ export const api = {
     request<SlaEstacion[]>(`/reporte/sla/por-estacion?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
+  slaMotivos: (p: SlaParams) =>
+    request<MotivoDowntime[]>(`/reporte/sla/motivos?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
   disponibilidadDiaria: (dias: number) =>
     request<DisponibilidadDiaria>(`/reporte/disponibilidad-diaria?dias=${dias}`),
   discrepanciasResumen: (periodo: string) =>
@@ -83,6 +87,13 @@ export const api = {
     )}`),
   ocrViaEvolucion: (p: { estacion: string; via: string; dias?: number; soloPrepago?: boolean }) =>
     request<OcrViaEvolucion>(`/ocr/via-evolucion?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
+
+  // ── Reportes (armador) ───────────────────────────────────────
+  reportesTipos: () => request<ReporteTipoInfo[]>('/reportes/tipos'),
+  reportesEstimar: (p: ReporteEstimarParams) =>
+    request<ReporteEstimado>(`/reportes/estimar?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
 }
@@ -142,14 +153,18 @@ export interface ViaInc       { via: string; estacion: string; total: number }
 export interface TendenciaInc { fecha: string; total: number }
 export interface HoraInc      { hora: number; total: number }
 export interface CausaInc     { causa: string; total: number }
+export interface RafagaInc    { minuto: string; total: number; pctDelPeriodo: number; estaciones: number }
 export interface IncidenteResumen {
   total: number; activos: number
   porEstacion: EstacionInc[]
   topVias: ViaInc[]
   tendencia: TendenciaInc[]
+  tendenciaAgrupada: TendenciaInc[]
   mttrMin?: number
   porHora: HoraInc[]
   porCausa: CausaInc[]
+  rafagaDominante?: RafagaInc | null
+  totalAgrupado: number
 }
 
 export interface EnlaceEventoWindow { inicio: string; fin?: string; enlace: string; latenciaMs?: number }
@@ -179,10 +194,25 @@ export interface MantenimientoRequest {
 export interface SlaEquipo {
   equipoId: number; nombre: string; tipoNombre: string
   estacionId: number; estacion: string; via: string
-  uptimePct: number; totalMin: number; downMin: number; motivos?: string
+  uptimePct: number; totalMin: number; downMin: number; motivos?: string; eventos: number
 }
 export interface SlaEstacion { estacionId: number; estacion: string; uptimePct: number; total: number }
-export interface SlaParams { estacionId?: number; desde?: string; hasta?: string }
+export interface SlaTipo { tipo: string; uptimePct: number; total: number }
+export interface MotivoDowntime { causa: string; minutos: number; pct: number }
+export interface SlaParams { estacionId?: number; desde?: string; hasta?: string; incluirMantenimiento?: boolean }
+
+export type ReporteTipo = 'incidentes' | 'sla' | 'discrepancias' | 'ocr'
+export interface ReporteTipoInfo { tipo: ReporteTipo; nombre: string; descripcion: string }
+export interface ReporteEstimarParams {
+  tipo: ReporteTipo
+  desde?: string; hasta?: string; periodo?: string
+  estacion?: string; estacionId?: number
+  soloActivos?: boolean; soloPrepago?: boolean; tipoError?: string
+}
+export interface ReporteEstimado {
+  filas: number; columnas: number; columnasNombres: string[]
+  bytesAprox: number; aviso?: string; pdfDisponible: boolean
+}
 export interface DiaDisponibilidad { fecha: string; pct: number }
 export interface DisponibilidadDiaria { dias: DiaDisponibilidad[]; mtbfDias: number; caidas: number }
 
