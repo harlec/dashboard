@@ -8,6 +8,8 @@ const links = [
   { to: '/admin/equipos',    label: '🖥 Equipos'      },
   { to: '/admin/tipos-equipo', label: '🏷 Tipos de equipo' },
   { to: '/admin/mantenimiento', label: '🔧 Mantenimiento' },
+  { to: '/admin/servicios',     label: '🗄 Servicios' },
+  { to: '/admin/servicio-checks', label: '🔎 Chequeos de servicio' },
   { to: '/admin/usuarios',   label: '👤 Usuarios'     },
   { to: '/admin/config',     label: '⚙ Configuración' },
 ]

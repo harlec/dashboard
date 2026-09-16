@@ -1,6 +1,4 @@
 using System.Collections.Concurrent;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Threading.Channels;
 using AunorApi.Data;
 using AunorApi.Hubs;
@@ -16,6 +14,7 @@ public class PingWorkerService(
     EnlaceEstadoCache enlaceCache,
     EmailAlertService emailAlert,
     TelegramAlertService telegramAlert,
+    IcmpGate icmpGate,
     IConfiguration config,
     ILogger<PingWorkerService> log) : BackgroundService
 {
@@ -26,24 +25,24 @@ public class PingWorkerService(
         var timeoutMs      = config.GetValue<int>("Ping:TimeoutSeconds",   3) * 1000;
         var pingsPerHost   = config.GetValue<int>("Ping:PingsPerHost",     2);
         var maxParallel    = config.GetValue<int>("Ping:MaxParallel",      60);
-        var icmpMaxParallel = config.GetValue<int>("Ping:IcmpMaxParallel", 20);
         var confirmacionesDown = config.GetValue<int>("Ping:ConfirmacionesDown", 2);
 
         log.LogInformation(
-            "PingWorker iniciado — ciclo normal {n}s, retry DOWN {d}s, timeout {t}s, paralelo {p}, paralelo ICMP {pi}, confirmaciones DOWN {c}",
-            intervalSec, downRetrySec, timeoutMs / 1000, maxParallel, icmpMaxParallel, confirmacionesDown);
+            "PingWorker iniciado — ciclo normal {n}s, retry DOWN {d}s, timeout {t}s, paralelo {p}, confirmaciones DOWN {c}",
+            intervalSec, downRetrySec, timeoutMs / 1000, maxParallel, confirmacionesDown);
 
-        // Semáforo dedicado para los sockets ICMP raw (compartido entre ciclo normal
-        // y retry DOWN). En Linux un socket raw recibe una copia de TODO el tráfico
-        // ICMP del host, no solo el suyo — con muchos sockets raw abiertos a la vez
-        // (una estación con 40+ equipos, maxParallel alto) cada respuesta se reparte
-        // y se filtra en todos ellos, y algunas se procesan tarde y expiran el timeout
-        // aunque el paquete sí llegó a tiempo. Limitarlo aparte del paralelo general
-        // (que también cubre chequeos TCP, sin este problema) evita el atasco.
+        // Semáforo dedicado para los sockets ICMP raw (compartido entre ciclo normal,
+        // retry DOWN, y ServicioCheckWorkerService vía IcmpGate). En Linux un socket
+        // raw recibe una copia de TODO el tráfico ICMP del host, no solo el suyo —
+        // con muchos sockets raw abiertos a la vez (una estación con 40+ equipos,
+        // maxParallel alto) cada respuesta se reparte y se filtra en todos ellos, y
+        // algunas se procesan tarde y expiran el timeout aunque el paquete sí llegó a
+        // tiempo. Limitarlo aparte del paralelo general (que también cubre chequeos
+        // TCP, sin este problema) evita el atasco.
         // (Se probó quitar CAP_NET_RAW para usar sockets sin privilegios y no
         // necesitar este límite — el .NET de esta imagen no soporta ese fallback en
         // Linux, así que se mantiene CAP_NET_RAW y este semáforo como el fix real.)
-        var icmpSem = new SemaphoreSlim(icmpMaxParallel, icmpMaxParallel);
+        var icmpSem = icmpGate.Semaphore;
 
         // Cuenta de ciclos DOWN consecutivos por equipo (compartida entre ciclo
         // normal y retry). Un solo ciclo malo (aunque ya no debería ser común,
@@ -513,7 +512,7 @@ public class PingWorkerService(
         string ip, string? ports, int timeoutMs, int pingsPerHost, SemaphoreSlim icmpSem)
     {
         if (string.IsNullOrWhiteSpace(ports))
-            return IcmpPing(ip, timeoutMs, pingsPerHost, icmpSem);
+            return NetworkChecks.IcmpPing(ip, timeoutMs, pingsPerHost, icmpSem);
 
         var portList = ports.Split(',')
             .Select(p => int.TryParse(p.Trim(), out var n) ? n : 0)
@@ -521,64 +520,8 @@ public class PingWorkerService(
             .ToList();
 
         return portList.Count == 0
-            ? IcmpPing(ip, timeoutMs, pingsPerHost, icmpSem)
-            : TcpCheckMulti(ip, portList, timeoutMs);
-    }
-
-    // Prueba varios puertos en paralelo — UP si cualquiera responde
-    private static async Task<(string estado, double? latencia, string? detalle)> TcpCheckMulti(
-        string ip, List<int> ports, int timeoutMs)
-    {
-        var tasks = ports.Select(p => TcpCheckOne(ip, p, timeoutMs));
-        var results = await Task.WhenAll(tasks);
-        var first = results.FirstOrDefault(r => r.up);
-        return first.up
-            ? ("UP", first.ms, null)
-            : ("DOWN", null, results.Select(r => r.detalle).FirstOrDefault(d => d != null) ?? "TcpError");
-    }
-
-    private static async Task<(bool up, double? ms, string? detalle)> TcpCheckOne(
-        string ip, int port, int timeoutMs)
-    {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        try
-        {
-            using var cts    = new CancellationTokenSource(timeoutMs);
-            using var client = new TcpClient();
-            await client.ConnectAsync(ip, port, cts.Token);
-            sw.Stop();
-            return (true, (double)sw.ElapsedMilliseconds, null);
-        }
-        catch (SocketException sockEx) { return (false, null, sockEx.SocketErrorCode.ToString()); }
-        catch (OperationCanceledException) { return (false, null, "TcpTimeout"); }
-        catch (Exception ex) { return (false, null, ex.GetType().Name); }
-    }
-
-    // ICMP ping — fallback para equipos sin puerto TCP conocido.
-    // El socket raw se limita con icmpSem (ver comentario en ExecuteAsync) para no
-    // tener decenas abiertos a la vez en estaciones con muchos equipos.
-    private static async Task<(string estado, double? latencia, string? detalle)> IcmpPing(
-        string ip, int timeoutMs, int count, SemaphoreSlim icmpSem)
-    {
-        double total = 0;
-        int    ok    = 0;
-        string? ultimoDetalle = null;
-
-        for (int i = 0; i < count; i++)
-        {
-            await icmpSem.WaitAsync();
-            try
-            {
-                using var ping  = new Ping();
-                var reply = await ping.SendPingAsync(ip, timeoutMs);
-                if (reply.Status == IPStatus.Success) { ok++; total += reply.RoundtripTime; }
-                else ultimoDetalle = reply.Status.ToString();
-            }
-            catch (Exception ex) { ultimoDetalle = ex.GetType().Name; }
-            finally { icmpSem.Release(); }
-        }
-
-        return ok == 0 ? ("DOWN", null, ultimoDetalle ?? "TimedOut") : ("UP", total / ok, null);
+            ? NetworkChecks.IcmpPing(ip, timeoutMs, pingsPerHost, icmpSem)
+            : NetworkChecks.TcpCheckMulti(ip, portList, timeoutMs);
     }
 
     // Interpretación legible del código crudo — usada en alertas e historial

@@ -107,12 +107,14 @@ builder.Services.AddHostedService<PingWorkerService>();
 builder.Services.AddHostedService<CamaraWorkerService>();
 builder.Services.AddHostedService<EnlaceMonitorService>();
 builder.Services.AddHostedService<TelegramQueueWorker>();
+builder.Services.AddHostedService<ServicioCheckWorkerService>();
 builder.Services.AddSingleton<ReporteSemanalService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteSemanalService>());
 
 // ── Singletons para workers ───────────────────────────────────
 builder.Services.AddSingleton<IConnectionStringProvider>(
     new ConnectionStringProvider(connStr));
+builder.Services.AddSingleton<IcmpGate>();
 builder.Services.AddSingleton<EmailAlertService>();
 builder.Services.AddSingleton<TelegramAlertService>();
 builder.Services.AddSingleton<ReporteService>();

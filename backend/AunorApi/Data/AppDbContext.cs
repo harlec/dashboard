@@ -17,6 +17,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Mantenimiento>   Mantenimientos    { get; set; }
     public DbSet<IncidenteGrupo>  IncidenteGrupos   { get; set; }
     public DbSet<EnlaceEvento>    EnlaceEventos     { get; set; }
+    public DbSet<Servicio>          Servicios          { get; set; }
+    public DbSet<ServicioCheck>     ServicioChecks     { get; set; }
+    public DbSet<ServicioCheckLog>  ServicioCheckLogs  { get; set; }
+    public DbSet<ServicioIncidente> ServicioIncidentes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -131,6 +135,59 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.LatenciaMs).HasColumnName("latencia_ms");
             e.Property(x => x.Ttl).HasColumnName("ttl");
             e.HasOne(x => x.Equipo).WithMany().HasForeignKey(x => x.EquipoId);
+        });
+
+        m.Entity<Servicio>(e => {
+            e.ToTable("servicios");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Nombre).HasColumnName("nombre");
+            e.Property(x => x.Descripcion).HasColumnName("descripcion");
+            e.Property(x => x.Activo).HasColumnName("activo");
+            e.Property(x => x.CreadoEn).HasColumnName("creado_en");
+        });
+
+        m.Entity<ServicioCheck>(e => {
+            e.ToTable("servicio_checks");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.ServicioId).HasColumnName("servicio_id");
+            e.Property(x => x.Nombre).HasColumnName("nombre");
+            e.Property(x => x.TipoCheck).HasColumnName("tipo_check");
+            e.Property(x => x.Host).HasColumnName("host");
+            e.Property(x => x.Puerto).HasColumnName("puerto");
+            e.Property(x => x.Ubicacion).HasColumnName("ubicacion");
+            e.Property(x => x.Monitorear).HasColumnName("monitorear");
+            e.Property(x => x.Activo).HasColumnName("activo");
+            e.Property(x => x.CreadoEn).HasColumnName("creado_en");
+            e.Property(x => x.UltimoEstado).HasColumnName("ultimo_estado");
+            e.Property(x => x.UltimaLatenciaMs).HasColumnName("ultima_latencia_ms");
+            e.Property(x => x.UltimoCheckEn).HasColumnName("ultimo_check_en");
+            e.HasOne(x => x.Servicio).WithMany(x => x.Checks).HasForeignKey(x => x.ServicioId);
+        });
+
+        m.Entity<ServicioCheckLog>(e => {
+            e.ToTable("servicio_check_logs");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.ServicioCheckId).HasColumnName("servicio_check_id");
+            e.Property(x => x.Timestamp).HasColumnName("timestamp");
+            e.Property(x => x.Estado).HasColumnName("estado");
+            e.Property(x => x.LatenciaMs).HasColumnName("latencia_ms");
+            e.Property(x => x.Detalle).HasColumnName("detalle");
+            e.HasOne(x => x.ServicioCheck).WithMany().HasForeignKey(x => x.ServicioCheckId);
+        });
+
+        m.Entity<ServicioIncidente>(e => {
+            e.ToTable("servicio_incidentes");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.ServicioCheckId).HasColumnName("servicio_check_id");
+            e.Property(x => x.Inicio).HasColumnName("inicio");
+            e.Property(x => x.Fin).HasColumnName("fin");
+            e.Property(x => x.DuracionMin).HasColumnName("duracion_min");
+            e.Property(x => x.DetalleEstado).HasColumnName("detalle_estado");
+            e.HasOne(x => x.ServicioCheck).WithMany().HasForeignKey(x => x.ServicioCheckId);
         });
 
         m.Entity<Mantenimiento>(e => {

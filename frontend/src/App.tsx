@@ -15,6 +15,8 @@ import { AdminVias }         from './pages/admin/Vias'
 import { AdminEquipos }      from './pages/admin/Equipos'
 import { AdminTiposEquipo }  from './pages/admin/TiposEquipo'
 import { AdminMantenimiento } from './pages/admin/Mantenimiento'
+import { AdminServicios }     from './pages/admin/Servicios'
+import { AdminServicioChecks } from './pages/admin/ServicioChecks'
 import { AdminUsuarios }     from './pages/admin/Usuarios'
 import { AdminConfiguracion } from './pages/admin/Configuracion'
 import { NocDashboard }       from './pages/NocDashboard'
@@ -36,6 +38,8 @@ function AppLayout() {
           <Route path="equipos"     element={<AdminEquipos />} />
           <Route path="tipos-equipo" element={<AdminTiposEquipo />} />
           <Route path="mantenimiento" element={<AdminMantenimiento />} />
+          <Route path="servicios"     element={<AdminServicios />} />
+          <Route path="servicio-checks" element={<AdminServicioChecks />} />
           <Route path="usuarios"    element={<AdminUsuarios />} />
           <Route path="config"      element={<AdminConfiguracion />} />
         </Route>
