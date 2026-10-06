@@ -116,6 +116,53 @@ public class ConfiguracionController(AppDbContext db, TelegramAlertService teleg
         return Ok(new { clave, valor = "" });
     }
 
+    // ── Imagen de fondo del Dashboard (SIGMA) — se guarda junto a los tonos (volumen
+    // audio/, servido sin auth en /api/audio) y su nombre en la clave fondo_imagen.
+    private static readonly string[] ExtFondoValidas = [".jpg", ".jpeg", ".png", ".webp"];
+    private const long MaxBytesFondo = 10 * 1024 * 1024; // 10 MB
+
+    [HttpPost("fondo")]
+    [Authorize(Roles = "admin")]
+    [RequestSizeLimit(MaxBytesFondo)]
+    public async Task<IActionResult> SubirFondo(IFormFile archivo)
+    {
+        if (archivo is null || archivo.Length == 0)
+            return BadRequest(new { error = "Debe adjuntar un archivo" });
+        if (archivo.Length > MaxBytesFondo)
+            return BadRequest(new { error = "La imagen excede 10 MB" });
+        var ext = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+        if (!ExtFondoValidas.Contains(ext))
+            return BadRequest(new { error = "Sólo se aceptan imágenes .jpg, .png o .webp" });
+
+        const string clave = "fondo_imagen";
+        var cfg = await db.Configuraciones.FindAsync(clave);
+        var anterior = cfg?.Valor;
+
+        Directory.CreateDirectory(AudioDir);
+        var nombreNuevo = $"fondo_{Guid.NewGuid():N}{ext}";
+        await using (var fs = System.IO.File.Create(Path.Combine(AudioDir, nombreNuevo)))
+            await archivo.CopyToAsync(fs);
+
+        if (cfg is null) db.Configuraciones.Add(new Configuracion { Clave = clave, Valor = nombreNuevo });
+        else cfg.Valor = nombreNuevo;
+        try { await db.SaveChangesAsync(); }
+        catch { TryDeleteSafe(nombreNuevo); throw; }
+
+        if (!string.IsNullOrWhiteSpace(anterior)) TryDeleteSafe(anterior);
+        return Ok(new { clave, valor = nombreNuevo, url = $"/api/audio/{nombreNuevo}" });
+    }
+
+    [HttpDelete("fondo")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> QuitarFondo()
+    {
+        var cfg = await db.Configuraciones.FindAsync("fondo_imagen");
+        var anterior = cfg?.Valor;
+        if (cfg is not null) { cfg.Valor = ""; await db.SaveChangesAsync(); }
+        if (!string.IsNullOrWhiteSpace(anterior)) TryDeleteSafe(anterior);
+        return Ok(new { clave = "fondo_imagen", valor = "" });
+    }
+
     // Nunca confiar en el nombre crudo leído de BD (pudo escribirse vía el PUT
     // genérico /api/config/{clave}, que no valida el valor) — Path.GetFileName
     // evita que un valor con traversal termine borrando algo fuera de audio/.

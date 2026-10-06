@@ -8,7 +8,8 @@ RUN dotnet publish ./AunorApi/AunorApi.csproj -c Release -o /publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 # fonts-dejavu-core: fuente TTF necesaria para el font resolver de PdfSharpCore
 # (Linux no tiene GDI+/fontconfig disponible para PdfSharpCore por defecto)
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core \
+# ffmpeg: convierte los clips .dav del NVR Dahua a .mp4 (módulo Oficios)
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /publish .

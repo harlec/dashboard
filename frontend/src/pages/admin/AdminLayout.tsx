@@ -10,6 +10,7 @@ const links = [
   { to: '/admin/mantenimiento', label: '🔧 Mantenimiento' },
   { to: '/admin/servicios',     label: '🗄 Servicios' },
   { to: '/admin/servicio-checks', label: '🔎 Chequeos de servicio' },
+  { to: '/admin/nvr',        label: '📹 NVR y canales' },
   { to: '/admin/usuarios',   label: '👤 Usuarios'     },
   { to: '/admin/config',     label: '⚙ Configuración' },
 ]
@@ -23,7 +24,7 @@ export function AdminLayout() {
   )
 
   return (
-    <div className="flex min-h-[calc(100vh-60px)]">
+    <div className="flex flex-1 min-h-[900px]">
       {/* Sidebar */}
       <aside className="w-52 bg-surface border-r border-border flex-shrink-0 pt-4">
         <div className="px-4 pb-3 text-[0.7rem] text-muted font-bold uppercase tracking-widest">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { FormModal, Field, Input } from '../../components/admin/FormModal'
 
-interface Servicio { id: number; nombre: string; descripcion?: string; activo: boolean }
+interface Servicio { id: number; nombre: string; descripcion?: string; uptimePct?: number; activo: boolean }
 const empty = (): Partial<Servicio> => ({ nombre: '', descripcion: '' })
 
 export function AdminServicios() {
@@ -30,7 +30,7 @@ export function AdminServicios() {
     await fetch(url, {
       method, credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: editing.nombre, descripcion: editing.descripcion })
+      body: JSON.stringify({ nombre: editing.nombre, descripcion: editing.descripcion, uptimePct: editing.uptimePct ?? null })
     })
     setSaving(false); setModal(false); load()
   }
@@ -64,6 +64,7 @@ export function AdminServicios() {
             { key: 'id',          label: 'ID' },
             { key: 'nombre',      label: 'Nombre' },
             { key: 'descripcion', label: 'Descripción' },
+            { key: 'uptimePct',   label: 'Uptime %', render: r => r.uptimePct != null ? `${r.uptimePct}%` : '—' },
             { key: 'activo',      label: 'Activo', render: r => r.activo ? '✅' : '❌' },
           ]}
           data={rows} keyField="id" loading={loading}
@@ -79,6 +80,11 @@ export function AdminServicios() {
         </Field>
         <Field label="Descripción (opcional)">
           <Input value={editing.descripcion ?? ''} onChange={e => setEditing(p => ({ ...p, descripcion: e.target.value }))} />
+        </Field>
+        <Field label="Uptime % (manual, mientras se define el monitoreo real)">
+          <Input type="number" min={0} max={100} step={0.01} value={editing.uptimePct ?? ''}
+            onChange={e => setEditing(p => ({ ...p, uptimePct: e.target.value === '' ? undefined : Number(e.target.value) }))}
+            placeholder="Ej: 99.98" />
         </Field>
       </FormModal>
     </div>

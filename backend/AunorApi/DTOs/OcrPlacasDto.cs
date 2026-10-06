@@ -14,7 +14,9 @@ public record OcrResumenDto(
     List<OcrViaDto>        PorVia
 );
 
-// Ranking de vías por errores OCR
+// Ranking de vías por errores OCR. Score = límite inferior de Wilson sobre la
+// tasa de ERROR (0-100) — mientras más alto, más confiable es que la vía tenga
+// una tasa de error genuinamente alta (no solo pocos tránsitos con mala suerte).
 public record OcrViaDto(
     string  Estacion,
     string  Via,
@@ -22,7 +24,32 @@ public record OcrViaDto(
     int     Aciertos,
     int     NoReconocidas,
     int     Confusiones,
-    decimal Efectividad
+    decimal Efectividad,
+    decimal Score
+);
+
+// Fila cruda de la agregación por vía (Dapper) — antes de calcular tasa/score
+public record OcrViaCrudaDto(
+    string Estacion,
+    string Via,
+    int    Total,
+    int    Aciertos,
+    int    NoReconocidas,
+    int    Confusiones
+);
+
+// Mejores vías de referencia, respetando el período elegido en la pantalla
+// (a diferencia de OcrMejorViaDto/tendencias, que usa siempre una ventana fija
+// de 30 días). Score = límite inferior de Wilson sobre la tasa de acierto:
+// pondera precisión y volumen juntos, para que una vía con pocos tránsitos y
+// 0 errores no gane sobre una vía con muchos tránsitos y pocas discrepancias.
+public record OcrMejorViaPeriodoDto(
+    string  Estacion,
+    string  Via,
+    int     Total,
+    int     Aciertos,
+    decimal TasaError,
+    decimal Score
 );
 
 public record OcrEstacionDto(
@@ -93,10 +120,13 @@ public record OcrDiaTendenciaDto(
     decimal TasaMejores
 );
 
-// Una de las mejores vías de referencia + su perfil horario
+// Una de las mejores vías de referencia + su perfil horario.
+// Score = límite inferior de Wilson sobre la tasa de acierto (0-100): pondera
+// precisión y volumen juntos, para que una vía con pocos tránsitos y 0 errores
+// no desplace a una vía con miles de tránsitos y una tasa de error mínima.
 public record OcrMejorViaDto(
     string Estacion, string Via,
-    int Total, decimal TasaVia,
+    int Total, decimal TasaVia, decimal Score,
     List<OcrCeldaDto> PorHora
 );
 
@@ -128,3 +158,29 @@ public record OcrItemDto(
     string PlacaOcr,
     string TipoError
 );
+
+// ── Tránsitos del mes en curso: volumen, forma de cobro y serie diaria ──
+// FormaCobro sale de tra_tipop: E efectivo, T tag (prepago), O cobro por lectura de
+// placa (OCR), S tarjeta de crédito, X exento, resto (M, etc.) otros. El total incluye X;
+// los conteos OCR NO (a un exento no se le evalúa la lectura de placa).
+public record TransitosMesDto(
+    string Mes,
+    int    DiasTranscurridos,
+    int    DiasMes,
+    int    Total,
+    double PromedioDia,
+    int    Proyeccion,
+    int    Efectivo,
+    int    Tag,
+    int    PorPlaca,
+    int    Tarjeta,
+    int    Exento,
+    int    Otros,
+    int    OcrConPlaca,
+    int    OcrAciertos,
+    int    OcrErrores,
+    int    OcrNoLegibles,
+    List<TransitosDiaDto> PorDia
+);
+
+public record TransitosDiaDto(string Fecha, int Total, int OcrConPlaca, int OcrAciertos);

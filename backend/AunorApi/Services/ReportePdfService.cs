@@ -60,7 +60,7 @@ public class ReportePdfService(AppDbContext db, ReporteService reporteService, I
         footer.Format.Font.Size = 7.5;
         footer.Format.Font.Color = Gray;
         footer.Format.Alignment = ParagraphAlignment.Center;
-        footer.AddText("Pulso Vial · Página ");
+        footer.AddText("SIGMA · Página ");
         footer.AddPageField();
         footer.AddText(" de ");
         footer.AddNumPagesField();

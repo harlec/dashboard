@@ -8,7 +8,8 @@ import { useAuth } from '../hooks/useAuth'
 // por eso no lleva su propio fondo ni position:sticky.
 
 const LINKS = [
-  { to: '/',              label: 'Dashboard' },
+  { to: '/',              label: 'Panel de control' },
+  { to: '/vias',          label: 'Vías' },
   { to: '/noc',            label: 'NOC' },
   { to: '/incidentes',    label: 'Incidentes' },
   { to: '/reporte',       label: 'Reporte SLA' },
@@ -83,7 +84,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
         </div>
 
         <div style={{ fontSize: 23, fontWeight: 700, letterSpacing: '0.2em', color: 'oklch(0.84 0.11 195)' }}>
-          PULSO<span style={{ fontWeight: 300, color: 'oklch(0.94 0.005 265)' }}>VIAL</span>
+          SIGMA
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10 }}>
@@ -107,6 +108,12 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
         <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.62 0.015 265)' }}>{user?.nombre ?? user?.username ?? 'Administrador'}</div>
         <div style={{ fontSize: 32, fontWeight: 300, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color: 'oklch(0.95 0.004 265)' }}>
           {now.toLocaleTimeString('es-PE', { hour12: false })}
+        </div>
+        <div onClick={logout} role="button" aria-label="Cerrar sesión" title="Cerrar sesión" style={{
+          padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+          color: 'oklch(0.80 0.08 20)', background: 'oklch(0.30 0.05 20 / 0.35)', boxShadow: 'inset 0 0 0 1px oklch(0.60 0.12 20 / 0.40)',
+        }}>
+          Salir
         </div>
       </div>
     </div>

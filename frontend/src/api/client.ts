@@ -65,6 +65,7 @@ export const api = {
     request<DiscrepanciasAnalisis>('/discrepancias/analisis'),
   discrepanciasVias: (periodo: string) =>
     request<ViaConteo[]>(`/discrepancias/vias?periodo=${periodo}`),
+  servicios: () => request<ServicioLive[]>('/servicios'),
   discrepanciasViaEvolucion: (p: { estacion: string; via: string; dias?: number }) =>
     request<ViaEvolucion>(`/discrepancias/via-evolucion?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
@@ -77,8 +78,11 @@ export const api = {
   // ── OCR Placas ──────────────────────────────────────────────
   ocrResumen: (periodo: string, soloPrepago = false) =>
     request<OcrResumen>(`/ocr/resumen?periodo=${periodo}&soloPrepago=${soloPrepago}`),
+  ocrTransitosMes: () => request<TransitosMes>('/ocr/transitos-mes'),
   ocrAnalisis: (soloPrepago = false) =>
     request<OcrAnalisis>(`/ocr/analisis?soloPrepago=${soloPrepago}`),
+  ocrMejoresVias: (periodo: string, soloPrepago = false) =>
+    request<OcrMejorViaPeriodo[]>(`/ocr/mejores-vias?periodo=${periodo}&soloPrepago=${soloPrepago}`),
   ocrTendencias: (soloPrepago = false) =>
     request<OcrTendencias>(`/ocr/tendencias?soloPrepago=${soloPrepago}`),
   ocrDetalle: (p: OcrDetalleParams) =>
@@ -178,6 +182,10 @@ export interface IncidenteDetalle {
 
 export interface CamaraStatus { id: number; camara: number; ultimoEmail?: string; minDesdeEmail?: number; online: boolean }
 
+// Servicios de plataforma (sin vía) — uptimePct es manual por ahora (ver Admin → Servicios);
+// el monitoreo real (servicio-checks) queda para una segunda etapa.
+export interface ServicioLive { id: number; nombre: string; descripcion?: string; uptimePct?: number; activo: boolean }
+
 export interface Mantenimiento {
   id: number
   estacionId?: number; estacion?: string
@@ -232,7 +240,8 @@ export interface DiscrepanciasAnalisis {
 export interface ConfusionPar   { desde: string; hasta: string; total: number }
 export interface EstacionConteo { estacion: string; total: number; totalTransacciones: number; efectividad: number }
 export interface TrendPunto     { bucket: string; estacion: string; total: number }
-export interface ViaConteo { via: string; estacion: string; total: number; totalTransitos: number; pct: number }
+// pct = % a secas · pctWilson = límite inferior del intervalo de Wilson (95%): el % "confirmado"
+export interface ViaConteo { via: string; estacion: string; total: number; totalTransitos: number; pct: number; pctWilson: number }
 export interface DiaViaDiscrepancia { fecha: string; total: number; discrepancias: number; pct: number }
 export interface ViaEvolucion { estacion: string; via: string; dias: number; diaria: DiaViaDiscrepancia[] }
 export interface DiscrepanciasResumen {
@@ -270,7 +279,15 @@ export interface OcrTipoError { tipoError: string; total: number }
 export interface OcrVia {
   estacion: string; via: string; total: number
   aciertos: number; noReconocidas: number; confusiones: number
-  efectividad: number
+  efectividad: number; score: number
+}
+export interface TransitosDia { fecha: string; total: number; ocrConPlaca: number; ocrAciertos: number }
+export interface TransitosMes {
+  mes: string; diasTranscurridos: number; diasMes: number
+  total: number; promedioDia: number; proyeccion: number
+  efectivo: number; tag: number; porPlaca: number; tarjeta: number; exento: number; otros: number
+  ocrConPlaca: number; ocrAciertos: number; ocrErrores: number; ocrNoLegibles: number
+  porDia: TransitosDia[]
 }
 export interface OcrResumen {
   totalConPlaca: number; aciertos: number; sinDetectar: number; errores: number
@@ -278,6 +295,10 @@ export interface OcrResumen {
   porEstacion: OcrEstacion[]
   porTipoError: OcrTipoError[]
   porVia: OcrVia[]
+}
+// Mejores vías de referencia para el período elegido (score de Wilson: precisión ajustada por volumen)
+export interface OcrMejorViaPeriodo {
+  estacion: string; via: string; total: number; aciertos: number; tasaError: number; score: number
 }
 export interface OcrConfusionCaracter {
   posicion: number; esperado: string; ocrLeyo: string; casos: number
@@ -296,7 +317,7 @@ export interface OcrAnalisis {
 export interface OcrCelda { hora: number; total: number; tasaError: number }
 export interface OcrHeatmapRow { estacion: string; via: string; total: number; tasaVia: number; horas: OcrCelda[] }
 export interface OcrDiaTendencia { fecha: string; total: number; tasaRed: number; tasaMejores: number }
-export interface OcrMejorViaTendencia { estacion: string; via: string; total: number; tasaVia: number; porHora: OcrCelda[] }
+export interface OcrMejorViaTendencia { estacion: string; via: string; total: number; tasaVia: number; score: number; porHora: OcrCelda[] }
 export interface OcrTendencias {
   heatmap: OcrHeatmapRow[]
   tendenciaDiaria: OcrDiaTendencia[]

@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import logo from '../assets/logo.png'
 
 interface Props { signalStatus?: 'idle' | 'ok' | 'error' }
 
 const LINKS = [
-  { to: '/',              label: 'Dashboard' },
+  { to: '/',              label: 'Panel de control' },
+  { to: '/vias',          label: 'Vías' },
   { to: '/noc',            label: 'NOC' },
   { to: '/incidentes',    label: 'Incidentes' },
   { to: '/reporte',       label: 'Reporte SLA' },
   { to: '/reportes',      label: 'Reportes' },
   { to: '/discrepancias', label: 'Discrepancias' },
   { to: '/ocr',            label: 'OCR Placas' },
+  // Oficios: oculto del menú mientras se termina de probar (ruta /oficios sigue activa)
   { to: '/admin',          label: 'Admin' },
 ]
 
@@ -52,9 +53,10 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
   const dotLabel = { idle: 'En espera', ok: 'En vivo', error: 'Sin conexión' }[signalStatus]
 
   return (
-    <nav className="bg-[#0a0908] flex items-center justify-between px-4 sm:px-6 h-[60px] sticky top-0 z-50 border-b border-border gap-4">
+    <nav className="flex items-center justify-between px-4 sm:px-6 h-[60px] sticky top-0 z-50 gap-4"
+      style={{ background: 'linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.14 0.016 262) 100%)', boxShadow: 'inset 0 -1px 0 oklch(1 0 0 / 0.06)' }}>
       <div className="flex items-center gap-3 min-w-0">
-        <div className="relative flex-shrink-0" ref={menuRef}>
+        <div className="relative flex-shrink-0 md:hidden" ref={menuRef}>
           <button
             onClick={() => setOpen(o => !o)}
             aria-label="Menú de navegación"
@@ -89,12 +91,12 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
           )}
         </div>
 
-        <img src={logo} alt="Pulso Vial" className="h-8 flex-shrink-0" />
+        <div className="flex-shrink-0 text-[1.4rem] font-bold tracking-[0.2em]" style={{ color: 'oklch(0.84 0.11 195)' }}>SIGMA</div>
 
-        <div className="hidden lg:flex gap-1 min-w-0">
+        <div className="hidden md:flex gap-1 min-w-0 overflow-x-auto [scrollbar-width:none]">
           {LINKS.map(({ to, label }) => (
             <Link key={to} to={to}
-              className={`px-3.5 py-1.5 rounded-md text-[0.84rem] transition-all whitespace-nowrap ${
+              className={`px-3 xl:px-3.5 py-1.5 rounded-[11px] text-[0.84rem] xl:text-[0.95rem] font-medium transition-all whitespace-nowrap ${
                 pathname === to ? 'text-ink' : 'text-white/60 hover:bg-white/10 hover:text-ink'}`}
               style={pathname === to
                 ? { background: 'oklch(0.34 0.045 210 / .75)', boxShadow: 'inset 0 0 0 1px oklch(0.70 0.09 200 / .35)' }
@@ -116,8 +118,8 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
           {user?.nombre ?? user?.username}
         </span>
 
-        <span className="hidden xl:inline text-[1.15rem] font-light tabular-nums text-white/80">
-          {now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+        <span className="hidden lg:inline text-[1.5rem] font-light tabular-nums text-white/90">
+          {now.toLocaleTimeString('es-PE', { hour12: false })}
         </span>
 
         <button onClick={logout} className="text-[0.78rem] text-white/40 hover:text-ink transition-colors">

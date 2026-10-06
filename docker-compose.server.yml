@@ -30,7 +30,21 @@ services:
       - NET_RAW
     volumes:
       - audio_data:/app/audio
+      - oficios_data:/app/oficios
     environment:
+      OFICIOS_STORAGE: /app/oficios
+      # Días que se conservan los MP4 descargados antes de borrarse solos
+      OFICIOS_CLIPS_DIAS: ${OFICIOS_CLIPS_DIAS:-3}
+      # Contraseñas de NVR por peaje: el nombre de cada variable se escribe en
+      # nvr_peaje.password_ref (ej. NVR_VIRU_PWD). Definirlas en .env.
+      NVR_FORTALEZA_PWD: ${NVR_FORTALEZA_PWD:-}
+      NVR_HUARMEY_PWD: ${NVR_HUARMEY_PWD:-}
+      NVR_402_PWD: ${NVR_402_PWD:-}
+      NVR_VIRU_PWD: ${NVR_VIRU_PWD:-}
+      NVR_SANTA_PWD: ${NVR_SANTA_PWD:-}
+      # Variable genérica de prueba: usar solo para probar la conexión a un NVR
+      # antes de decidir el nombre definitivo por peaje (NVR_<PEAJE>_PWD arriba)
+      NVR_PWD: ${NVR_PWD:-}
       ASPNETCORE_URLS: http://+:5000
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Default: "Server=sqlserver,1433;Database=red;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True"
@@ -67,3 +81,4 @@ services:
 volumes:
   sqlserver_data:
   audio_data:
+  oficios_data:

@@ -38,8 +38,11 @@ export function useAuthProvider(): AuthCtx {
   }, [])
 
   const logout = useCallback(async () => {
-    await api.logout()
+    // Aunque la llamada falle (red caída, cookie ya vencida) se sale igual: se
+    // limpia la sesión local y se recarga en /login para no dejar estado viejo.
+    try { await api.logout() } catch { /* noop */ }
     setUser(null)
+    window.location.assign('/login')
   }, [])
 
   return { user, loading, loginUser, logout }

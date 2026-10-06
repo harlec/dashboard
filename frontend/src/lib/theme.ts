@@ -24,6 +24,10 @@ export const SEMAFORO = {
   sinDato: 'transparent',
 } as const
 
+// Naranja y rojo del Panel de control (Panel SIGMA v2). Solo los usa el tablero; el resto de
+// las pantallas de monitoreo conserva SEMAFORO.
+export const PANEL = { naranja: '#ffb84d', rojo: '#ff6b6b' } as const
+
 // Texto — primario / secundario / terciario.
 export const TEXTO = {
   primario:   'oklch(0.96 0.004 265)',

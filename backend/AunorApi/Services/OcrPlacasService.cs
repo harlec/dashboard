@@ -46,6 +46,100 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
         WHEN 3 THEN '402'       WHEN 4 THEN 'VIRU' WHEN 5 THEN 'SANTA'
         ELSE 'DESCONOCIDA' END";
 
+    // Límite inferior del intervalo de Wilson (95%) para una proporción — la forma
+    // estándar de comparar tasas de acierto entre muestras de tamaño muy distinto.
+    // Una vía con 2 tránsitos y 0 errores (100%) obtiene un score bajo por la
+    // incertidumbre; una vía con 1000 tránsitos y 5 discrepancias (99.5%) obtiene
+    // un score alto porque el volumen respalda esa tasa. Así el ranking de
+    // "mejores vías" no lo gana la vía con menos datos, lo gana la más confiable.
+    private static double WilsonScore(int aciertos, int total)
+    {
+        if (total <= 0) return 0;
+        const double z = 1.959963985; // 95% de confianza
+        double n = total;
+        double phat = aciertos / n;
+        double z2 = z * z;
+        double denom = 1 + z2 / n;
+        double centro = phat + z2 / (2 * n);
+        double ajuste = z * Math.Sqrt((phat * (1 - phat) + z2 / (4 * n)) / n);
+        return Math.Max(0, (centro - ajuste) / denom) * 100;
+    }
+
+    private sealed record TransitosDiaFila(DateTime Dia, int Total, int Efectivo, int Tag, int PorPlaca, int Tarjeta, int Exento,
+        int ConPlaca, int Aciertos, int NoLegibles, int Errores);
+
+    // El panel consulta cada ~2 min desde varias pantallas: un escaneo del mes completo por cada
+    // visita castiga a la BD de producción, así que se reutiliza el último resultado 90 s.
+    private static TransitosMesDto? _transitosMesCache;
+    private static DateTime _transitosMesCacheAt;
+    private static readonly SemaphoreSlim _transitosMesLock = new(1, 1);
+
+    // ── Tránsitos del mes en curso: total, promedio diario, forma de cobro y serie por día ──
+    public async Task<TransitosMesDto> GetTransitosMesAsync()
+    {
+        await _transitosMesLock.WaitAsync();
+        try
+        {
+            if (_transitosMesCache != null && DateTime.Now - _transitosMesCacheAt < TimeSpan.FromSeconds(90)
+                && _transitosMesCache.Mes == DateTime.Now.ToString("yyyy-MM"))
+                return _transitosMesCache;
+            _transitosMesCache = await CalcularTransitosMesAsync();
+            _transitosMesCacheAt = DateTime.Now;
+            return _transitosMesCache;
+        }
+        finally { _transitosMesLock.Release(); }
+    }
+
+    private async Task<TransitosMesDto> CalcularTransitosMesAsync()
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+        string pw = PeriodWhere("mes");
+        // El total del mes incluye exentos (X), que FiltroBase deja fuera por no ser evaluables en OCR/DAC.
+        string baseConExentos = FiltroBase.Replace("'T')", "'T','X')");
+
+        var porDiaFilas = (await conn.QueryAsync<TransitosDiaFila>($@"
+            SELECT CAST(tra_fecha AS DATE) AS Dia,
+                   COUNT(*) AS Total,
+                   SUM(CASE WHEN tra_tipop = 'E' THEN 1 ELSE 0 END) AS Efectivo,
+                   SUM(CASE WHEN tra_tipop = 'T' THEN 1 ELSE 0 END) AS Tag,
+                   SUM(CASE WHEN tra_tipop = 'O' THEN 1 ELSE 0 END) AS PorPlaca,
+                   SUM(CASE WHEN tra_tipop = 'S' THEN 1 ELSE 0 END) AS Tarjeta,
+                   SUM(CASE WHEN tra_tipop = 'X' THEN 1 ELSE 0 END) AS Exento,
+                   -- Lectura OCR: solo tránsitos con placa de referencia (mismo criterio que GetResumenAsync)
+                   SUM(CASE WHEN tra_tipop <> 'X' AND tra_paten IS NOT NULL AND tra_paten <> '' THEN 1 ELSE 0 END) AS ConPlaca,
+                   SUM(CASE WHEN tra_tipop <> 'X' AND tra_paten IS NOT NULL AND tra_paten <> '' AND tra_paten = tra_patocr THEN 1 ELSE 0 END) AS Aciertos,
+                   SUM(CASE WHEN tra_tipop <> 'X' AND tra_paten IS NOT NULL AND tra_paten <> '' AND (tra_patocr IS NULL OR tra_patocr = '') THEN 1 ELSE 0 END) AS NoLegibles,
+                   SUM(CASE WHEN tra_tipop <> 'X' AND tra_paten IS NOT NULL AND tra_paten <> '' AND tra_patocr IS NOT NULL AND tra_patocr <> '' AND tra_paten <> tra_patocr THEN 1 ELSE 0 END) AS Errores
+            FROM transitos t
+            WHERE {pw}
+              {baseConExentos}
+            GROUP BY CAST(tra_fecha AS DATE)
+            ORDER BY Dia", commandTimeout: 120)).ToList();
+
+        var hoy = DateTime.Now;
+        int diasMes = DateTime.DaysInMonth(hoy.Year, hoy.Month);
+        int total    = porDiaFilas.Sum(r => r.Total);
+        int efectivo = porDiaFilas.Sum(r => r.Efectivo);
+        int tag      = porDiaFilas.Sum(r => r.Tag);
+        int porPlaca = porDiaFilas.Sum(r => r.PorPlaca);
+        int tarjeta  = porDiaFilas.Sum(r => r.Tarjeta);
+        int exento   = porDiaFilas.Sum(r => r.Exento);
+
+        // El promedio usa días CALENDARIO transcurridos (incluye el día en curso, aún parcial),
+        // así que el día de hoy lo subestima un poco hasta que cierre la jornada.
+        int dias = hoy.Day;
+        double promedio = dias > 0 ? Math.Round((double)total / dias, 0) : 0;
+
+        return new TransitosMesDto(
+            hoy.ToString("yyyy-MM"), dias, diasMes, total, promedio, (int)Math.Round(promedio * diasMes),
+            efectivo, tag, porPlaca, tarjeta, exento, total - efectivo - tag - porPlaca - tarjeta - exento,
+            porDiaFilas.Sum(r => r.ConPlaca), porDiaFilas.Sum(r => r.Aciertos),
+            porDiaFilas.Sum(r => r.Errores), porDiaFilas.Sum(r => r.NoLegibles),
+            porDiaFilas.Select(r => new TransitosDiaDto(r.Dia.ToString("yyyy-MM-dd"), r.Total, r.ConPlaca, r.Aciertos)).ToList());
+    }
+
     // ── Resumen + por estación + tipos de error ───────────────────────────
     public async Task<OcrResumenDto> GetResumenAsync(string periodo, bool soloPrepago = false)
     {
@@ -109,37 +203,86 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             GROUP BY {TipoErrorExpr}
             ORDER BY Total DESC")).ToList();
 
-        // Ranking de vías por errores OCR (no detectadas + confusiones)
-        var porVia = (await conn.QueryAsync<OcrViaDto>($@"
-            SELECT TOP 20
+        // Ranking de vías por errores OCR (no detectadas + confusiones). Se ordena
+        // por score de Wilson sobre la tasa de ERROR (no por la tasa cruda): así una
+        // vía con 1-2 tránsitos y 100% de error no desplaza a una vía con miles de
+        // tránsitos y una tasa de error alta pero consistente, que es la que
+        // realmente conviene atender primero — mismo criterio que "mejores vías".
+        var porViaCruda = (await conn.QueryAsync<OcrViaCrudaDto>($@"
+            SELECT
                 {EstacionCase} AS Estacion,
                 ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR)) AS Via,
                 COUNT(*) AS Total,
                 SUM(CASE WHEN tra_paten = tra_patocr THEN 1 ELSE 0 END) AS Aciertos,
                 SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = '' THEN 1 ELSE 0 END) AS NoReconocidas,
                 SUM(CASE WHEN tra_patocr IS NOT NULL AND tra_patocr <> ''
-                          AND tra_paten <> tra_patocr THEN 1 ELSE 0 END) AS Confusiones,
-                ROUND(100.0 * SUM(CASE WHEN tra_paten = tra_patocr THEN 1 ELSE 0 END)
-                    / NULLIF(COUNT(*), 0), 1) AS Efectividad
+                          AND tra_paten <> tra_patocr THEN 1 ELSE 0 END) AS Confusiones
             FROM transitos t
             LEFT JOIN viadef vd ON t.tra_coest = vd.via_coest AND t.tra_nuvia = vd.via_nuvia
             WHERE {pw}
               {FiltroBase}
               {fp}
               AND tra_paten IS NOT NULL AND tra_paten <> ''
-            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr
-            ORDER BY (
-                1.0 * (
-                    SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = '' THEN 1 ELSE 0 END) +
-                    SUM(CASE WHEN tra_patocr IS NOT NULL AND tra_patocr <> ''
-                              AND tra_paten <> tra_patocr THEN 1 ELSE 0 END)
-                ) / NULLIF(COUNT(*), 0)
-            ) DESC")).ToList();
+            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr")).ToList();
+
+        var porVia = porViaCruda
+            .Select(v => {
+                int errores = v.NoReconocidas + v.Confusiones;
+                decimal efectividad = v.Total > 0 ? Math.Round((decimal)v.Aciertos * 100 / v.Total, 1) : 0m;
+                decimal score = Math.Round((decimal)WilsonScore(errores, v.Total), 1);
+                return new OcrViaDto(v.Estacion, v.Via, v.Total, v.Aciertos, v.NoReconocidas, v.Confusiones, efectividad, score);
+            })
+            .OrderByDescending(v => v.Score)
+            .Take(20)
+            .ToList();
 
         return new OcrResumenDto(
             total, aciertos, sinDetectar, errores,
             efectividad, tasaSinDetect, tasaError,
             porEstacion, porTipoError, porVia);
+    }
+
+    // ── Mejores vías de referencia, respetando el período elegido ─────────
+    // A diferencia de GetTendenciasAsync (ventana fija de 30 días), esta usa el
+    // mismo período que el resto de la pantalla (1h/4h/12h/24h/ayer/mes) y
+    // ordena por score de Wilson, no por tasa de error cruda — así una vía con
+    // pocos tránsitos y 0 errores no le gana a una con muchos tránsitos y pocas
+    // discrepancias, que es en realidad la referencia más confiable.
+    public async Task<List<OcrMejorViaPeriodoDto>> GetMejoresViasAsync(string periodo, bool soloPrepago = false)
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+        string pw = PeriodWhere(periodo);
+        string fp = FiltroPrepago(soloPrepago);
+
+        var vias = (await conn.QueryAsync<OcrViaCrudaDto>($@"
+            SELECT
+                {EstacionCase} AS Estacion,
+                ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR)) AS Via,
+                COUNT(*) AS Total,
+                SUM(CASE WHEN tra_paten = tra_patocr THEN 1 ELSE 0 END) AS Aciertos,
+                SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = '' THEN 1 ELSE 0 END) AS NoReconocidas,
+                SUM(CASE WHEN tra_patocr IS NOT NULL AND tra_patocr <> ''
+                          AND tra_paten <> tra_patocr THEN 1 ELSE 0 END) AS Confusiones
+            FROM transitos t
+            LEFT JOIN viadef vd ON t.tra_coest = vd.via_coest AND t.tra_nuvia = vd.via_nuvia
+            WHERE {pw}
+              {FiltroBase}
+              {fp}
+              AND tra_paten IS NOT NULL AND tra_paten <> ''
+            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr",
+            commandTimeout: 60)).ToList();
+
+        return vias
+            .Where(v => v.Total >= 5)
+            .Select(v => new OcrMejorViaPeriodoDto(
+                v.Estacion, v.Via, v.Total, v.Aciertos,
+                v.Total > 0 ? Math.Round((decimal)(v.NoReconocidas + v.Confusiones) * 100 / v.Total, 1) : 0m,
+                Math.Round((decimal)WilsonScore(v.Aciertos, v.Total), 1)))
+            .OrderByDescending(v => v.Score)
+            .Take(20)
+            .ToList();
     }
 
     // ── Análisis de confusión de caracteres + por hora + pares ──────────
@@ -345,6 +488,7 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
                     Via: g.Key.Via,
                     Total: tot,
                     TasaVia: tot > 0 ? Math.Round((decimal)err * 100 / tot, 1) : 0m,
+                    Score: Math.Round((decimal)WilsonScore(tot - err, tot), 1),
                     Horas: horas
                 );
             })
@@ -357,12 +501,15 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             .Select(v => new OcrHeatmapRowDto(v.Estacion, v.Via, v.Total, v.TasaVia, v.Horas))
             .ToList();
 
-        // Mejores vías de referencia: top 5 con ≥100 transacciones y menor tasa de error
+        // Mejores vías de referencia: ranking por score de Wilson (precisión ajustada
+        // por volumen), no por tasa de error cruda — evita que una vía con pocos
+        // tránsitos y 0 errores gane sobre una vía con miles de tránsitos y una tasa
+        // de error mínima, que es en realidad la referencia más confiable.
         var mejoresVias = viaAgg
-            .Where(v => v.Total >= 100)
-            .OrderBy(v => v.TasaVia)
-            .Take(5)
-            .Select(v => new OcrMejorViaDto(v.Estacion, v.Via, v.Total, v.TasaVia, v.Horas))
+            .Where(v => v.Total >= 20)
+            .OrderByDescending(v => v.Score)
+            .Take(8)
+            .Select(v => new OcrMejorViaDto(v.Estacion, v.Via, v.Total, v.TasaVia, v.Score, v.Horas))
             .ToList();
 
         var mejoresKey = new HashSet<string>(mejoresVias.Select(m => $"{m.Estacion}|{m.Via}"));

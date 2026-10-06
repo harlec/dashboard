@@ -1,9 +1,11 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthContext, useAuthProvider } from './hooks/useAuth'
 import { useFontScale } from './hooks/useFontScale'
-import { MonitorTopbar }   from './components/MonitorTopbar'
+import { WallTopbar }      from './components/WallTopbar'
+import { ScaledPage }      from './components/ScaledStage'
 import { Login }           from './pages/Login'
 import { Dashboard }       from './pages/Dashboard'
+import { Vias }            from './pages/Vias'
 import { Incidentes }      from './pages/Incidentes'
 import { ReporteSLA }      from './pages/ReporteSLA'
 import { Reportes }        from './pages/Reportes'
@@ -17,6 +19,10 @@ import { AdminTiposEquipo }  from './pages/admin/TiposEquipo'
 import { AdminMantenimiento } from './pages/admin/Mantenimiento'
 import { AdminServicios }     from './pages/admin/Servicios'
 import { AdminServicioChecks } from './pages/admin/ServicioChecks'
+import { AdminNvrCanales }   from './pages/admin/NvrCanales'
+// Oficios: módulo oculto por ahora (en pruebas). No se importa ni se enruta,
+// pero el código sigue intacto en pages/Oficios.tsx — reactivar agregando de
+// nuevo el import y la <Route path="/oficios" .../> de abajo.
 import { AdminUsuarios }     from './pages/admin/Usuarios'
 import { AdminConfiguracion } from './pages/admin/Configuracion'
 import { NocDashboard }       from './pages/NocDashboard'
@@ -25,11 +31,13 @@ import { OcrDashboard }       from './pages/OcrDashboard'
 
 function AppLayout() {
   useFontScale()
+  const { pathname } = useLocation()
+  const activo = pathname.startsWith('/admin') ? 'Admin' : pathname.startsWith('/noc') ? 'NOC' : 'Vías'
   return (
-    <>
-      <MonitorTopbar signalStatus="ok" />
+    <ScaledPage>
+      <WallTopbar activo={activo} signalStatus="ok" />
       <Routes>
-        <Route path="/"           element={<Dashboard />} />
+        <Route path="/vias"       element={<Vias />} />
         <Route path="/noc"        element={<NocDashboard />} />
         <Route path="/admin"      element={<AdminLayout />}>
           <Route index              element={<AdminDashboard />} />
@@ -40,12 +48,13 @@ function AppLayout() {
           <Route path="mantenimiento" element={<AdminMantenimiento />} />
           <Route path="servicios"     element={<AdminServicios />} />
           <Route path="servicio-checks" element={<AdminServicioChecks />} />
+          <Route path="nvr"         element={<AdminNvrCanales />} />
           <Route path="usuarios"    element={<AdminUsuarios />} />
           <Route path="config"      element={<AdminConfiguracion />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </ScaledPage>
   )
 }
 
@@ -56,8 +65,9 @@ export default function App() {
     <div className="flex items-center justify-center min-h-screen text-muted">Cargando…</div>
   )
 
-  // Pantallas "muro" — lienzo propio a 1920×1080 escalado (ScaledStage) con su
-  // propio topbar (WallTopbar), sin el AppLayout/MonitorTopbar de siempre.
+  // Pantallas "muro" — lienzo propio escalado (1920×1080 vía ScaledStage; el
+  // Dashboard/SIGMA en "/" es 1920×1360, escalado a mano) con su propio topbar,
+  // sin el AppLayout/MonitorTopbar de siempre.
   const muro = (el: JSX.Element) => auth.user ? el : <Navigate to="/login" replace />
 
   return (
@@ -66,6 +76,7 @@ export default function App() {
         <Route path="/login" element={
           auth.user ? <Navigate to="/" replace /> : <Login />
         } />
+        <Route path="/"                 element={muro(<Dashboard />)} />
         <Route path="/muro/noc"        element={muro(<NocMuro />)} />
         <Route path="/incidentes"      element={muro(<Incidentes />)} />
         <Route path="/reporte"         element={muro(<ReporteSLA />)} />

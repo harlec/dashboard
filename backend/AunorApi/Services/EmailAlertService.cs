@@ -37,7 +37,7 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
 
         // Header con logo real
         sb.Append($"<div style='background:#ffffff;padding:24px 28px 18px;border-bottom:3px solid {brand};'>");
-        sb.Append($"<img src='cid:{LogoContentId}' alt='Pulso Vial' height='34' style='display:block;height:34px;' />");
+        sb.Append($"<span style='font-size:24px;font-weight:700;letter-spacing:0.2em;color:{brand};'>SIGMA</span>");
         sb.Append($"<div style='color:{muted};font-size:13px;font-weight:600;margin-top:10px;'>Reporte semanal de disponibilidad · equipos críticos</div>");
         sb.Append("</div>");
 
@@ -82,12 +82,12 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
 
         // Footer
         sb.Append($"<div style='background:#faf9f7;border-top:1px solid {border};padding:14px 28px;{font}font-size:11px;color:{muted};'>");
-        sb.Append($"Generado automáticamente por <b style='color:{brand}'>Pulso Vial</b> — dashboard de monitoreo de red vial.");
+        sb.Append($"Generado automáticamente por <b style='color:{brand}'>SIGMA</b> — dashboard de monitoreo de red vial.");
         sb.Append("</div>");
 
         sb.Append("</div></div>"); // card + outer
 
-        var (ok, error) = await SendAsync($"🛣 [Pulso Vial] Reporte semanal de disponibilidad", sb.ToString(), lista);
+        var (ok, error) = await SendAsync($"🛣 [SIGMA] Reporte semanal de disponibilidad", sb.ToString(), lista);
         return ok
             ? (true, $"Enviado a {string.Join(", ", lista)}.")
             : (false, error ?? "Error al enviar — revisa la configuración SMTP y los logs del servidor.");
@@ -213,7 +213,7 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
 
         // Header
         sb.Append($"<div style='background:#ffffff;padding:24px 28px 18px;border-bottom:3px solid {brand};'>");
-        sb.Append($"<img src='cid:{LogoContentId}' alt='Pulso Vial' height='34' style='display:block;height:34px;' />");
+        sb.Append($"<span style='font-size:24px;font-weight:700;letter-spacing:0.2em;color:{brand};'>SIGMA</span>");
         sb.Append($"<div style='color:{muted};font-size:13px;font-weight:600;margin-top:10px;'>📊 Reporte diario de discrepancias · últimas 24 horas</div>");
         sb.Append("</div>");
 
@@ -252,20 +252,22 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
         sb.Append("</div>"); // padding wrapper
 
         sb.Append($"<div style='background:#faf9f7;border-top:1px solid {border};padding:14px 28px;{font}font-size:11px;color:{muted};'>");
-        sb.Append($"Generado automáticamente por <b style='color:{brand}'>Pulso Vial</b> — dashboard de monitoreo de red vial.");
+        sb.Append($"Generado automáticamente por <b style='color:{brand}'>SIGMA</b> — dashboard de monitoreo de red vial.");
         sb.Append("</div>");
 
         sb.Append("</div></div>");
 
-        var (ok, error) = await SendAsync("📊 [Pulso Vial] Reporte diario de discrepancias", sb.ToString(), lista);
+        var (ok, error) = await SendAsync("📊 [SIGMA] Reporte diario de discrepancias", sb.ToString(), lista);
         return ok
             ? (true, $"Enviado a {string.Join(", ", lista)}.")
             : (false, error ?? "Error al enviar — revisa la configuración SMTP y los logs del servidor.");
     }
 
     // ── Alerta: alguna vía superó el umbral de % de discrepancia ──────────
+    // `vias` ya viene filtrada y ordenada por PctWilson (ver AlertaDiscrepanciasService);
+    // `excluidas` = vías que superaron el % a secas pero con tan pocos tránsitos que no se confirman.
     public async Task<(bool ok, string message)> SendAlertaDiscrepanciasAsync(
-        List<ViaConteoDto> vias, double umbral, string destinatarios)
+        List<ViaConteoDto> vias, double umbral, string destinatarios, int excluidas = 0)
     {
         var lista = destinatarios.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         if (lista.Count == 0)
@@ -284,9 +286,9 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
 
         // Header — banda roja de alerta
         sb.Append($"<div style='background:{brand};padding:20px 28px;'>");
-        sb.Append($"<img src='cid:{LogoContentId}' alt='Pulso Vial' height='30' style='display:block;height:30px;filter:brightness(0) invert(1);' />");
-        sb.Append($"<div style='color:#ffffff;font-size:15px;font-weight:800;margin-top:12px;'>⚠ {vias.Count} vía{(vias.Count == 1 ? "" : "s")} sobre el {umbral}% de discrepancia</div>");
-        sb.Append($"<div style='color:#ffe8e6;font-size:12.5px;margin-top:2px;'>Detectado en la última hora</div>");
+        sb.Append($"<span style='font-size:22px;font-weight:700;letter-spacing:0.2em;color:#fff;'>SIGMA</span>");
+        sb.Append($"<div style='color:#ffffff;font-size:15px;font-weight:800;margin-top:12px;'>⚠ {vias.Count} vía{(vias.Count == 1 ? "" : "s")} con discrepancia mayor al {umbral}%</div>");
+        sb.Append($"<div style='color:#ffe8e6;font-size:12.5px;margin-top:2px;'>Última hora · confirmado con intervalo de Wilson (95%)</div>");
         sb.Append("</div>");
 
         sb.Append("<div style='padding:24px 28px;'>");
@@ -294,11 +296,11 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
         // Callout de la peor vía
         sb.Append($"<div style='background:#FDECEA;border-radius:8px;padding:16px 18px;margin-bottom:20px;'>" +
                    $"<div style='font-size:16px;font-weight:800;color:{ink};line-height:1.3;'>{peor.Via} <span style='color:{muted};font-weight:600;font-size:12px;'>· {peor.Estacion}</span></div>" +
-                   $"<div style='margin-top:6px;'>{PctBadge(peor.Pct, "#2E7D32", "#B26A00", brand, 5, (decimal)umbral)}<span style='{font}font-size:11px;color:{muted};margin-left:8px;'>la más crítica de este grupo</span></div></div>");
+                   $"<div style='margin-top:6px;'>{PctBadge(peor.Pct, "#2E7D32", "#B26A00", brand, 5, (decimal)umbral)}<span style='{font}font-size:11px;color:{muted};margin-left:8px;'>la más crítica de este grupo · confirmado ≥ {peor.PctWilson:0.#}%</span></div></div>");
 
         sb.Append($"<table width='100%' cellpadding='0' cellspacing='0' style='{font}font-size:13px;border-collapse:collapse;'>");
         sb.Append("<tr style='background:#faf9f7;'>" +
-                   string.Join("", new[] { "#", "Estación", "Vía", "% Discrepancia", "Discrepancias", "Tránsitos" }
+                   string.Join("", new[] { "#", "Estación", "Vía", "% Discrepancia", "Confirmado ≥", "Discrepancias", "Tránsitos" }
                        .Select(h => $"<th style='text-align:left;padding:8px 10px;color:{muted};font-size:10.5px;text-transform:uppercase;border-bottom:2px solid {border};'>{h}</th>")) +
                    "</tr>");
         for (int i = 0; i < vias.Count; i++)
@@ -310,19 +312,30 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
                       $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};'>{v.Estacion}</td>" +
                       $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};font-weight:600;'>{v.Via}</td>" +
                       $"<td style='padding:8px 10px;border-bottom:1px solid {border};'>{PctBadge(v.Pct, "#2E7D32", "#B26A00", brand, 5, (decimal)umbral)}</td>" +
+                      $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{ink};font-weight:600;'>{v.PctWilson:0.#}%</td>" +
                       $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};'>{v.Total}</td>" +
                       $"<td style='padding:8px 10px;border-bottom:1px solid {border};color:{muted};'>{v.TotalTransitos}</td></tr>");
         }
         sb.Append("</table>");
+
+        // Cómo leerlo — por qué una vía con pocos tránsitos no aparece aunque su % sea alto
+        sb.Append($"<div style='margin-top:16px;{font}font-size:11.5px;color:{muted};line-height:1.5;'>" +
+                  $"<b>Cómo se calcula:</b> solo se alerta si el límite inferior del intervalo de Wilson (95%) supera el {umbral}%. " +
+                  "<i>Confirmado ≥</i> es ese límite: la tasa real de la vía está, con 95% de confianza, por encima de ese valor. " +
+                  "Así una vía con muy pocos tránsitos (p. ej. 1 discrepancia en 2) no genera falsas alarmas." +
+                  (excluidas > 0
+                      ? $" <b>{excluidas}</b> vía{(excluidas == 1 ? "" : "s")} superó{(excluidas == 1 ? "" : "n")} el {umbral}% pero con muy pocos tránsitos y no se incluye{(excluidas == 1 ? "" : "n")}."
+                      : "") +
+                  "</div>");
         sb.Append("</div>"); // padding wrapper
 
         sb.Append($"<div style='background:#faf9f7;border-top:1px solid {border};padding:14px 28px;{font}font-size:11px;color:{muted};'>");
-        sb.Append($"Generado automáticamente por <b style='color:{brand}'>Pulso Vial</b> — dashboard de monitoreo de red vial.");
+        sb.Append($"Generado automáticamente por <b style='color:{brand}'>SIGMA</b> — dashboard de monitoreo de red vial.");
         sb.Append("</div>");
 
         sb.Append("</div></div>");
 
-        var (ok, error) = await SendAsync($"⚠ [Pulso Vial] {vias.Count} vía(s) sobre {umbral}% de discrepancia", sb.ToString(), lista);
+        var (ok, error) = await SendAsync($"⚠ [SIGMA] {vias.Count} vía(s) sobre {umbral}% de discrepancia", sb.ToString(), lista);
         return ok
             ? (true, $"Enviado a {string.Join(", ", lista)}.")
             : (false, error ?? "Error al enviar — revisa la configuración SMTP y los logs del servidor.");

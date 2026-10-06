@@ -17,7 +17,7 @@ public class ServiciosController(AppDbContext db) : ControllerBase
         var result = await db.Servicios
             .Where(s => s.Activo)
             .OrderBy(s => s.Nombre)
-            .Select(s => new { s.Id, s.Nombre, s.Descripcion, s.Activo })
+            .Select(s => new { s.Id, s.Nombre, s.Descripcion, s.UptimePct, s.Activo })
             .ToListAsync();
         return Ok(result);
     }
@@ -26,7 +26,7 @@ public class ServiciosController(AppDbContext db) : ControllerBase
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create([FromBody] ServicioRequest req)
     {
-        var s = new Servicio { Nombre = req.Nombre, Descripcion = req.Descripcion };
+        var s = new Servicio { Nombre = req.Nombre, Descripcion = req.Descripcion, UptimePct = req.UptimePct };
         db.Servicios.Add(s);
         await db.SaveChangesAsync();
         return Created($"/api/servicios/{s.Id}", s);
@@ -38,7 +38,7 @@ public class ServiciosController(AppDbContext db) : ControllerBase
     {
         var s = await db.Servicios.FindAsync(id);
         if (s is null) return NotFound();
-        s.Nombre = req.Nombre; s.Descripcion = req.Descripcion;
+        s.Nombre = req.Nombre; s.Descripcion = req.Descripcion; s.UptimePct = req.UptimePct;
         await db.SaveChangesAsync();
         return Ok(s);
     }
@@ -146,7 +146,7 @@ public class ServicioChecksController(AppDbContext db) : ControllerBase
     }
 }
 
-public record ServicioRequest(string Nombre, string? Descripcion);
+public record ServicioRequest(string Nombre, string? Descripcion, decimal? UptimePct);
 
 public record ServicioCheckRequest(
     int ServicioId, string Nombre, string TipoCheck,

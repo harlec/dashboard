@@ -17,6 +17,17 @@ public class OcrPlacasController(OcrPlacasService svc) : ControllerBase
         return Ok(await svc.GetResumenAsync(periodo, soloPrepago));
     }
 
+    [HttpGet("transitos-mes")]
+    public async Task<IActionResult> TransitosMes() => Ok(await svc.GetTransitosMesAsync());
+
+    [HttpGet("mejores-vias")]
+    public async Task<IActionResult> MejoresVias([FromQuery] string periodo = "24h", [FromQuery] bool soloPrepago = false)
+    {
+        if (!OcrPlacasService.EsPeriodoValido(periodo))
+            return BadRequest("Período inválido");
+        return Ok(await svc.GetMejoresViasAsync(periodo, soloPrepago));
+    }
+
     [HttpGet("analisis")]
     public async Task<IActionResult> Analisis([FromQuery] bool soloPrepago = false)
         => Ok(await svc.GetAnalisisAsync(soloPrepago));

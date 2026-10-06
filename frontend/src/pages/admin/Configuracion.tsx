@@ -115,6 +115,48 @@ export function AdminConfiguracion() {
     }
   }
 
+  const [fondoFile, setFondoFile] = useState<File | null>(null)
+  const [fondoBusy, setFondoBusy] = useState(false)
+  const [fondoError, setFondoError] = useState('')
+  const hudActivo = values['dashboard_estilo'] === 'hud'
+  const toggleHud = async () => {
+    const nuevo = hudActivo ? '' : 'hud'
+    setValues(p => ({ ...p, dashboard_estilo: nuevo }))
+    await fetch('/api/config/dashboard_estilo', {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: nuevo }),
+    })
+  }
+  const oscuridad = Math.max(0, Math.min(90, parseInt(values['fondo_oscuridad'] ?? '62', 10) || 0))
+  const guardarOscuridad = (v: number) =>
+    fetch('/api/config/fondo_oscuridad', {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: String(v) }),
+    })
+  const fondoActual = values['fondo_imagen'] ?? ''
+
+  const subirFondo = async () => {
+    if (!fondoFile) return
+    setFondoBusy(true); setFondoError('')
+    try {
+      const form = new FormData()
+      form.append('archivo', fondoFile)
+      const r = await fetch('/api/config/fondo', { method: 'POST', credentials: 'include', body: form })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(data.error ?? 'Error al subir la imagen')
+      setFondoFile(null)
+      reloadConfig()
+    } catch (e) {
+      setFondoError(e instanceof Error ? e.message : 'Error al subir la imagen')
+    } finally { setFondoBusy(false) }
+  }
+
+  const quitarFondo = async () => {
+    setFondoBusy(true)
+    try { await fetch('/api/config/fondo', { method: 'DELETE', credentials: 'include' }); reloadConfig() }
+    finally { setFondoBusy(false) }
+  }
+
   const escalaActual = parseInt(values['escala_fuente'] ?? '100', 10) || 100
 
   const setEscala = async (pct: number) => {
@@ -228,6 +270,62 @@ export function AdminConfiguracion() {
 
       <div className="flex flex-col gap-3 max-w-xl">
         <div className="bg-surface rounded-xl p-4 border border-border">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Estilo HUD del Panel de control</div>
+              <div className="text-xs text-muted">
+                Variante de un solo color (verde azulado SIGMA) con cuadrícula y marcos tipo HUD; el rojo queda solo para fallas. Afecta a todos los usuarios.
+              </div>
+            </div>
+            <button onClick={toggleHud} role="switch" aria-checked={hudActivo}
+              className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors ${hudActivo ? 'bg-brand' : 'bg-surface-3'}`}>
+              <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${hudActivo ? 'left-6' : 'left-1'}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-surface rounded-xl p-4 border border-border">
+          <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Imagen de fondo del Panel de control</div>
+          <div className="text-xs text-muted mb-3">
+            Foto detrás del Panel de control (SIGMA): las tarjetas pasan a verse como vidrio sobre la imagen.
+            .jpg / .png / .webp, máx. 10 MB — mejor una foto oscura y de 1920 px o más. Sin imagen se usa el fondo normal.
+          </div>
+          {fondoActual && (
+            <img src={`/api/audio/${fondoActual}`} alt="Fondo actual"
+              className="w-full max-h-40 object-cover rounded-lg border border-border mb-3" />
+          )}
+          {fondoActual && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-xs text-muted mb-1">
+                <span>Oscuridad del fondo (velo sobre la imagen)</span>
+                <span className="font-bold text-[#eae7e4]">{oscuridad}%</span>
+              </div>
+              <input type="range" min={0} max={90} step={2} value={oscuridad}
+                onChange={e => setValues(p => ({ ...p, fondo_oscuridad: e.target.value }))}
+                onPointerUp={() => guardarOscuridad(oscuridad)} onKeyUp={() => guardarOscuridad(oscuridad)}
+                className="w-full accent-[#72BF44]" />
+              <div className="flex justify-between text-[0.65rem] text-dim"><span>más claro</span><span>más oscuro</span></div>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+              onChange={e => setFondoFile(e.target.files?.[0] ?? null)}
+              className="text-xs text-muted file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-surface-3 file:text-[#eae7e4] file:font-bold" />
+            <button onClick={subirFondo} disabled={!fondoFile || fondoBusy}
+              className="px-3 py-2 rounded-lg text-sm font-bold bg-brand text-white disabled:opacity-40">
+              {fondoBusy ? 'Subiendo…' : 'Subir imagen'}
+            </button>
+            {fondoActual && (
+              <button onClick={quitarFondo} disabled={fondoBusy}
+                className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 text-[#eae7e4] disabled:opacity-40">
+                Quitar imagen
+              </button>
+            )}
+          </div>
+          {fondoError && <div className="text-xs mt-2 text-red-400">{fondoError}</div>}
+        </div>
+
+        <div className="bg-surface rounded-xl p-4 border border-border">
           <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Tamaño de letra del sistema</div>
           <div className="text-xs text-muted mb-3">
             Escala todo el texto de la aplicación — útil para pantallas grandes del NOC. Afecta a todos los usuarios.
@@ -268,7 +366,7 @@ export function AdminConfiguracion() {
           {saved['fuente_sistema'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
         </div>
 
-        {rows.filter(r => !r.clave.startsWith('tono_') && r.clave !== 'escala_fuente' && r.clave !== 'fuente_sistema').map(r => {
+        {rows.filter(r => !r.clave.startsWith('tono_') && r.clave !== 'escala_fuente' && r.clave !== 'fondo_imagen' && r.clave !== 'dashboard_estilo' && r.clave !== 'fondo_oscuridad' && r.clave !== 'fuente_sistema').map(r => {
           const meta = LABELS[r.clave] ?? { label: r.clave, desc: '' }
           return (
             <div key={r.clave} className="bg-surface rounded-xl p-4 border border-border">

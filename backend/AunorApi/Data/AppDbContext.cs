@@ -21,6 +21,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ServicioCheck>     ServicioChecks     { get; set; }
     public DbSet<ServicioCheckLog>  ServicioCheckLogs  { get; set; }
     public DbSet<ServicioIncidente> ServicioIncidentes { get; set; }
+    public DbSet<NvrPeaje>          NvrPeajes          { get; set; }
+    public DbSet<NvrCanal>          NvrCanales         { get; set; }
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -143,6 +145,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.Nombre).HasColumnName("nombre");
             e.Property(x => x.Descripcion).HasColumnName("descripcion");
+            e.Property(x => x.UptimePct).HasColumnName("uptime_pct");
             e.Property(x => x.Activo).HasColumnName("activo");
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
         });
@@ -188,6 +191,35 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.DuracionMin).HasColumnName("duracion_min");
             e.Property(x => x.DetalleEstado).HasColumnName("detalle_estado");
             e.HasOne(x => x.ServicioCheck).WithMany().HasForeignKey(x => x.ServicioCheckId);
+        });
+
+        m.Entity<NvrPeaje>(e => {
+            e.ToTable("nvr_peaje");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.CoestTransito).HasColumnName("coest_transito");
+            e.Property(x => x.Peaje).HasColumnName("peaje");
+            e.Property(x => x.Ip).HasColumnName("ip");
+            e.Property(x => x.PuertoHttp).HasColumnName("puerto_http");
+            e.Property(x => x.Usuario).HasColumnName("usuario");
+            e.Property(x => x.PasswordRef).HasColumnName("password_ref");
+            e.Property(x => x.RetencionDias).HasColumnName("retencion_dias");
+            e.Property(x => x.Activo).HasColumnName("activo");
+            e.Property(x => x.CreadoEn).HasColumnName("creado_en");
+        });
+
+        m.Entity<NvrCanal>(e => {
+            e.ToTable("nvr_canal");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.NvrPeajeId).HasColumnName("nvr_peaje_id");
+            e.Property(x => x.Canal).HasColumnName("canal");
+            e.Property(x => x.Tipo).HasColumnName("tipo");
+            e.Property(x => x.ViaNumero).HasColumnName("via_numero");
+            e.Property(x => x.Sentido).HasColumnName("sentido");
+            e.Property(x => x.Nombre).HasColumnName("nombre");
+            e.Property(x => x.Activo).HasColumnName("activo");
+            e.HasOne(x => x.NvrPeaje).WithMany(x => x.Canales).HasForeignKey(x => x.NvrPeajeId);
         });
 
         m.Entity<Mantenimiento>(e => {

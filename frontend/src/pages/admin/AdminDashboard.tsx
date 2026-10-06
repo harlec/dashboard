@@ -51,7 +51,7 @@ export function AdminDashboard() {
           <div className="font-bold text-[#eae7e4] mb-2">Info</div>
           <p className="text-xs leading-relaxed">
             Desde este panel puedes gestionar la estructura del sistema: estaciones, vías, equipos y usuarios.
-            Los cambios se reflejan en el dashboard en tiempo real.
+            Los cambios se reflejan en el panel de control en tiempo real.
           </p>
         </div>
       </div>

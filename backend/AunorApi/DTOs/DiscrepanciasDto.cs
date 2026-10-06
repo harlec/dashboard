@@ -26,7 +26,9 @@ public record DiscrepanciasAnalisisDto(
 );
 public record EstacionConteoDto(string Estacion, int Total, int TotalTransacciones, double Efectividad);
 public record TrendPuntoDto(string Bucket, string Estacion, int Total);
-public record ViaConteoDto(string Via, string Estacion, int Total, int TotalTransitos, double Pct);
+// Pct = % a secas. PctWilson = límite inferior del intervalo de Wilson (95%) de ese %:
+// el valor "confirmado" — con pocos tránsitos queda muy por debajo del Pct (ver Wilson.cs).
+public record ViaConteoDto(string Via, string Estacion, int Total, int TotalTransitos, double Pct, double PctWilson);
 
 public record DiscrepanciasResumenDto(
     int    Total,

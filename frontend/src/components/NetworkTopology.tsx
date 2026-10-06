@@ -246,7 +246,7 @@ export function NetworkTopology({ estaciones }: Props) {
           )
         })}
 
-        {/* Hub — PULSO VIAL */}
+        {/* Hub — SIGMA */}
         <circle cx={HUB.x} cy={HUB.y} r={R_HUB}
           fill="#72BF44" opacity="0.50" filter="url(#f-hub)" />
         <circle cx={HUB.x} cy={HUB.y} r={R_HUB + 9}
@@ -259,12 +259,7 @@ export function NetworkTopology({ estaciones }: Props) {
         <text x={HUB.x} y={HUB.y - 3} textAnchor="middle"
           fill="#DAFFF0" fontSize="7.5" fontWeight="900"
           fontFamily="var(--app-font)" letterSpacing="1">
-          PULSO
-        </text>
-        <text x={HUB.x} y={HUB.y + 8} textAnchor="middle"
-          fill="#DAFFF0" fontSize="7.5" fontWeight="900"
-          fontFamily="var(--app-font)" letterSpacing="1">
-          VIAL
+          SIGMA
         </text>
 
         {/* Watermark */}

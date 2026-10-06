@@ -4,7 +4,7 @@ import { api, type ViaConteo, type IncidenteItem, type EquipoLive, type Disponib
 import { useLiveDashboard } from '../hooks/useLiveDashboard'
 import { useAlertSound } from '../hooks/useAlertSound'
 import { EquipoModal } from '../components/EquipoModal'
-import logo from '../assets/logo.png'
+import { severidadDac as severidadDacBase } from '../lib/dac'
 
 // Paleta corporativa ALEATICA (manual de marca, sección "2.7 Colores corporativos") —
 // hex derivado de los RGB de la guía. No trae un rojo, así que "down"/crítico se
@@ -26,7 +26,8 @@ const ALEATICA = {
 // por el presupuesto de píxeles fijo), este menú es la única forma de llegar al resto
 // desde acá cuando alguien la ve con mouse en vez de en la TV.
 const MENU_LINKS = [
-  { to: '/',              label: 'Dashboard' },
+  { to: '/',              label: 'Panel de control' },
+  { to: '/vias',          label: 'Vías' },
   { to: '/noc',           label: 'NOC' },
   { to: '/incidentes',    label: 'Incidentes' },
   { to: '/reporte',       label: 'Reporte SLA' },
@@ -161,15 +162,13 @@ function fmtDur(min: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
-// ── Severidad del DAC: % discrepancias/tránsitos de las últimas 24h, pero exige
-// un mínimo de tránsitos para llegar a cada nivel. Una vía alterna con 5 tránsitos
-// y 1 discrepancia es 20% — estadísticamente no dice nada; una vía regular con
-// 2000 tránsitos al 20% sí es una señal real. Por eso el umbral de tránsitos crece
-// junto con la severidad exigida: entre menos tráfico, más tolerante hay que ser.
-function severidadDac(pct: number, transitos: number): 'up' | 'degraded' | 'down' {
-  if (pct > 20 && transitos >= 30) return 'down'
-  if (pct > 12 && transitos >= 15) return 'degraded'
-  return 'up'
+// ── Severidad del DAC (últimas 24h): criterio compartido con el Dashboard y la alerta
+// horaria (lib/dac.ts) — límite inferior del intervalo de Wilson del % de discrepancia.
+// Una vía alterna con 5 tránsitos y 1 discrepancia (20% a secas) no dice nada
+// estadísticamente y no alarma; una regular con 2000 tránsitos al 20% sí es señal real.
+function severidadDac(v: ViaConteo): 'up' | 'degraded' | 'down' {
+  const s = severidadDacBase(v)
+  return s === 'critico' ? 'down' : s === 'warn' ? 'degraded' : 'up'
 }
 
 
@@ -288,7 +287,7 @@ export function NocMuro() {
   // Solo las que el criterio de severidad marca fuera de parámetro — para el KPI
   const viasCriticas = useMemo(() =>
     vias
-      .map(v => ({ ...v, severidad: severidadDac(v.pct, v.totalTransitos) }))
+      .map(v => ({ ...v, severidad: severidadDac(v) }))
       .filter(v => v.severidad !== 'up'),
     [vias])
 
@@ -334,7 +333,7 @@ export function NocMuro() {
       if (!v) return chipDe('na', via.numero, resaltarSoloFallas, `DAC vía ${via.numero} — sin tránsito en las últimas 24h`)
       const txt = `${Math.round(v.pct)}%`
       const title = `DAC vía ${via.numero} — ${v.pct.toFixed(1)}% discrepancia (${v.total}/${v.totalTransitos} tránsitos, 24h)`
-      return chipDe(severidadDac(v.pct, v.totalTransitos), txt, resaltarSoloFallas, title)
+      return chipDe(severidadDac(v), txt, resaltarSoloFallas, title)
     })
     filas.push(dacFila)
 
@@ -389,7 +388,7 @@ export function NocMuro() {
       key: `inc-${inc.id}`,
     }))
   const colaFuncional = [...viasCriticas]
-    .sort((a, b) => b.pct - a.pct)
+    .sort((a, b) => b.pctWilson - a.pctWilson)
     .map(v => ({
       severidad: v.severidad === 'down' ? 'critico' as const : 'degradado' as const,
       titulo: `DAC vía ${v.via} · ${v.estacion}`,
@@ -413,9 +412,10 @@ export function NocMuro() {
   )
 
   return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0d13', overflow: 'hidden' }}>
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: '#0a0d13', overflowX: 'hidden' }}>
+    <div style={{ width: 1920 * escala, height: 1080 * escala, flex: '0 0 auto', margin: '0 auto', overflow: 'hidden' }}>
     <div style={{
-      width: 1920, height: 1080, flex: '0 0 auto', transform: `scale(${escala})`,
+      width: 1920, height: 1080, flex: '0 0 auto', transform: `scale(${escala})`, transformOrigin: 'top left',
       boxSizing: 'border-box', padding: '28px 30px',
       display: 'flex', flexDirection: 'column', gap: 20,
       fontFamily: 'var(--app-font)', color: 'oklch(0.96 0.004 265)', overflow: 'hidden',
@@ -438,7 +438,7 @@ export function NocMuro() {
       {/* ── Header ── */}
       <div style={{ height: 64, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <img src={logo} alt="Pulso Vial" style={{ height: 36, width: 'auto', display: 'block' }} />
+          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '0.2em', color: 'oklch(0.84 0.11 195)' }}>SIGMA</div>
           <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'oklch(0.45 0.02 265)' }} />
           <div style={{ fontSize: 25, fontWeight: 500, letterSpacing: '-0.01em', color: 'oklch(0.90 0.006 265)' }}>Centro de operaciones</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px 7px 12px', borderRadius: 999, background: `${ALEATICA.verde}29`, boxShadow: `inset 0 0 0 1px ${ALEATICA.verde}47` }}>
@@ -777,6 +777,7 @@ export function NocMuro() {
       </div>
 
       <EquipoModal equipo={selectedEquipo} onClose={() => setSelectedEquipo(null)} />
+    </div>
     </div>
     </div>
   )

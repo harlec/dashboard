@@ -51,7 +51,7 @@ export function NocDashboard() {
 
   return (
     /* Contenedor full-height (descontando navbar 60px) */
-    <div style={{ height: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', padding: '0 28px', background: 'radial-gradient(1200px 800px at 50% 30%, #0a121b 0%, #06090e 60%, #04060a 100%)' }}>
+    <div style={{ flex: '1 1 auto', minHeight: 900, display: 'flex', flexDirection: 'column', padding: '0 28px', borderRadius: 16, background: 'radial-gradient(1200px 800px at 50% 30%, #0a121b 0%, #06090e 60%, #04060a 100%)' }}>
 
       {/* ── NOC Header (96px) ── */}
       <div style={{ height: 96, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,.05)' }}>

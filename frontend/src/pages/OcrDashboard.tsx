@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { api } from '../api/client'
-import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion } from '../api/client'
+import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion, OcrMejorViaPeriodo } from '../api/client'
 import { ScaledStage } from '../components/ScaledStage'
 import { WallTopbar } from '../components/WallTopbar'
 
@@ -18,7 +18,7 @@ function colorError(tipo: string) {
   if (tipo === 'SUSTITUCIÓN')     return '#e0991f'
   if (tipo === 'CARÁCTER EXTRA')  return '#a78bfa'
   if (tipo === 'CARÁCTER PERDIDO') return '#60a5fa'
-  return '#6b7a8c'
+  return '#8b9dab'
 }
 
 // ── Colores heatmap ───────────────────────────────────────────
@@ -41,7 +41,7 @@ function heatFg(tasa: number | null): string {
 function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
   const HORAS = Array.from({ length: 24 }, (_, i) => i)
   if (!rows.length) return (
-    <div style={{ padding: 32, textAlign: 'center', color: '#3a4a50', fontFamily: 'var(--app-font)', fontSize: 12 }}>
+    <div style={{ padding: 32, textAlign: 'center', color: '#7d92a0', fontFamily: 'var(--app-font)', fontSize: 12 }}>
       Sin datos suficientes para el heatmap
     </div>
   )
@@ -50,10 +50,10 @@ function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
       <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--app-font)' }}>
         <thead>
           <tr>
-            <th style={{ padding: '4px 10px 4px 0', textAlign: 'left', color: '#3a4a50', fontWeight: 600, whiteSpace: 'nowrap', minWidth: 110 }}>Vía</th>
-            <th style={{ padding: '4px 4px', color: '#3a4a50', fontWeight: 400, fontSize: 10, whiteSpace: 'nowrap', minWidth: 48 }}>% err</th>
+            <th style={{ padding: '4px 10px 4px 0', textAlign: 'left', color: '#7d92a0', fontWeight: 600, whiteSpace: 'nowrap', minWidth: 110 }}>Vía</th>
+            <th style={{ padding: '4px 4px', color: '#7d92a0', fontWeight: 400, fontSize: 10, whiteSpace: 'nowrap', minWidth: 48 }}>% err</th>
             {HORAS.map(h => (
-              <th key={h} style={{ padding: '2px 1px', color: '#2a3a50', fontWeight: 400, fontSize: 9, textAlign: 'center', width: 26 }}>
+              <th key={h} style={{ padding: '2px 1px', color: '#67798c', fontWeight: 400, fontSize: 9, textAlign: 'center', width: 26 }}>
                 {h % 3 === 0 ? `${String(h).padStart(2,'0')}h` : ''}
               </th>
             ))}
@@ -95,7 +95,7 @@ function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
 }
 
 // ── Perfil horario mejores vías ───────────────────────────────
-const LINEA_COLORS = ['#3fb978', '#00BBE7', '#FFDD00', '#2dd4a7', '#F99B1C']
+const LINEA_COLORS = ['#3fb978', '#00BBE7', '#FFDD00', '#2dd4a7', '#F99B1C', '#a78bfa', '#60a5fa', '#e879f9']
 
 function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
   if (!vias.length) return null
@@ -112,7 +112,7 @@ function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
       {[0, maxT * 0.5, maxT].map((t, i) => (
         <g key={i}>
           <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
+          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#67798c" fontSize="7" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
         </g>
       ))}
       {/* Líneas por vía */}
@@ -125,7 +125,7 @@ function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
       })}
       {/* Eje X */}
       {[0, 6, 12, 18, 23].map(h => (
-        <text key={h} x={xOf(h)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="var(--app-font)">{String(h).padStart(2,'0')}h</text>
+        <text key={h} x={xOf(h)} y={H - 5} textAnchor="middle" fill="#67798c" fontSize="8" fontFamily="var(--app-font)">{String(h).padStart(2,'0')}h</text>
       ))}
     </svg>
   )
@@ -160,7 +160,7 @@ function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria
       {[0, maxT * 0.5, maxT].map((t, i) => (
         <g key={i}>
           <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="7" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
+          <text x={pL - 3} y={yOf(t) + 3} textAnchor="end" fill="#67798c" fontSize="7" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
         </g>
       ))}
       {/* Área red semitransparente */}
@@ -171,7 +171,7 @@ function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria
       {ptsMej && <polyline points={ptsMej} fill="none" stroke="#3fb978" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />}
       {/* Eje X (fechas) */}
       {datos.map((d, i) => i % step === 0 ? (
-        <text key={i} x={xOf(i)} y={H - 5} textAnchor="middle" fill="#2a3a50" fontSize="7" fontFamily="var(--app-font)">
+        <text key={i} x={xOf(i)} y={H - 5} textAnchor="middle" fill="#67798c" fontSize="7" fontFamily="var(--app-font)">
           {d.fecha.slice(5)}
         </text>
       ) : null)}
@@ -202,7 +202,7 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
         {[0, maxT * 0.5, maxT].map((t, i) => (
           <g key={i}>
             <line x1={pL} y1={yOf(t)} x2={W - pR} y2={yOf(t)} stroke="rgba(255,255,255,.05)" strokeWidth=".5" />
-            <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#2a3a50" fontSize="8" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
+            <text x={pL - 4} y={yOf(t) + 3} textAnchor="end" fill="#67798c" fontSize="8" fontFamily="var(--app-font)">{t.toFixed(0)}%</text>
           </g>
         ))}
         <polygon points={area} fill="rgba(239,75,84,.08)" />
@@ -210,7 +210,7 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
         <polyline points={ptsNoDet}  fill="none" stroke="#e0991f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         <polyline points={ptsErrRec} fill="none" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         {datos.map((d, i) => i % step === 0 ? (
-          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#2a3a50" fontSize="8" fontFamily="var(--app-font)">{d.fecha.slice(5)}</text>
+          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#67798c" fontSize="8" fontFamily="var(--app-font)">{d.fecha.slice(5)}</text>
         ) : null)}
       </svg>
       <div style={{ display: 'flex', gap: 16, padding: '0 4px 4px', fontFamily: 'var(--app-font)', fontSize: 10 }}>
@@ -246,7 +246,7 @@ function EvolucionHoraChart({ datos }: { datos: OcrViaEvolucion['porHora'] }) {
           )
         })}
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d92a0', marginTop: 2 }}>
         <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
       </div>
     </div>
@@ -269,10 +269,13 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
   return (
     <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.18)', borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '11px 18px', borderBottom: '1px solid rgba(239,75,84,.1)', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c05050', fontWeight: 700 }}>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#e88888', fontWeight: 700 }}>
           RANKING VÍAS · ERRORES OCR
         </span>
-        <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50', marginLeft: 'auto' }}>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d92a0' }}>
+          ordenado por score de Wilson (confianza de tasa de error alta) — no por tasa cruda
+        </span>
+        <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d92a0', marginLeft: 'auto' }}>
           <span><span style={{ color: '#ef4b54' }}>■</span> No reconocida</span>
           <span><span style={{ color: '#e0991f' }}>■</span> Confusión</span>
         </div>
@@ -293,7 +296,7 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
               return (
                 <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: rank <= 3 ? '#ef4b54' : '#3a4a50', width: 20, textAlign: 'right', fontWeight: 700 }}>#{rank}</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: rank <= 3 ? '#ef4b54' : '#7d92a0', width: 20, textAlign: 'right', fontWeight: 700 }}>#{rank}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#ccd0d8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.via}</span>
@@ -314,13 +317,55 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
                       <div style={{ display: 'flex', gap: 10, fontFamily: 'var(--app-font)', fontSize: 10 }}>
                         <span style={{ color: '#ef4b54' }}>{tasaNoRec.toFixed(1)}% no det.</span>
                         <span style={{ color: '#e0991f' }}>{tasaConf.toFixed(1)}% conf.</span>
-                        <span style={{ marginLeft: 'auto', color: '#3a4a50' }}>{v.total.toLocaleString()} tráns.</span>
+                        <span style={{ color: '#7d92a0' }}>{v.total.toLocaleString()} tráns.</span>
+                        <span style={{ marginLeft: 'auto', color: '#ff9ba0', fontWeight: 700 }}>{Number(v.score).toFixed(1)} pts</span>
                       </div>
                     </div>
                   </div>
                 </div>
               )
             })}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Mejores vías de referencia — ranking por score de Wilson (precisión ajustada
+// por volumen), no por tasa de error cruda. Respeta el período elegido arriba
+// (a diferencia del panel de la pestaña Tendencias, que usa siempre 30 días).
+function MejoresViasPanel({ vias }: { vias: OcrMejorViaPeriodo[] }) {
+  if (!vias.length) return (
+    <div style={{ padding: 48, textAlign: 'center', color: '#7d92a0', fontFamily: 'var(--app-font)', fontSize: 13 }}>
+      Sin vías con al menos 5 tránsitos en este período
+    </div>
+  )
+  return (
+    <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(63,185,120,.2)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ padding: '11px 18px', borderBottom: '1px solid rgba(63,185,120,.1)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#7fbf98', fontWeight: 700 }}>
+          MEJORES VÍAS · REFERENCIA CONFIABLE
+        </span>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8681', marginLeft: 'auto' }}>
+          score de Wilson (precisión × volumen) — una vía con pocos tránsitos no le gana a una con miles y pocas discrepancias · mín. 5 tránsitos en el período
+        </span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+        {vias.map((v, i) => (
+          <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,.04)', borderRight: '1px solid rgba(255,255,255,.04)', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#3fb978', width: 20, textAlign: 'right', fontWeight: 700 }}>#{i + 1}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#ccd0d8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.via}</span>
+                <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? '#8d94a3', fontWeight: 600, flexShrink: 0 }}>{v.estacion}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, fontFamily: 'var(--app-font)', fontSize: 10, color: '#8b9dab', marginTop: 4 }}>
+                <span>{v.total.toLocaleString()} tráns.</span>
+                <span style={{ color: '#3fb978' }}>{Number(v.tasaError).toFixed(1)}% err</span>
+                <span style={{ marginLeft: 'auto', color: '#2dd4a7', fontWeight: 700 }}>{Number(v.score).toFixed(1)} pts</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -358,8 +403,10 @@ export function OcrDashboard() {
   const [detalle,    setDetalle]    = useState<OcrDetalle | null>(null)
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
-  const [tab,        setTab]        = useState<'ranking' | 'confusion' | 'tendencias' | 'porvia' | 'detalle'>('ranking')
+  const [tab,        setTab]        = useState<'ranking' | 'mejores' | 'confusion' | 'tendencias' | 'porvia' | 'detalle'>('ranking')
   const [soloPrepago, setSoloPrepago] = useState(false)
+  const [mejoresVias,    setMejoresVias]    = useState<OcrMejorViaPeriodo[] | null>(null)
+  const [loadingMejores, setLoadingMejores] = useState(false)
 
   // Evolución por vía
   const [viaEstacion,  setViaEstacion]  = useState('')
@@ -406,9 +453,18 @@ export function OcrDashboard() {
     setDetalle(d)
   }, [periodo, estacion, placa, tipoError, pagina, soloPrepago])
 
+  // Mejores vías: respeta el período elegido arriba (a diferencia de tendencias, que es fijo a 30d)
+  const loadMejoresVias = useCallback(async () => {
+    setLoadingMejores(true)
+    try { setMejoresVias(await api.ocrMejoresVias(periodo, soloPrepago)) }
+    catch { setMejoresVias([]) }
+    finally { setLoadingMejores(false) }
+  }, [periodo, soloPrepago])
+
   useEffect(() => { loadResumen() }, [loadResumen])
   useEffect(() => { if (tab === 'detalle') loadDetalle() }, [tab, loadDetalle])
   useEffect(() => { if (tab === 'porvia') loadTendencias() }, [tab, loadTendencias])
+  useEffect(() => { if (tab === 'mejores') loadMejoresVias() }, [tab, loadMejoresVias])
 
   // Lista de vías disponibles (con datos) por estación, sacada del heatmap ya cargado
   const viasPorEstacion = useMemo(() => {
@@ -503,6 +559,7 @@ export function OcrDashboard() {
           <div style={{ height: 38, flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6 }}>
             {([
               ['ranking',    'Ranking de Vías'],
+              ['mejores',    'Mejores Vías'],
               ['confusion',  'Análisis de Caracteres'],
               ['tendencias', 'Tendencias 30d'],
               ['porvia',     'Evolución por Vía'],
@@ -521,6 +578,14 @@ export function OcrDashboard() {
             <RankingVias vias={resumen.porVia} />
           )}
 
+          {tab === 'mejores' && (
+            loadingMejores ? (
+              <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 13 }}>Calculando mejores vías…</div>
+            ) : (
+              <MejoresViasPanel vias={mejoresVias ?? []} />
+            )
+          )}
+
           {tab === 'confusion' && analisis && (
             <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 16 }}>
 
@@ -530,10 +595,10 @@ export function OcrDashboard() {
                 {/* Matriz de confusión de caracteres */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(224,153,31,.2)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(224,153,31,.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#b07a20', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#e0aa4e', fontWeight: 700 }}>
                       CONFUSIÓN DE CARACTERES · SUSTITUCIONES · ÚLTIMOS 30 DÍAS
                     </span>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a30' }}>solo misma longitud</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d8f68' }}>solo misma longitud</span>
                   </div>
 
                   {analisis.topConfusiones.length === 0 ? (
@@ -567,7 +632,7 @@ export function OcrDashboard() {
                                 <span style={{ color: '#3fb978' }}>{c.esperado}</span>
                                 <span style={{ color: '#9aa7b6', margin: '0 8px' }}>→</span>
                                 <span style={{ color: '#ef4b54' }}>{c.ocrLeyo}</span>
-                                <span style={{ color: '#3a4a50', marginLeft: 8, fontSize: 10 }}>en pos.{c.posicion}</span>
+                                <span style={{ color: '#7d92a0', marginLeft: 8, fontSize: 10 }}>en pos.{c.posicion}</span>
                               </td>
                             </tr>
                           ))}
@@ -580,7 +645,7 @@ export function OcrDashboard() {
                 {/* Top pares (placa cajero → placa OCR) */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
                       TOP PARES MÁS FRECUENTES · ERRORES OCR
                     </span>
                   </div>
@@ -589,7 +654,7 @@ export function OcrDashboard() {
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
                         <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'rgba(255,255,255,.2)', width: 20 }}>{i + 1}</span>
                         <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 14, color: '#e6edf3', letterSpacing: '.06em', minWidth: 80 }}>{p.placaCajero}</span>
-                        <span style={{ color: '#3a4a50', fontSize: 12 }}>→</span>
+                        <span style={{ color: '#7d92a0', fontSize: 12 }}>→</span>
                         <PlacaDiff cajero={p.placaCajero} ocr={p.placaOcr} />
                         <span style={{ marginLeft: 'auto', fontSize: 11, color: colorError(p.tipoError), fontFamily: 'var(--app-font)', fontWeight: 600, flexShrink: 0 }}>
                           {p.tipoError}
@@ -607,7 +672,7 @@ export function OcrDashboard() {
                 {/* Por estación */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>EFECTIVIDAD POR ESTACIÓN</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>EFECTIVIDAD POR ESTACIÓN</span>
                   </div>
                   <div style={{ padding: '8px 0' }}>
                     {resumen.porEstacion.map(e => (
@@ -622,7 +687,7 @@ export function OcrDashboard() {
                         <div style={{ height: 6, background: 'rgba(255,255,255,.05)', borderRadius: 3, overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${e.efectividad}%`, background: colorTasa(e.efectividad), borderRadius: 3, transition: 'width .4s' }} />
                         </div>
-                        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50' }}>
+                        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d92a0' }}>
                           <span>{e.total.toLocaleString()} tránsitos</span>
                           <span>·</span>
                           <span style={{ color: '#3fb978' }}>{e.aciertos.toLocaleString()} OK</span>
@@ -637,7 +702,7 @@ export function OcrDashboard() {
                 {/* Tipos de error */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>CLASIFICACIÓN DE ERRORES</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>CLASIFICACIÓN DE ERRORES</span>
                   </div>
                   <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {resumen.porTipoError.map(t => {
@@ -660,8 +725,8 @@ export function OcrDashboard() {
                 {/* Efectividad por hora (últimos 7 días) */}
                 <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>EFECTIVIDAD POR HORA · 7 DÍAS</span>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040' }}>posibles caídas de iluminación</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>EFECTIVIDAD POR HORA · 7 DÍAS</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8681' }}>posibles caídas de iluminación</span>
                   </div>
                   <div style={{ padding: '12px 18px' }}>
                     <HoraChart data={analisis.porHora} />
@@ -684,13 +749,13 @@ export function OcrDashboard() {
                   {/* ── Heatmap vía × hora ── */}
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
                         HEATMAP ERROR OCR · VÍA × HORA DEL DÍA · ÚLTIMOS 30 DÍAS
                       </span>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040' }}>peor a mejor de arriba a abajo · hover para detalle</span>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8681' }}>peor a mejor de arriba a abajo · hover para detalle</span>
                       <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center', fontFamily: 'var(--app-font)', fontSize: 10 }}>
                         {[['<10%','rgba(63,185,120,.55)'],['10-20%','rgba(224,153,31,.6)'],['20-35%','rgba(239,75,84,.55)'],['>35%','rgba(239,75,84,.88)']].map(([l,c]) => (
-                          <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#3a4a50' }}>
+                          <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#7d92a0' }}>
                             <span style={{ width: 14, height: 10, borderRadius: 2, background: c as string, display: 'inline-block' }} />{l}
                           </span>
                         ))}
@@ -707,11 +772,11 @@ export function OcrDashboard() {
                     {/* Perfil horario de las mejores vías */}
                     <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(63,185,120,.15)', borderRadius: 12, overflow: 'hidden' }}>
                       <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(63,185,120,.08)' }}>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#3a6a4a', fontWeight: 700 }}>
-                          PERFIL HORARIO · MEJORES VÍAS (REFERENCIA)
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#7fbf98', fontWeight: 700 }}>
+                          MEJORES VÍAS · REFERENCIA POR SCORE DE CONFIANZA
                         </span>
-                        <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
-                          vías con menor tasa de error — {tendencias.mejoresVias.length} vías · mín. 100 tránsitos
+                        <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8681', marginTop: 3 }}>
+                          score de Wilson (precisión ajustada por volumen) — una vía con pocos tránsitos y 0 errores no le gana a una con miles de tránsitos y pocas discrepancias · mín. 20 tránsitos
                         </div>
                       </div>
                       <div style={{ padding: '12px 18px 8px' }}>
@@ -721,16 +786,19 @@ export function OcrDashboard() {
                       <div style={{ padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {tendencias.mejoresVias.map((v, i) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 20, height: 2.5, background: LINEA_COLORS[i], borderRadius: 2, flexShrink: 0 }} />
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d92a0', width: 14 }}>#{i + 1}</span>
+                            <div style={{ width: 16, height: 2.5, background: LINEA_COLORS[i % LINEA_COLORS.length], borderRadius: 2, flexShrink: 0 }} />
                             <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#ccd0d8' }}>{v.via}</span>
                             <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? '#8d94a3', marginLeft: 2 }}>{v.estacion}</span>
-                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3fb978', marginLeft: 'auto' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#8b9dab', marginLeft: 'auto' }}>{v.total.toLocaleString()} tráns.</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3fb978' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, fontWeight: 700, color: '#2dd4a7', width: 46, textAlign: 'right' }}>{Number(v.score).toFixed(1)} pts</span>
                           </div>
                         ))}
                       </div>
                       {tendencias.mejoresVias.length === 0 && (
-                        <div style={{ padding: '12px 18px', color: '#3a4a50', fontFamily: 'var(--app-font)', fontSize: 12 }}>
-                          Insuficientes vías con ≥100 tránsitos en 30d
+                        <div style={{ padding: '12px 18px', color: '#7d92a0', fontFamily: 'var(--app-font)', fontSize: 12 }}>
+                          Insuficientes vías con ≥20 tránsitos en 30d
                         </div>
                       )}
                     </div>
@@ -738,10 +806,10 @@ export function OcrDashboard() {
                     {/* Tendencia diaria 30d */}
                     <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                       <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c07777', fontWeight: 700 }}>
                           TENDENCIA DIARIA · % ERROR RED VS REFERENCIA
                         </span>
-                        <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040', marginTop: 3 }}>
+                        <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8681', marginTop: 3 }}>
                           ¿el sistema mejora o empeora? · caídas bruscas = incidente
                         </div>
                       </div>
@@ -790,12 +858,12 @@ export function OcrDashboard() {
                 <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
                   {[30, 60, 90].map(d => (
                     <button key={d} onClick={() => setViaDias(d)}
-                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : '#6b7a8c' }}>
+                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : '#8b9dab' }}>
                       {d}d
                     </button>
                   ))}
                 </div>
-                <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 10, color: '#2a4040' }}>solo vías con ≥50 tránsitos en 30d aparecen en la lista</span>
+                <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8681' }}>solo vías con ≥50 tránsitos en 30d aparecen en la lista</span>
               </div>
 
               {loadingT || loadingVia ? (
@@ -808,7 +876,7 @@ export function OcrDashboard() {
                 <>
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#6a3030', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c07777', fontWeight: 700 }}>
                         {viaEvolucion.estacion} · {viaEvolucion.via} — % ERROR POR DÍA · ÚLTIMOS {viaEvolucion.dias}D
                       </span>
                     </div>
@@ -819,7 +887,7 @@ export function OcrDashboard() {
 
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#5a8a7a', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
                         PERFIL HORARIO · MISMA VÍA · {viaEvolucion.dias}D
                       </span>
                     </div>
@@ -897,7 +965,7 @@ export function OcrDashboard() {
                     <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderTop: '1px solid rgba(255,255,255,.05)' }}>
                       {Array.from({ length: Math.min(Math.ceil(detalle.total / 50), 10) }, (_, i) => i + 1).map(p => (
                         <button key={p} onClick={() => setPagina(p)}
-                          style={{ width: 32, height: 32, borderRadius: 6, fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: pagina === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: pagina === p ? 'rgba(45,212,167,.12)' : 'transparent', color: pagina === p ? '#2dd4a7' : '#6b7a8c' }}>
+                          style={{ width: 32, height: 32, borderRadius: 6, fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: pagina === p ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: pagina === p ? 'rgba(45,212,167,.12)' : 'transparent', color: pagina === p ? '#2dd4a7' : '#8b9dab' }}>
                           {p}
                         </button>
                       ))}
@@ -941,7 +1009,7 @@ function HoraChart({ data }: { data: { hora: number; total: number; efectividad:
         {/* 95% line */}
         <line x1="0" y1={48 * 0.05} x2="240" y2={48 * 0.05} stroke="#3fb978" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: '#3a4a50', marginTop: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: '#7d92a0', marginTop: 2 }}>
         <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
       </div>
     </div>

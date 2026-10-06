@@ -194,7 +194,8 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
             .Select(x => {
                 var disc = viaDisc.GetValueOrDefault((x.Via, x.Estacion));
                 var pct  = x.Total > 0 ? Math.Round(disc * 100.0 / x.Total, 2) : 0.0;
-                return new ViaConteoDto(x.Via, x.Estacion, disc, x.Total, pct);
+                var wil  = Math.Round(Wilson.LimiteInferior(disc, x.Total), 2);
+                return new ViaConteoDto(x.Via, x.Estacion, disc, x.Total, pct, wil);
             })
             .ToList();
     }

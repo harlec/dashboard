@@ -39,19 +39,30 @@ public class AlertaDiscrepanciasService(
         var umbral        = double.TryParse(umbralValor, out var u) ? u : UmbralDefault;
         var destinatarios = (await db.Configuraciones.FindAsync([ClaveEmail], ct))?.Valor ?? "";
 
-        var vias = (await discrepanciasService.GetViasAsync("1h"))
-            .Where(v => v.Pct > umbral)
+        var todas = await discrepanciasService.GetViasAsync("1h");
+
+        // El % "a secas" engaña con poco tráfico: 1 discrepancia en 2 tránsitos es 50%. Se
+        // alerta solo cuando el límite inferior del intervalo de Wilson (95%) supera el
+        // umbral — es decir, cuando hay evidencia estadística de que la tasa REAL de la
+        // vía está por encima. Con mucho volumen equivale casi al % normal.
+        var vias = todas
+            .Where(v => v.PctWilson > umbral)
+            .OrderByDescending(v => v.PctWilson)
             .ToList();
+        var excluidas = todas.Count(v => v.Pct > umbral && v.PctWilson <= umbral);
 
         if (vias.Count == 0)
         {
-            log.LogDebug("Revisión de umbral de discrepancias: ninguna vía sobre {umbral}%", umbral);
-            return (true, "Sin vías sobre el umbral en la última hora.");
+            log.LogDebug("Revisión de umbral de discrepancias: ninguna vía confirmada sobre {umbral}% ({excl} con % alto pero pocos tránsitos)",
+                umbral, excluidas);
+            return (true, excluidas > 0
+                ? $"Sin vías confirmadas sobre el umbral en la última hora ({excluidas} superaron el % pero con muy pocos tránsitos)."
+                : "Sin vías sobre el umbral en la última hora.");
         }
 
-        var (ok, message) = await emailAlert.SendAlertaDiscrepanciasAsync(vias, umbral, destinatarios);
-        log.LogInformation("Alerta de discrepancias ({n} vías sobre {umbral}%): {ok} — {message}",
-            vias.Count, umbral, ok, message);
+        var (ok, message) = await emailAlert.SendAlertaDiscrepanciasAsync(vias, umbral, destinatarios, excluidas);
+        log.LogInformation("Alerta de discrepancias ({n} vías confirmadas sobre {umbral}%, {excl} descartadas por poco volumen): {ok} — {message}",
+            vias.Count, umbral, excluidas, ok, message);
         return (ok, message);
     }
 

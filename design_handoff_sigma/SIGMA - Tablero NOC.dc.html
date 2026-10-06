@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #04100f; }
+  a { color: oklch(0.80 0.08 195); text-decoration: none; }
+  a:hover { color: oklch(0.88 0.07 195); }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @keyframes halo { 0%, 100% { opacity: 0.30; r: 26; } 50% { opacity: 0.08; r: 34; } }
+  @keyframes pk1 { 0% { transform: translate(0,0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(0px,-198px); opacity: 0.15; } }
+  @keyframes pk2 { 0% { transform: translate(0,0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(-189px,-61px); opacity: 0.15; } }
+  @keyframes pk3 { 0% { transform: translate(0,0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(188px,-61px); opacity: 0.15; } }
+  @keyframes pk4 { 0% { transform: translate(0,0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(-117px,161px); opacity: 0.15; } }
+  @keyframes pk5 { 0% { transform: translate(0,0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(116px,161px); opacity: 0.15; } }
+</style>
+</helmet>
+
+<div data-screen-label="SIGMA — centro de operaciones" style="width: 1920px; height: 1360px; box-sizing: border-box; padding: 18px 26px 18px; display: flex; flex-direction: column; gap: 13px; font-family: Manrope, system-ui, sans-serif; color: oklch(0.965 0.006 190); overflow: hidden; background-color: #061413; background-image: radial-gradient(1200px 700px at 8% -12%, oklch(0.33 0.045 185 / 0.65), transparent 66%), radial-gradient(1000px 620px at 98% 2%, oklch(0.30 0.040 200 / 0.45), transparent 64%), radial-gradient(1100px 700px at 55% 120%, oklch(0.26 0.035 190 / 0.55), transparent 70%);">
+
+  <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div style="width: 40px; height: 40px; border-radius: 12px; background: oklch(0.255 0.030 190); box-shadow: inset 0 0 0 1px oklch(0.360 0.030 190); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+        <div style="width: 18px; height: 2px; border-radius: 2px; background: oklch(0.800 0.020 190);"></div>
+        <div style="width: 18px; height: 2px; border-radius: 2px; background: oklch(0.800 0.020 190);"></div>
+        <div style="width: 18px; height: 2px; border-radius: 2px; background: oklch(0.800 0.020 190);"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="font-size: 21px; font-weight: 600; letter-spacing: 0.07em; color: oklch(0.860 0.100 195);">SIGMA</div>
+        <div style="width: 5px; height: 5px; border-radius: 50%; background: oklch(0.480 0.025 190);"></div>
+        <div style="font-size: 18px; font-weight: 500; letter-spacing: -0.005em; color: oklch(0.820 0.018 190);">Sistema integral de gestión y monitoreo avanzado</div>
+        <div style="display: flex; align-items: center; gap: 9px; padding: 6px 15px 6px 12px; border-radius: 999px; background: oklch(0.300 0.055 172); box-shadow: inset 0 0 0 1px oklch(0.520 0.090 172 / 0.6);">
+          <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.840 0.150 172); animation: breathe 2.6s ease-in-out infinite;"></div>
+          <span style="font-size: 15px; font-weight: 500; letter-spacing: 0.04em; color: oklch(0.900 0.090 172);">EN VIVO</span>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="font-size: 17px; font-weight: 500; color: oklch(0.740 0.020 190);">5 estaciones · 200 equipos · red MPLS</div>
+      <div style="font-size: 36px; font-weight: 200; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;">{{ reloj }}</div>
+    </div>
+  </div>
+
+  <div style="flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
+    <sc-for list="{{ muro }}" as="m" hint-placeholder-count="5">
+      <div onClick="{{ m.onClick }}" style="box-sizing: border-box; border-radius: 20px; padding: 15px 18px 16px; background: {{ m.fondo }}; box-shadow: inset 0 0 0 1px {{ m.borde }}, 0 16px 38px oklch(0.06 0.02 190 / 0.5); cursor: pointer;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: {{ m.punto }};"></div>
+          <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.09em; color: {{ m.etiquetaFg }};">{{ m.etiqueta }}</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px;">
+          <span style="font-size: 44px; font-weight: 300; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: {{ m.cifraFg }}; text-shadow: {{ m.sombra }}; transition: text-shadow 1.1s ease-out;">{{ m.cifra }}</span>
+          <span style="font-size: 16px; font-weight: 500; color: oklch(0.780 0.020 190);">{{ m.sufijo }}</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; min-height: 20px;">
+          <span style="font-size: 14px; font-weight: 500; color: {{ m.notaFg }};">{{ m.nota }}</span>
+          <span style="flex: 0 0 auto; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ m.d.color }};">{{ m.d.txt }}</span>
+        </div>
+        <div style="height: 18px; border-radius: 8px; margin-top: 11px; box-shadow: inset 0 0 0 1px {{ m.borde }}; padding: 3px; box-sizing: border-box; overflow: hidden;">
+          <div style="height: 100%; width: {{ m.barra }}; border-radius: 0; background-image: {{ m.rayas }}; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 430px 1fr 470px; gap: 16px;">
+
+    <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+
+      <div style="flex: 0 0 auto; opacity: {{ visOcr.op }}; outline: {{ visOcr.ring }}; outline-offset: -1px; transition: opacity 0.5s ease, outline-color 0.5s ease; box-sizing: border-box; border-radius: 22px; padding: 18px 22px 16px; background: linear-gradient(170deg, oklch(0.250 0.030 190) 0%, oklch(0.185 0.024 190) 100%); box-shadow: inset 0 0 0 1px oklch(0.340 0.030 190), 0 18px 44px oklch(0.09 0.02 190 / 0.55); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 19px; font-weight: 500;">OCR · lectura de placas</div>
+          <div style="padding: 4px 12px; border-radius: 8px; font-size: 15px; font-weight: 500; color: oklch(0.860 0.100 75); background: oklch(0.290 0.045 75); box-shadow: inset 0 0 0 1px oklch(0.440 0.060 75);">24 h</div>
+        </div>
+
+        <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+        <div style="width: 100%; position: relative; aspect-ratio: 440 / 250;">
+          <svg viewBox="0 0 440 250" style="width: 100%; height: 100%; display: block;">
+            <circle cx="220" cy="230" r="152" fill="oklch(0.160 0.020 190)"></circle>
+            <path d="M 40 230 A 180 180 0 1 1 400 230" fill="none" stroke="oklch(0.215 0.024 190)" stroke-width="30" stroke-linecap="round"></path>
+            <sc-for list="{{ arcos }}" as="a" hint-placeholder-count="2">
+              <path d="M 40 230 A 180 180 0 1 1 400 230" fill="none" stroke="{{ a.color }}" stroke-width="30" stroke-linecap="{{ a.cap }}" stroke-dasharray="{{ a.dash }}" stroke-dashoffset="{{ a.offset }}" style="transition: stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1);"></path>
+            </sc-for>
+            <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="40">
+              <line x1="{{ t.x1 }}" y1="{{ t.y1 }}" x2="{{ t.x2 }}" y2="{{ t.y2 }}" stroke="{{ t.color }}" stroke-width="2.6" stroke-linecap="butt"></line>
+            </sc-for>
+          </svg>
+          <div style="position: absolute; left: 0; right: 0; bottom: 20%; text-align: center;">
+            <div style="font-size: 54px; font-weight: 200; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums;">29,929</div>
+            <div style="font-size: 18px; font-weight: 400; color: oklch(0.760 0.020 190); margin-top: 6px;">tránsitos con placa</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <sc-for list="{{ ocr }}" as="o" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 10px 14px; background: oklch(0.215 0.026 190); box-shadow: inset 0 0 0 1px oklch(0.310 0.028 190);">
+              <div style="flex: 0 0 auto; width: 6px; height: 20px; border-radius: 4px; background: {{ o.color }};"></div>
+              <span style="flex: 0 0 auto; width: 104px; font-size: 16px; font-weight: 500; white-space: nowrap; color: oklch(0.900 0.015 190);">{{ o.nombre }}</span>
+              <div style="flex: 1 1 auto; height: 16px; border-radius: 7px; box-shadow: inset 0 0 0 1px oklch(0.460 0.035 190); padding: 3px; box-sizing: border-box; overflow: hidden;">
+                <div style="height: 100%; width: {{ o.pct }}; border-radius: 0; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: {{ o.rayas }};"></div>
+              </div>
+              <span style="flex: 0 0 auto; width: 74px; text-align: right; font-size: 15px; font-weight: 500; color: oklch(0.640 0.020 190); font-variant-numeric: tabular-nums;">{{ o.n }}</span>
+              <span style="flex: 0 0 auto; width: 62px; text-align: right; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;">{{ o.pct }}</span>
+            </div>
+          </sc-for>
+        </div>
+        </div>
+      </div>
+
+      <div style="flex: 1 1 auto; min-height: 0; opacity: {{ visDac.op }}; outline: {{ visDac.ring }}; outline-offset: -1px; transition: opacity 0.5s ease, outline-color 0.5s ease; box-sizing: border-box; border-radius: 22px; padding: 18px 22px 20px; background: linear-gradient(170deg, oklch(0.250 0.030 190) 0%, oklch(0.185 0.024 190) 100%); box-shadow: inset 0 0 0 1px oklch(0.340 0.030 190), 0 18px 44px oklch(0.09 0.02 190 / 0.55); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 19px; font-weight: 500;">Discrepancias DAC · detalle</div>
+          <div style="padding: 4px 12px; border-radius: 8px; font-size: 15px; font-weight: 500; color: oklch(0.860 0.100 75); background: oklch(0.290 0.045 75); box-shadow: inset 0 0 0 1px oklch(0.440 0.060 75);">12 h</div>
+        </div>
+
+        <div style="flex: 0 0 auto; margin-top: 14px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px;">
+            <span style="font-size: 17px; font-weight: 500;">Tasa de coincidencia por hora</span>
+            <span style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">banda 90–100% · meta 99.5%</span>
+          </div>
+          <div style="position: relative; height: 96px; display: flex; align-items: flex-end; gap: 6px; padding: 0 2px 0; box-shadow: inset 0 -1px 0 oklch(0.400 0.028 190);">
+            <div style="position: absolute; left: 0; right: 0; bottom: 74%; height: 1px; background: repeating-linear-gradient(90deg, oklch(0.640 0.090 78) 0px, oklch(0.640 0.090 78) 4px, transparent 4px, transparent 9px);"></div>
+            <sc-for list="{{ porHora }}" as="h" hint-placeholder-count="12">
+              <div style="flex: 1 1 0; height: {{ h.alto }}; transition: height 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: {{ h.rayas }};"></div>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <sc-for list="{{ porHora }}" as="h" hint-placeholder-count="12">
+              <span style="flex: 1 1 0; text-align: center; font-size: 12px; font-weight: 500; color: oklch(0.640 0.020 190); font-variant-numeric: tabular-nums;">{{ h.hora }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-around; gap: 9px; margin-top: 14px; padding-top: 14px; border-top: 1px solid oklch(0.330 0.026 190);">
+          <div style="display: flex; align-items: baseline; justify-content: space-between;">
+            <span style="font-size: 17px; font-weight: 500;">Vías más críticas</span>
+            <span style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">1,144 de 16,836 tránsitos</span>
+          </div>
+          <sc-for list="{{ criticas }}" as="c" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 17px; font-weight: 500; width: 46px; font-variant-numeric: tabular-nums;">{{ c.via }}</span>
+              <span style="font-size: 15px; font-weight: 500; letter-spacing: 0.06em; width: 96px; color: {{ c.color }};">{{ c.estacion }}</span>
+              <div style="flex: 1 1 auto; height: 16px; border-radius: 7px; box-shadow: inset 0 0 0 1px oklch(0.460 0.035 190); padding: 3px; box-sizing: border-box; overflow: hidden;">
+                <div style="height: 100%; width: {{ c.ancho }}; border-radius: 0; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: {{ c.rayas }};"></div>
+              </div>
+              <span style="font-size: 15px; font-weight: 500; color: oklch(0.660 0.020 190); font-variant-numeric: tabular-nums;">{{ c.base }}</span>
+              <span style="font-size: 17px; font-weight: 600; width: 60px; text-align: right; font-variant-numeric: tabular-nums;">{{ c.pct }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="min-height: 0; opacity: {{ visTopo.op }}; outline: {{ visTopo.ring }}; outline-offset: -1px; transition: opacity 0.5s ease, outline-color 0.5s ease; box-sizing: border-box; border-radius: 22px; padding: 18px 22px 14px; background: linear-gradient(170deg, oklch(0.250 0.030 190) 0%, oklch(0.180 0.024 190) 100%); box-shadow: inset 0 0 0 1px oklch(0.340 0.030 190), 0 18px 44px oklch(0.09 0.02 190 / 0.55); display: flex; flex-direction: column;">
+      <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 9px; height: 9px; border-radius: 50%; background: oklch(0.840 0.150 172); animation: breathe 2.6s ease-in-out infinite;"></div>
+          <div style="font-size: 19px; font-weight: 600; letter-spacing: 0.10em; color: oklch(0.880 0.090 172);">CONECTIVIDAD DE NODOS DE PEAJE · EN VIVO</div>
+        </div>
+        <div style="font-size: 16px; font-weight: 500; color: oklch(0.700 0.020 190);">5 nodos · ciclo 30 s · umbral 40 ms</div>
+      </div>
+
+      <div style="flex: 1 1 auto; min-height: 0; padding: 6px 0 2px; display: flex; justify-content: center; align-items: center;">
+      <div style="position: relative; aspect-ratio: 1000 / 680; width: 100%; max-height: 100%; margin: 0 auto;">
+        <svg viewBox="0 0 1000 680" style="width: 100%; height: 100%; display: block;">
+          <defs>
+            <pattern id="rejilla" width="62" height="62" patternUnits="userSpaceOnUse">
+              <path d="M 62 0 L 0 0 0 62" fill="none" stroke="oklch(0.300 0.026 190 / 0.55)" stroke-width="1"></path>
+            </pattern>
+            <radialGradient id="nucleo">
+              <stop offset="0%" stop-color="oklch(0.880 0.140 172)"></stop>
+              <stop offset="100%" stop-color="oklch(0.680 0.130 175)"></stop>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="1000" height="680" fill="url(#rejilla)"></rect>
+
+          <sc-for list="{{ enlaces }}" as="e" hint-placeholder-count="5">
+            <line x1="485" y1="381" x2="{{ e.x }}" y2="{{ e.y }}" stroke="{{ e.color }}" stroke-width="1.6" opacity="0.55"></line>
+          </sc-for>
+          <sc-for list="{{ paquetes }}" as="p" hint-placeholder-count="10">
+            <circle cx="485" cy="381" r="{{ p.r }}" fill="{{ p.color }}" style="animation: {{ p.anim }};"></circle>
+          </sc-for>
+
+          <sc-for list="{{ nodos }}" as="n" hint-placeholder-count="5">
+            <g>
+              <circle cx="{{ n.x }}" cy="{{ n.y }}" r="26" fill="{{ n.color }}" opacity="0.16"></circle>
+              <circle cx="{{ n.x }}" cy="{{ n.y }}" r="15" fill="{{ n.color }}" opacity="0.55"></circle>
+              <circle cx="{{ n.x }}" cy="{{ n.y }}" r="7" fill="{{ n.color }}"></circle>
+            </g>
+          </sc-for>
+
+          <circle cx="485" cy="381" r="52" fill="oklch(0.800 0.130 175)" opacity="0.14"></circle>
+          <circle cx="485" cy="381" r="34" fill="url(#nucleo)"></circle>
+          <text x="485" y="388" text-anchor="middle" fill="oklch(0.140 0.030 175)" font-family="Manrope, sans-serif" font-size="16" font-weight="700" letter-spacing="1.2">SIGMA</text>
+        </svg>
+        <sc-for list="{{ nodos }}" as="n" hint-placeholder-count="5">
+          <div style="position: absolute; left: {{ n.left }}; top: {{ n.top }}; transform: translate(-50%, -50%); text-align: center; white-space: nowrap; pointer-events: none;">
+            <div style="font-size: 19px; font-weight: 500; color: oklch(0.965 0.006 190);">{{ n.nombre }}</div>
+            <div style="font-size: 15px; font-weight: 500; color: oklch(0.720 0.020 190); margin-top: 3px;">{{ n.detalle }}</div>
+          </div>
+        </sc-for>
+      </div>
+      </div>
+
+      <div style="flex: 0 0 auto; display: grid; grid-template-columns: 1.05fr 1fr; gap: 24px; padding-top: 14px; border-top: 1px solid oklch(0.320 0.026 190);">
+        <div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px;">
+            <span style="font-size: 17px; font-weight: 500;">Latencia por estación</span>
+            <span style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">umbral 40 ms · nadie pasa del 73%</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ latencias }}" as="l" hint-placeholder-count="5">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="width: 108px; font-size: 16px; font-weight: 500; letter-spacing: 0.05em; color: oklch(0.880 0.015 190);">{{ l.nombre }}</span>
+                <div style="flex: 1 1 auto; height: 16px; border-radius: 7px; box-shadow: inset 0 0 0 1px oklch(0.460 0.035 190); padding: 3px; box-sizing: border-box; overflow: hidden;">
+                  <div style="height: 100%; width: {{ l.ancho }}; border-radius: 0; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: {{ l.rayas }};"></div>
+                </div>
+                <span style="width: 150px; white-space: nowrap; font-size: 14px; font-weight: 500; color: oklch(0.640 0.020 190); text-align: right;">{{ l.equipos }}</span>
+                <span style="width: 62px; text-align: right; font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ l.color }};">{{ l.ms }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px;">
+            <span style="font-size: 17px; font-weight: 500;">Últimos incidentes</span>
+            <span style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">10 activos · MTTR 2 m</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <sc-for list="{{ ultimos }}" as="u" hint-placeholder-count="5">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 7px 12px; border-radius: 10px; background: oklch(0.215 0.026 190); box-shadow: inset 0 0 0 1px oklch(0.310 0.028 190);">
+                <div style="width: 7px; height: 7px; border-radius: 50%; background: {{ u.color }};"></div>
+                <span style="flex: 1 1 auto; min-width: 0; font-size: 16px; font-weight: 500;">{{ u.equipo }}</span>
+                <span style="width: 96px; font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">{{ u.estacion }}</span>
+                <span style="width: 82px; text-align: right; font-size: 15px; font-weight: 500; color: oklch(0.680 0.020 190); font-variant-numeric: tabular-nums;">{{ u.hora }}</span>
+                <span style="width: 44px; text-align: right; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums;">{{ u.dur }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+
+      <div style="flex: 0 0 auto; opacity: {{ visSla.op }}; outline: {{ visSla.ring }}; outline-offset: -1px; transition: opacity 0.5s ease, outline-color 0.5s ease; box-sizing: border-box; border-radius: 22px; padding: 18px 22px 20px; background: linear-gradient(170deg, oklch(0.250 0.030 190) 0%, oklch(0.185 0.024 190) 100%); box-shadow: inset 0 0 0 1px oklch(0.340 0.030 190), 0 18px 44px oklch(0.09 0.02 190 / 0.55);">
+        <div style="font-size: 19px; font-weight: 500;">Cumplimiento de SLA · 30 días</div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 8px;">
+          <div style="display: flex; align-items: baseline;">
+            <span style="font-size: 58px; font-weight: 200; letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: {{ slaSombra }}; transition: text-shadow 1.1s ease-out;">{{ slaCifra }}</span>
+            <span style="font-size: 32px; font-weight: 200; color: oklch(0.900 0.015 190);">%</span>
+          </div>
+          <div style="text-align: right; font-size: 16px; font-weight: 500; color: oklch(0.720 0.020 190); line-height: 1.45;">meta 99.5% · faltan {{ slaFaltan }} pp<br /><span style="color: oklch(0.780 0.150 25); font-weight: 500;">132 de 200</span> equipos bajo meta</div>
+        </div>
+        <div style="margin-top: 14px; height: 38px; border-radius: 12px; box-shadow: inset 0 0 0 1px oklch(0.480 0.035 190); padding: 5px; box-sizing: border-box; overflow: hidden;">
+          <div style="height: 100%; width: {{ slaAncho }}; border-radius: 0; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: repeating-linear-gradient(90deg, oklch(0.720 0.085 200) 0px, oklch(0.720 0.085 200) 2px, transparent 2px, transparent 7px);"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px;">
+          <sc-for list="{{ sla }}" as="s" hint-placeholder-count="5">
+            <div style="text-align: center;">
+              <div style="font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; color: {{ s.color }};">{{ s.pct }}</div>
+              <div style="font-size: 14px; font-weight: 500; color: oklch(0.680 0.020 190); margin-top: 4px;">{{ s.nombre }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 0 0 auto; opacity: {{ visInc.op }}; outline: {{ visInc.ring }}; outline-offset: -1px; transition: opacity 0.5s ease, outline-color 0.5s ease; box-sizing: border-box; border-radius: 22px; padding: 18px 22px; background: linear-gradient(170deg, oklch(0.250 0.030 190) 0%, oklch(0.185 0.024 190) 100%); box-shadow: inset 0 0 0 1px oklch(0.340 0.030 190), 0 18px 44px oklch(0.09 0.02 190 / 0.55);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 19px; font-weight: 500;">Incidentes de red · detalle</div>
+          <div style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">7 días · agrupados por ráfaga</div>
+        </div>
+        <div style="margin-top: 12px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px;">
+            <span style="font-size: 17px; font-weight: 500;">Equipos fuera de línea por día</span>
+            <span style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">pico 8/9 · ráfaga de enlace</span>
+          </div>
+          <div style="height: 42px; display: flex; align-items: flex-end; gap: 8px; box-shadow: inset 0 -1px 0 oklch(0.400 0.028 190);">
+            <sc-for list="{{ porDia }}" as="d" hint-placeholder-count="7">
+              <div style="flex: 1 1 0; height: {{ d.alto }}; transition: height 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: {{ d.rayas }};"></div>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 5px;">
+            <sc-for list="{{ porDia }}" as="d" hint-placeholder-count="7">
+              <div style="flex: 1 1 0; text-align: center; font-size: 12px; font-weight: 600; white-space: nowrap; color: {{ d.color }}; font-variant-numeric: tabular-nums;">{{ d.valor }}<br /><span style="font-size: 12px; font-weight: 500; color: oklch(0.640 0.020 190);">{{ d.dia }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px; padding-top: 11px; border-top: 1px solid oklch(0.330 0.026 190);">
+          <span style="font-size: 17px; font-weight: 500;">Por estación</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+          <sc-for list="{{ porEstacion }}" as="e" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 92px; font-size: 16px; font-weight: 500; color: oklch(0.880 0.015 190);">{{ e.nombre }}</span>
+              <div style="flex: 1 1 auto; height: 16px; border-radius: 7px; box-shadow: inset 0 0 0 1px oklch(0.460 0.035 190); padding: 3px; box-sizing: border-box; overflow: hidden;">
+                <div style="height: 100%; width: {{ e.ancho }}; border-radius: 0; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); background-image: {{ e.rayas }};"></div>
+              </div>
+              <span style="width: 44px; text-align: right; font-size: 15px; font-weight: 500; color: oklch(0.660 0.020 190); font-variant-numeric: tabular-nums;">{{ e.pct }}</span>
+              <span style="width: 56px; text-align: right; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums;">{{ e.n }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 1 1 auto; min-height: 0; opacity: {{ visSrv.op }}; outline: {{ visSrv.ring }}; outline-offset: -1px; transition: opacity 0.5s ease, outline-color 0.5s ease; box-sizing: border-box; border-radius: 22px; padding: 18px 22px; background: linear-gradient(170deg, oklch(0.250 0.030 190) 0%, oklch(0.185 0.024 190) 100%); box-shadow: inset 0 0 0 1px oklch(0.340 0.030 190), 0 18px 44px oklch(0.09 0.02 190 / 0.55); display: flex; flex-direction: column;">
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 19px; font-weight: 500;">Servicios de plataforma</div>
+          <div style="font-size: 15px; font-weight: 500; color: oklch(0.700 0.020 190);">Aunor</div>
+        </div>
+        <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 9px; margin-top: 12px;">
+          <sc-for list="{{ servicios }}" as="s" hint-placeholder-count="4">
+            <div style="flex: 0 0 auto; min-height: 42px; display: flex; align-items: center; gap: 14px; padding: 7px 16px; border-radius: 14px; background: oklch(0.215 0.026 190); box-shadow: inset 0 0 0 1px oklch(0.310 0.028 190);">
+              <div style="width: 9px; height: 9px; border-radius: 50%; background: {{ s.punto }};"></div>
+              <div style="flex: 1 1 auto; min-width: 0;">
+                <div style="font-size: 17px; font-weight: 500;">{{ s.nombre }}</div>
+                <div style="font-size: 15px; font-weight: 500; color: oklch(0.680 0.020 190);">{{ s.detalle }}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ s.cifraFg }};">{{ s.uptime }}</div>
+                <div style="font-size: 14px; font-weight: 500; color: oklch(0.660 0.020 190);">{{ s.estado }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 0 0 auto; display: flex; align-items: center; gap: 10px;">
+    <span style="flex: 0 0 auto; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; color: oklch(0.600 0.020 190);">IR A</span>
+    <sc-for list="{{ secciones }}" as="x" hint-placeholder-count="6">
+      <div onClick="{{ x.onClick }}" style="flex: 1 1 0; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 7px 16px; border-radius: 999px; cursor: pointer; background: {{ x.fondo }}; box-shadow: inset 0 0 0 1px {{ x.borde }}; transition: background 0.35s ease, box-shadow 0.35s ease;">
+        <span style="font-size: 15px; font-weight: 500; white-space: nowrap; color: {{ x.fg }};">{{ x.label }}</span>
+        <span style="font-size: 14px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; color: {{ x.notaFg }};">{{ x.nota }}</span>
+      </div>
+    </sc-for>
+    <div onClick="{{ verTodo }}" style="flex: 0 0 auto; padding: 7px 14px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; color: {{ todoFg }}; transition: color 0.35s ease;">VER TODO</div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1360},&quot;ritmoSeg&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:4,&quot;min&quot;:2,&quot;max&quot;:12,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Monitoreo en vivo&quot;},&quot;simular&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Monitoreo en vivo&quot;},&quot;slaPct&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:90,&quot;max&quot;:100,&quot;step&quot;:0.01,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Monitoreo en vivo&quot;}}">
+class Component extends DCLogic {
+  state = { reloj: '22:41', pulso: 0, brillo: false, seg: 0, foco: null };
+
+  componentDidMount() {
+    this.sim = {
+      disp: 97.07, fuera: 0, degradados: 2, dac: 93.2, activos: 10, eventos: 4360,
+      hora: 93.2, lat: [9, 10, 11, 13, 29], ocr: 29929, sla: 97.18, cola: 182, fact: 320
+    };
+    this.prev = { ...this.sim, lat: this.sim.lat.slice() };
+    this.tick();
+    this._t = setInterval(() => this.tick(), 1000);
+    this.arrancar();
+  }
+
+  arrancar() {
+    clearInterval(this._s);
+    if (this.props.simular === false) return;
+    const ms = Math.max(1, this.props.ritmoSeg ?? 4) * 1000;
+    this._s = setInterval(() => this.simular(), ms);
+  }
+
+  componentDidUpdate(antes) {
+    if (antes.ritmoSeg !== this.props.ritmoSeg || antes.simular !== this.props.simular) this.arrancar();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this._t); clearInterval(this._s); clearTimeout(this._b);
+  }
+
+  tick() {
+    const d = new Date(), p = (n) => String(n).padStart(2, '0');
+    const ciclo = this.state.pulso === 0 ? 0 : (this.state.seg + 1) % 4;
+    this.setState({ reloj: `${p(d.getHours())}:${p(d.getMinutes())}`, seg: ciclo });
+  }
+
+  simular() {
+    const s = this.sim;
+    const antes = { ...s, lat: s.lat.slice() };
+    const paso = (v, d, min, max, dec) =>
+      +Math.max(min, Math.min(max, v + (Math.random() * 2 - 1) * d)).toFixed(dec);
+    const salto = (v, prob, min, max) =>
+      Math.random() < prob ? Math.max(min, Math.min(max, v + (Math.random() < 0.5 ? 1 : -1))) : v;
+
+    s.disp = paso(s.disp, 0.05, 96.20, 99.10, 2);
+    s.dac = paso(s.dac, 0.40, 90.80, 96.60, 1);
+    s.sla = paso(s.sla, 0.05, 96.40, 98.60, 2);
+    s.hora = paso(s.hora, 0.55, 90.20, 96.50, 1);
+    s.ocr += 7 + Math.round(Math.random() * 24);
+    s.cola = Math.round(paso(s.cola, 28, 0, 340, 0));
+    s.fact = Math.round(paso(s.fact, 45, 180, 620, 0));
+    s.lat = s.lat.map((v, i) => i === 4 ? paso(v, 3.2, 18, 44, 0) : paso(v, 1.3, 7, 19, 0));
+    s.fuera = salto(s.fuera, 0.18, 0, 4);
+    s.degradados = salto(s.degradados, 0.14, 0, 6);
+    s.activos = salto(s.activos, 0.22, 3, 18);
+    s.eventos += Math.round(Math.random() * 3);
+
+    this.prev = antes;
+    this.setState({ pulso: this.state.pulso + 1, brillo: true, seg: 0 });
+    clearTimeout(this._b);
+    this._b = setTimeout(() => this.setState({ brillo: false }), 160);
+  }
+
+  renderVals() {
+    const VERDE = 'oklch(0.800 0.150 172)';
+    const AMBAR = 'oklch(0.820 0.110 78)';
+    const ROJO = 'oklch(0.680 0.190 18)';
+    const CIAN = 'oklch(0.760 0.090 200)';
+    const LILA = 'oklch(0.680 0.120 305)';
+
+    const rayar = (c) => `repeating-linear-gradient(90deg, ${c} 0px, ${c} 2px, transparent 2px, transparent 7px)`;
+    const ROJO_D = 'oklch(0.760 0.150 28)';
+
+    const s = this.sim || { disp: 97.07, fuera: 0, degradados: 2, dac: 93.2, activos: 10, eventos: 4360,
+      hora: 93.2, lat: [9, 10, 11, 13, 29], ocr: 29929, sla: 97.18, cola: 182, fact: 320 };
+    const pv = this.prev || s;
+    const brillo = this.state.brillo;
+
+    const delta = (ahora, antes, polaridad, dec) => {
+      const d = +(ahora - antes).toFixed(dec);
+      if (!d) return { txt: 'estable', color: 'oklch(0.620 0.020 190)' };
+      const sube = d > 0;
+      const bueno = polaridad === 'alta' ? sube : !sube;
+      return {
+        txt: (sube ? '▲' : '▼') + ' ' + Math.abs(d).toFixed(dec),
+        color: bueno ? VERDE : ROJO_D
+      };
+    };
+    const glow = (c) => brillo ? `0 0 22px ${c}` : '0 0 0 transparent';
+
+    const operativos = 200 - s.fuera;
+    const transitos = 16836 + Math.max(0, s.ocr - 29929);
+    const discrepancias = Math.round(transitos * (1 - s.dac / 100));
+
+    const muro = [
+      { etiqueta: 'DISPONIBILIDAD · 30 DÍAS', cifra: s.disp.toFixed(2), sufijo: '%', nota: 'monitoreo de red · últimos 30 días', barra: s.disp.toFixed(2) + '%',
+        d: delta(s.disp, pv.disp, 'alta', 2),
+        punto: CIAN, etiquetaFg: 'oklch(0.840 0.090 200)', cifraFg: 'oklch(0.870 0.090 200)', notaFg: 'oklch(0.740 0.035 200)',
+        barraBg: CIAN, fondo: 'linear-gradient(150deg, oklch(0.275 0.055 205) 0%, oklch(0.188 0.024 190) 68%)', borde: 'oklch(0.415 0.060 205)' },
+      { etiqueta: 'EQUIPOS OPERATIVOS · AHORA', cifra: String(operativos), sufijo: `de 200 · ${s.fuera} fuera de línea`,
+        nota: s.fuera === 0 ? '5 estaciones reportando · todos en línea' : `${s.fuera} sin reportar · reintentando enlace`,
+        barra: ((operativos / 200) * 100).toFixed(2) + '%',
+        d: delta(operativos, 200 - pv.fuera, 'alta', 0),
+        punto: VERDE, etiquetaFg: 'oklch(0.880 0.120 172)', cifraFg: 'oklch(0.900 0.140 172)', notaFg: 'oklch(0.740 0.030 172)',
+        barraBg: VERDE, fondo: 'linear-gradient(150deg, oklch(0.280 0.060 172) 0%, oklch(0.190 0.026 185) 68%)', borde: 'oklch(0.420 0.070 172)' },
+      { etiqueta: 'DEGRADADOS · AHORA', cifra: String(s.degradados), sufijo: 'fuera de parámetro',
+        nota: s.degradados === 0 ? 'sin vías fuera de parámetro' : `${s.degradados} vía${s.degradados === 1 ? '' : 's'} con DAC degradado`,
+        barra: ((s.degradados / 16) * 100).toFixed(1) + '%',
+        d: delta(s.degradados, pv.degradados, 'baja', 0),
+        punto: AMBAR, etiquetaFg: 'oklch(0.860 0.110 78)', cifraFg: 'oklch(0.880 0.120 78)', notaFg: 'oklch(0.760 0.060 78)',
+        barraBg: AMBAR, fondo: 'linear-gradient(150deg, oklch(0.280 0.060 68) 0%, oklch(0.188 0.024 190) 68%)', borde: 'oklch(0.420 0.070 68)' },
+      { etiqueta: 'DISCREPANCIAS DAC · 12 H', cifra: s.dac.toFixed(1), sufijo: '% coincidencia',
+        nota: `${discrepancias.toLocaleString('es-PE')} de ${transitos.toLocaleString('es-PE')} tránsitos · meta 99.5%`,
+        barra: s.dac.toFixed(1) + '%',
+        d: delta(s.dac, pv.dac, 'alta', 1),
+        punto: AMBAR, etiquetaFg: 'oklch(0.860 0.110 78)', cifraFg: 'oklch(0.880 0.110 78)', notaFg: 'oklch(0.760 0.055 78)',
+        barraBg: AMBAR, fondo: 'linear-gradient(150deg, oklch(0.278 0.055 78) 0%, oklch(0.188 0.024 190) 68%)', borde: 'oklch(0.418 0.062 78)' },
+      { etiqueta: 'INCIDENTES · 7 DÍAS', cifra: s.eventos.toLocaleString('es-PE'), sufijo: `eventos · ${s.activos} activos`,
+        nota: 'pico 8/9 · MTTR 2 m', barra: ((s.activos / 18) * 100).toFixed(1) + '%',
+        d: delta(s.activos, pv.activos, 'baja', 0),
+        punto: 'oklch(0.780 0.150 22)', etiquetaFg: 'oklch(0.840 0.130 25)', cifraFg: 'oklch(0.870 0.130 25)', notaFg: 'oklch(0.760 0.070 25)',
+        barraBg: 'oklch(0.780 0.150 22)', fondo: 'linear-gradient(150deg, oklch(0.272 0.058 25) 0%, oklch(0.188 0.024 190) 68%)', borde: 'oklch(0.410 0.070 25)' }
+    ].map((m, i) => ({ ...m, rayas: rayar(m.barraBg), sombra: glow(m.barraBg),
+      onClick: () => {
+        const destino = ['conectividad', 'conectividad', 'discrepancias', 'discrepancias', 'incidentes'][i];
+        this.setState({ foco: this.state.foco === destino ? null : destino });
+      } }));
+
+    const rayarH = (c) => `repeating-linear-gradient(0deg, ${c} 0px, ${c} 2px, transparent 2px, transparent 7px)`;
+
+    const escala = (v, min, max) => Math.max(4, Math.min(100, ((v - min) / (max - min)) * 100)).toFixed(1) + '%';
+
+    const porHora = [
+      { hora: '11', v: 95.1 }, { hora: '12', v: 94.4 }, { hora: '13', v: 92.8 }, { hora: '14', v: 91.6 },
+      { hora: '15', v: 93.0 }, { hora: '16', v: 94.2 }, { hora: '17', v: 92.1 }, { hora: '18', v: 90.7 },
+      { hora: '19', v: 91.9 }, { hora: '20', v: 93.6 }, { hora: '21', v: 94.8 }, { hora: '22', v: s.hora }
+    ].map((h) => {
+      const color = h.v >= 94 ? VERDE : h.v >= 92 ? AMBAR : 'oklch(0.720 0.150 30)';
+      return { ...h, alto: escala(h.v, 89, 100), rayas: rayarH(color) };
+    });
+
+    const porDia = [
+      { dia: '8/9', v: 1204 }, { dia: '9/9', v: 812 }, { dia: '10/9', v: 566 }, { dia: '11/9', v: 431 },
+      { dia: '12/9', v: 604 }, { dia: '13/9', v: 487 }, { dia: '14/9', v: 256 }
+    ].map((d) => {
+      const color = d.v >= 900 ? 'oklch(0.720 0.150 25)' : d.v >= 500 ? AMBAR : CIAN;
+      return { ...d, color, valor: d.v.toLocaleString('es-PE'), alto: escala(d.v, 0, 1300), rayas: rayarH(color) };
+    });
+
+    const totalOcr = s.ocr;
+    const partes = [
+      { nombre: 'Aciertos', n: Math.round(totalOcr * 0.7929), color: VERDE },
+      { nombre: 'Errores', n: Math.round(totalOcr * 0.0427), color: AMBAR },
+      { nombre: 'No detectadas', n: Math.round(totalOcr * 0.1644), color: ROJO, rayado: true }
+    ];
+    const L = Math.PI * 180;
+    const arcos = [];
+    const ticks = [];
+    let f = 0;
+    partes.forEach((p, i) => {
+      const frac = p.n / totalOcr;
+      if (p.rayado) {
+        const paso = 0.0055;
+        for (let t = f + paso / 2; t < f + frac; t += paso) {
+          const ang = Math.PI * (1 - t);
+          const cx = 220 + Math.cos(ang) * 1, cy = 230 - Math.sin(ang) * 1;
+          ticks.push({
+            x1: (220 + Math.cos(ang) * 166).toFixed(1),
+            y1: (230 - Math.sin(ang) * 166).toFixed(1),
+            x2: (220 + Math.cos(ang) * 194).toFixed(1),
+            y2: (230 - Math.sin(ang) * 194).toFixed(1),
+            color: p.color
+          });
+        }
+      } else {
+        arcos.push({
+          color: p.color,
+          cap: i === 0 ? 'round' : 'butt',
+          dash: `${(frac * L).toFixed(1)} ${(L * 2).toFixed(1)}`,
+          offset: (-f * L).toFixed(1)
+        });
+      }
+      f += frac;
+    });
+    const ocr = partes.map((p) => ({
+      nombre: p.nombre, color: p.color, rayas: rayar(p.color),
+      n: p.n.toLocaleString('es-PE'),
+      pct: (Math.round((p.n / totalOcr) * 1000) / 10) + '%'
+    }));
+
+    const criticas = [
+      { via: '508', estacion: 'HUARMEY', pct: '16.9%', base: '92/545', ancho: '100%', color: 'oklch(0.720 0.150 40)' },
+      { via: '609', estacion: '402', pct: '15.9%', base: '33/207', ancho: '94%', color: CIAN },
+      { via: '408', estacion: 'FORTALEZA', pct: '13.4%', base: '77/573', ancho: '79%', color: VERDE },
+      { via: '407', estacion: 'FORTALEZA', pct: '10.9%', base: '52/475', ancho: '64%', color: VERDE },
+      { via: '401', estacion: 'FORTALEZA', pct: '10.3%', base: '53/517', ancho: '61%', color: VERDE }
+    ].map((c) => ({ ...c, rayas: rayar(c.color) }));
+
+    const N = [
+      { nombre: 'Fortaleza', x: 485, y: 183, detalle: `100% · ${s.lat[4]} ms · 40/40`, ty: 141, tsy: 164, color: s.lat[4] >= 26 ? AMBAR : VERDE },
+      { nombre: 'Viru', x: 296, y: 320, detalle: `100% · ${s.lat[1]} ms · 41/41`, ty: 278, tsy: 301, color: VERDE },
+      { nombre: 'Huarmey', x: 673, y: 320, detalle: `100% · ${s.lat[0]} ms · 40/40`, ty: 278, tsy: 301, color: VERDE },
+      { nombre: 'Santa', x: 368, y: 542, detalle: `100% · ${s.lat[2]} ms · 37/37`, ty: 600, tsy: 623, color: VERDE },
+      { nombre: 'KM 402', x: 601, y: 542, detalle: `100% · ${s.lat[3]} ms · 42/42`, ty: 600, tsy: 623, color: VERDE }
+    ];
+    const nodos = N.map((n) => ({
+      ...n,
+      left: ((n.x / 1000) * 100).toFixed(2) + '%',
+      top: (((n.ty - 12) / 680) * 100).toFixed(2) + '%'
+    }));
+    const enlaces = N.map((n) => ({ x: n.x, y: n.y, color: n.color }));
+    const paquetes = [];
+    for (let i = 0; i < 5; i++) {
+      for (let k = 0; k < 2; k++) {
+        paquetes.push({
+          r: 5,
+          color: N[i].color,
+          anim: `pk${i + 1} ${(2.6 + i * 0.25).toFixed(2)}s linear ${(k * 1.3 + i * 0.35).toFixed(2)}s infinite`
+        });
+      }
+    }
+
+    const latencias = [
+      { nombre: 'HUARMEY', equipos: '40/40 · 8.5–10 ms' },
+      { nombre: 'VIRU', equipos: '41/41 · 9.5–11 ms' },
+      { nombre: 'SANTA', equipos: '37/37 · 10–12 ms' },
+      { nombre: 'KM 402', equipos: '42/42 · 12.5–15 ms' },
+      { nombre: 'FORTALEZA', equipos: '40/40 · pico 801 ms' }
+    ].map((l, i) => {
+      const ms = s.lat[i];
+      const color = ms >= 26 ? AMBAR : ms >= 16 ? 'oklch(0.800 0.090 120)' : VERDE;
+      return { ...l, ms: ms + ' ms', ancho: Math.min(100, (ms / 40) * 100).toFixed(1) + '%', color, rayas: rayar(color) };
+    });
+
+    const ultimos = [
+      { equipo: 'PC OCR 805', estacion: 'Santa', hora: '14/9 14:47', dur: '0 m', color: ROJO },
+      { equipo: 'PC vía 704', estacion: 'Viru', hora: '14/9 14:13', dur: '1 m', color: ROJO },
+      { equipo: 'PC OCR 808', estacion: 'Santa', hora: '14/9 13:32', dur: '0 m', color: AMBAR },
+      { equipo: 'Display 602', estacion: 'KM 402', hora: '14/9 10:37', dur: '0 m', color: AMBAR },
+      { equipo: 'Display 408', estacion: 'Fortaleza', hora: '14/9 10:33', dur: '0 m', color: AMBAR }
+    ];
+
+    const sla = [
+      { nombre: 'Fortaleza', pct: '99.92%', color: VERDE },
+      { nombre: 'KM 402', pct: '97.68%', color: AMBAR },
+      { nombre: 'Viru', pct: '97.34%', color: AMBAR },
+      { nombre: 'Huarmey', pct: '96.53%', color: 'oklch(0.720 0.150 25)' },
+      { nombre: 'Santa', pct: '94.18%', color: 'oklch(0.700 0.180 20)' }
+    ];
+
+    const porEstacion = [
+      { nombre: 'KM 402', n: '1,687', pct: '39%', ancho: '100%', color: CIAN },
+      { nombre: 'Viru', n: '1,601', pct: '37%', ancho: '95%', color: CIAN },
+      { nombre: 'Fortaleza', n: '933', pct: '21%', ancho: '55%', color: LILA },
+      { nombre: 'Huarmey', n: '77', pct: '2%', ancho: '6%', color: 'oklch(0.520 0.040 190)' },
+      { nombre: 'Santa', n: '62', pct: '1%', ancho: '5%', color: 'oklch(0.520 0.040 190)' }
+    ].map((e) => ({ ...e, rayas: rayar(e.color) }));
+
+    const servicios = [
+      { nombre: 'Prepago', detalle: 'saldos y recargas · cola 0', uptime: '99.98%', estado: 'operativo', punto: VERDE, cifraFg: 'oklch(0.900 0.015 190)' },
+      { nombre: 'Facturación', detalle: `${s.fact} ms · ${s.cola} comprobantes en cola`, uptime: '98.71%', estado: s.cola > 120 ? 'degradado' : 'operativo', punto: s.cola > 120 ? AMBAR : VERDE, cifraFg: s.cola > 120 ? 'oklch(0.860 0.110 78)' : 'oklch(0.900 0.015 190)' },
+      { nombre: 'Servicio de dominio web', detalle: 'DNS Aunor · réplica secundaria ok', uptime: '100%', estado: 'operativo', punto: VERDE, cifraFg: 'oklch(0.900 0.015 190)' },
+      { nombre: 'Pasarela de tránsitos', detalle: `${s.lat[1] + 12} ms · lag de réplica 0.4 s`, uptime: '99.94%', estado: 'operativo', punto: VERDE, cifraFg: 'oklch(0.900 0.015 190)' }
+    ];
+
+    const slaPct = this.props.slaPct ?? s.sla;
+
+    const foco = this.state.foco;
+    const enfocar = (id) => () => this.setState({ foco: this.state.foco === id ? null : id });
+    const vis = (id) => ({
+      op: !foco || foco === id ? 1 : 0.34,
+      ring: foco === id ? '2px solid oklch(0.760 0.090 200)' : '2px solid transparent'
+    });
+    const SEC = [
+      { id: 'conectividad', label: 'Vías y conectividad', nota: `${operativos}/200` },
+      { id: 'discrepancias', label: 'Discrepancias DAC', nota: s.dac.toFixed(1) + '%' },
+      { id: 'ocr', label: 'OCR de placas', nota: s.ocr.toLocaleString('es-PE') },
+      { id: 'sla', label: 'Cumplimiento SLA', nota: slaPct.toFixed(2) + '%' },
+      { id: 'incidentes', label: 'Incidentes', nota: `${s.activos} activos` },
+      { id: 'servicios', label: 'Servicios', nota: s.cola > 120 ? '1 degradado' : 'todo ok' }
+    ];
+    const secciones = SEC.map((x) => {
+      const on = foco === x.id;
+      return { ...x, onClick: enfocar(x.id),
+        fg: on ? 'oklch(0.150 0.030 200)' : 'oklch(0.880 0.015 190)',
+        notaFg: on ? 'oklch(0.300 0.040 200)' : 'oklch(0.660 0.020 190)',
+        fondo: on ? 'oklch(0.760 0.090 200)' : 'oklch(0.225 0.026 190)',
+        borde: on ? 'oklch(0.840 0.090 200)' : 'oklch(0.360 0.028 190)' };
+    });
+
+    return {
+      secciones, verTodo: () => this.setState({ foco: null }),
+      todoFg: foco ? 'oklch(0.860 0.100 195)' : 'oklch(0.560 0.020 190)',
+      visOcr: vis('ocr'), visDac: vis('discrepancias'), visTopo: vis('conectividad'),
+      visSla: vis('sla'), visInc: vis('incidentes'), visSrv: vis('servicios'),
+      reloj: this.state.reloj, muro, arcos, ocr, criticas, nodos, enlaces, paquetes,
+      latencias, ultimos, sla, porHora, porDia, porEstacion, servicios, ticks,
+      slaCifra: slaPct.toFixed(2),
+      slaFaltan: (99.5 - slaPct).toFixed(2),
+      slaSombra: glow('oklch(0.720 0.085 200)'),
+      slaAncho: Math.max(0, Math.min(100, ((slaPct - 90) / 10) * 100)) + '%'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -59,7 +59,7 @@ public class TelegramAlertService(
             return (false, "Falta configurar el Bot Token y/o el Chat ID.");
 
         var r = await EjecutarAsync(token, chatId, null,
-            "✅ Prueba de conexión — Pulsovial Dashboard\nSi ves este mensaje, las alertas de Telegram están configuradas correctamente.");
+            "✅ Prueba de conexión — SIGMA Dashboard\nSi ves este mensaje, las alertas de Telegram están configuradas correctamente.");
         return (r.Ok, r.Detalle);
     }
 
