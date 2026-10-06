@@ -161,14 +161,14 @@ public record OcrItemDto(
 
 // ── Tránsitos del mes en curso: volumen, forma de cobro y serie diaria ──
 // FormaCobro sale de tra_tipop: E efectivo, T tag (prepago), O cobro por lectura de
-// placa (OCR), S tarjeta de crédito, X exento, resto (M, etc.) otros. El total incluye X;
+// placa (tarifa diferenciada, solo Virú y KM 402; el campo se llama PorPlaca por el código OCR), S tarjeta de crédito, X exento, resto (M, etc.) otros. El total incluye X;
 // los conteos OCR NO (a un exento no se le evalúa la lectura de placa).
 public record TransitosMesDto(
     string Mes,
     int    DiasTranscurridos,
     int    DiasMes,
     int    Total,
-    double PromedioDia,
+    double PromedioDia,   // promedio de días COMPLETOS del mes (excluye hoy)
     int    Proyeccion,
     int    Efectivo,
     int    Tag,
@@ -180,7 +180,11 @@ public record TransitosMesDto(
     int    OcrAciertos,
     int    OcrErrores,
     int    OcrNoLegibles,
-    List<TransitosDiaDto> PorDia
+    List<TransitosDiaDto> PorDia,
+    List<TransitosProyDto> Esperado,   // hoy → fin de mes: tránsitos esperados por día
+    int    DiasCompletos
 );
 
 public record TransitosDiaDto(string Fecha, int Total, int OcrConPlaca, int OcrAciertos);
+
+public record TransitosProyDto(string Fecha, int Esperado);

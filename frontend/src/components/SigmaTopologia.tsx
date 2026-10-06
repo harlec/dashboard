@@ -23,10 +23,10 @@ const UMBRAL_LAT_MS = 24
 
 function statusColor(up: number, total: number, hud = false, lat: number | null = null): string {
   if (total === 0 || up === total) {
-    if (lat != null && lat >= UMBRAL_LAT_MS) return hud ? 'oklch(0.93 0.05 195)' : PANEL.naranja
+    if (lat != null && lat >= UMBRAL_LAT_MS) return PANEL.naranja
     return hud ? 'oklch(0.82 0.11 192)' : SEMAFORO.ok
   }
-  return up / total >= 0.5 ? (hud ? 'oklch(0.93 0.05 195)' : PANEL.naranja) : PANEL.rojo
+  return up / total >= 0.5 ? PANEL.naranja : PANEL.rojo
 }
 
 function staPos(i: number, total: number) {

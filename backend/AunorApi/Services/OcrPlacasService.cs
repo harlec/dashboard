@@ -90,16 +90,34 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
         finally { _transitosMesLock.Release(); }
     }
 
+    // Mediana: resiste días atípicos (feriado, caída de un sistema) mejor que el promedio.
+    private static double Mediana(List<int> valores)
+    {
+        var o = valores.OrderBy(v => v).ToList();
+        int n = o.Count;
+        return n == 0 ? 0 : n % 2 == 1 ? o[n / 2] : (o[n / 2 - 1] + o[n / 2]) / 2.0;
+    }
+
     private async Task<TransitosMesDto> CalcularTransitosMesAsync()
     {
         await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
         await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
-        string pw = PeriodWhere("mes");
         // El total del mes incluye exentos (X), que FiltroBase deja fuera por no ser evaluables en OCR/DAC.
         string baseConExentos = FiltroBase.Replace("'T')", "'T','X')");
 
-        var porDiaFilas = (await conn.QueryAsync<TransitosDiaFila>($@"
+        // "Hoy" según el reloj del servidor de BD (el mismo que usa GETDATE() en el resto de consultas);
+        // el contenedor corre en UTC y cambiaría de día a las 19:00 hora local.
+        var ahora = await conn.ExecuteScalarAsync<DateTime>("SELECT GETDATE()");
+        var hoy = ahora.Date;
+        var iniMes = new DateTime(hoy.Year, hoy.Month, 1);
+        int diasMes = DateTime.DaysInMonth(hoy.Year, hoy.Month);
+        var finMes = iniMes.AddDays(diasMes - 1);
+
+        // Una sola pasada: el mes en curso y, si hace falta, hasta 28 días atrás (ventana de referencia
+        // para la proyección cuando el mes apenas empieza). Siempre ≤ 31 días de datos.
+        var desde = iniMes < hoy.AddDays(-28) ? iniMes : hoy.AddDays(-28);
+        var filas = (await conn.QueryAsync<TransitosDiaFila>($@"
             SELECT CAST(tra_fecha AS DATE) AS Dia,
                    COUNT(*) AS Total,
                    SUM(CASE WHEN tra_tipop = 'E' THEN 1 ELSE 0 END) AS Efectivo,
@@ -113,13 +131,12 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
                    SUM(CASE WHEN tra_tipop <> 'X' AND tra_paten IS NOT NULL AND tra_paten <> '' AND (tra_patocr IS NULL OR tra_patocr = '') THEN 1 ELSE 0 END) AS NoLegibles,
                    SUM(CASE WHEN tra_tipop <> 'X' AND tra_paten IS NOT NULL AND tra_paten <> '' AND tra_patocr IS NOT NULL AND tra_patocr <> '' AND tra_paten <> tra_patocr THEN 1 ELSE 0 END) AS Errores
             FROM transitos t
-            WHERE {pw}
+            WHERE tra_fecha >= @Desde
               {baseConExentos}
             GROUP BY CAST(tra_fecha AS DATE)
-            ORDER BY Dia", commandTimeout: 120)).ToList();
+            ORDER BY Dia", new { Desde = desde }, commandTimeout: 120)).ToList();
 
-        var hoy = DateTime.Now;
-        int diasMes = DateTime.DaysInMonth(hoy.Year, hoy.Month);
+        var porDiaFilas = filas.Where(r => r.Dia >= iniMes).ToList();
         int total    = porDiaFilas.Sum(r => r.Total);
         int efectivo = porDiaFilas.Sum(r => r.Efectivo);
         int tag      = porDiaFilas.Sum(r => r.Tag);
@@ -127,17 +144,40 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
         int tarjeta  = porDiaFilas.Sum(r => r.Tarjeta);
         int exento   = porDiaFilas.Sum(r => r.Exento);
 
-        // El promedio usa días CALENDARIO transcurridos (incluye el día en curso, aún parcial),
-        // así que el día de hoy lo subestima un poco hasta que cierre la jornada.
-        int dias = hoy.Day;
-        double promedio = dias > 0 ? Math.Round((double)total / dias, 0) : 0;
+        // ── Promedio y proyección: SOLO con días completos (el día en curso aún no termina) ──
+        var completosMes = porDiaFilas.Where(r => r.Dia < hoy).ToList();
+        var ventana = filas.Where(r => r.Dia < hoy && r.Dia >= hoy.AddDays(-28)).ToList();
+        double promedio = completosMes.Count > 0 ? completosMes.Average(r => r.Total)
+                        : ventana.Count > 0      ? ventana.Average(r => r.Total) : 0;
+
+        // Esperado de un día = mediana de ese mismo día de la semana en las últimas 4 semanas completas
+        // (el tráfico tiene patrón semanal: un domingo no se parece a un viernes). Si hay menos de
+        // 2 muestras de ese día de la semana, se usa la mediana de todos los días de la ventana.
+        double Esperado(DateTime d)
+        {
+            var mismos = ventana.Where(r => r.Dia.DayOfWeek == d.DayOfWeek).Select(r => r.Total).ToList();
+            if (mismos.Count >= 2) return Mediana(mismos);
+            return ventana.Count > 0 ? Mediana(ventana.Select(r => r.Total).ToList()) : promedio;
+        }
+
+        var esperados = new List<TransitosProyDto>();
+        for (var d = hoy; d <= finMes; d = d.AddDays(1))
+            esperados.Add(new TransitosProyDto(d.ToString("yyyy-MM-dd"), (int)Math.Round(Esperado(d))));
+
+        // Cierre = días completos reales + hoy (lo que ya llevamos, o lo esperado si aún va por debajo)
+        //          + lo esperado para los días que faltan.
+        int realCompleto = completosMes.Sum(r => r.Total);
+        int hoyReal = porDiaFilas.FirstOrDefault(r => r.Dia == hoy)?.Total ?? 0;
+        int proyeccion = realCompleto + Math.Max(hoyReal, esperados.Count > 0 ? esperados[0].Esperado : 0)
+                       + esperados.Skip(1).Sum(e => e.Esperado);
 
         return new TransitosMesDto(
-            hoy.ToString("yyyy-MM"), dias, diasMes, total, promedio, (int)Math.Round(promedio * diasMes),
+            hoy.ToString("yyyy-MM"), hoy.Day, diasMes, total, Math.Round(promedio, 0), proyeccion,
             efectivo, tag, porPlaca, tarjeta, exento, total - efectivo - tag - porPlaca - tarjeta - exento,
             porDiaFilas.Sum(r => r.ConPlaca), porDiaFilas.Sum(r => r.Aciertos),
             porDiaFilas.Sum(r => r.Errores), porDiaFilas.Sum(r => r.NoLegibles),
-            porDiaFilas.Select(r => new TransitosDiaDto(r.Dia.ToString("yyyy-MM-dd"), r.Total, r.ConPlaca, r.Aciertos)).ToList());
+            porDiaFilas.Select(r => new TransitosDiaDto(r.Dia.ToString("yyyy-MM-dd"), r.Total, r.ConPlaca, r.Aciertos)).ToList(),
+            esperados, completosMes.Count);
     }
 
     // ── Resumen + por estación + tipos de error ───────────────────────────

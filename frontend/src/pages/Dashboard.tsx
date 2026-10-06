@@ -35,7 +35,7 @@ let hudActivo = false
 function aplicarPaleta(hud: boolean) {
   hudActivo = hud
   Object.assign(SEM, hud
-    ? { ok: 'oklch(0.82 0.11 190)', warn: 'oklch(0.93 0.05 195)', info: 'oklch(0.74 0.10 195)', lila: 'oklch(0.66 0.09 195)' }
+    ? { ok: 'oklch(0.82 0.11 190)', warn: PANEL.naranja, critico: PANEL.rojo, info: 'oklch(0.74 0.10 195)', lila: 'oklch(0.66 0.09 195)' }
     : { ...BASE_SEM })
 }
 const estColor = (nombre: string) => hudActivo ? EST_HUD : estacionColor(nombre)
@@ -558,11 +558,11 @@ export function Dashboard() {
             <CardHeader title="Tránsitos y cobro" right={<PeriodChip label={tm ? `día ${tm.diasTranscurridos} de ${tm.diasMes}` : 'mes'} />} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: TEXTO.terciario }}>promedio diario</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: TEXTO.terciario }} title="Promedio de los días completos del mes (no incluye hoy, que aún no termina)">promedio diario · días completos</div>
                 <div style={{ fontSize: 30, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{tm ? tm.promedioDia.toLocaleString('es-PE') : '—'}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: TEXTO.terciario }}>proyección de cierre</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: TEXTO.terciario }} title="Días completos + hoy + días restantes estimados con la mediana de ese mismo día de la semana en las últimas 4 semanas">proyección de cierre</div>
                 <div style={{ fontSize: 30, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{tm ? tm.proyeccion.toLocaleString('es-PE') : '—'}</div>
               </div>
             </div>
@@ -570,8 +570,8 @@ export function Dashboard() {
               // Un slot por día del mes: reales sólidos, restantes proyectados (borde punteado) al promedio
               const dias = tm?.diasMes ?? 31
               const porDia = new Map((tm?.porDia ?? []).map(d => [parseInt(d.fecha.slice(8, 10), 10), d.total]))
-              const prom = tm?.promedioDia ?? 0
-              const maxDia = Math.max(1, prom, ...porDia.values())
+              const esperado = new Map((tm?.esperado ?? []).map(e => [parseInt(e.fecha.slice(8, 10), 10), e.esperado]))
+              const maxDia = Math.max(1, ...porDia.values(), ...esperado.values())
               return (
                 <div>
                   <div style={{ height: 62, display: 'flex', alignItems: 'flex-end', gap: 3, boxShadow: 'inset 0 -1px 0 oklch(0.400 0.028 190)' }}>
@@ -579,8 +579,8 @@ export function Dashboard() {
                       const dia = i + 1
                       const real = porDia.get(dia)
                       const proyectado = real == null
-                      const alto = Math.max(4, (proyectado ? prom : real) / maxDia * 100)
-                      return <div key={dia} title={proyectado ? `día ${dia}: proyectado` : `día ${dia}: ${real.toLocaleString('es-PE')}`} style={{
+                      const alto = Math.max(4, ((proyectado ? esperado.get(dia) ?? tm?.promedioDia ?? 0 : real) as number) / maxDia * 100)
+                      return <div key={dia} title={proyectado ? `día ${dia}: esperado ${(esperado.get(dia) ?? 0).toLocaleString('es-PE')}` : `día ${dia}: ${real.toLocaleString('es-PE')}`} style={{
                         flex: '1 1 0', height: `${alto}%`, borderRadius: '2px 2px 0 0', boxSizing: 'border-box',
                         background: proyectado ? 'transparent' : SEM.info,
                         border: proyectado ? `1px dashed ${TEXTO.terciario}` : undefined, borderBottom: proyectado ? 'none' : undefined,
@@ -589,7 +589,7 @@ export function Dashboard() {
                     })}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, fontWeight: 500, color: TEXTO.terciario }}>
-                    <span>real</span><span>proyectado</span>
+                    <span>real</span><span>proyectado · mediana por día de la semana</span>
                   </div>
                 </div>
               )
@@ -600,7 +600,7 @@ export function Dashboard() {
                 { nombre: 'Efectivo', n: tm?.efectivo ?? 0, color: SEM.warn },
                 { nombre: 'Tarjeta', n: tm?.tarjeta ?? 0, color: SEM.ok },
                 { nombre: 'Prepago', n: tm?.tag ?? 0, color: SEM.info },
-                { nombre: 'OCR', n: tm?.porPlaca ?? 0, color: 'oklch(0.72 0.10 230)' },
+                { nombre: 'Tarifa diferenciada', n: tm?.porPlaca ?? 0, color: 'oklch(0.72 0.10 230)' },
                 { nombre: 'Exento + otros', n: (tm?.exento ?? 0) + (tm?.otros ?? 0), color: 'oklch(0.50 0.02 190)' },
               ]} />
             </div>
@@ -690,7 +690,7 @@ export function Dashboard() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {filas.map((f, i) => (
-                      <div key={f.nombre} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 2px', boxShadow: i > 0 ? 'inset 0 1px 0 oklch(0.290 0.024 190)' : undefined }}>
+                      <div key={f.nombre} title={f.nombre === 'Sin placa de referencia' ? 'Tránsitos sin placa capturada en el sistema: no hay con qué comparar la lectura del OCR' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 2px', boxShadow: i > 0 ? 'inset 0 1px 0 oklch(0.290 0.024 190)' : undefined }}>
                         <span style={{ width: 8, height: 8, borderRadius: 2, background: f.color, flex: '0 0 auto' }} />
                         <span style={{ flex: 1, fontSize: 16, fontWeight: 500 }}>{f.nombre}</span>
                         <span style={{ fontSize: 14, fontWeight: 500, color: TEXTO.terciario, fontVariantNumeric: 'tabular-nums' }}>{f.n.toLocaleString('es-PE')}</span>

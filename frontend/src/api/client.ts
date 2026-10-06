@@ -288,6 +288,8 @@ export interface TransitosMes {
   efectivo: number; tag: number; porPlaca: number; tarjeta: number; exento: number; otros: number
   ocrConPlaca: number; ocrAciertos: number; ocrErrores: number; ocrNoLegibles: number
   porDia: TransitosDia[]
+  esperado: { fecha: string; esperado: number }[]
+  diasCompletos: number
 }
 export interface OcrResumen {
   totalConPlaca: number; aciertos: number; sinDetectar: number; errores: number
