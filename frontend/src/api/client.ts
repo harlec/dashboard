@@ -55,8 +55,10 @@ export const api = {
     )}`),
   disponibilidadDiaria: (dias: number) =>
     request<DisponibilidadDiaria>(`/reporte/disponibilidad-diaria?dias=${dias}`),
-  discrepanciasResumen: (periodo: string) =>
-    request<DiscrepanciasResumen>(`/discrepancias/resumen?periodo=${periodo}`),
+  discrepanciasResumen: (periodo: string, desde?: string, hasta?: string) =>
+    request<DiscrepanciasResumen>(`/discrepancias/resumen?${new URLSearchParams(
+      Object.fromEntries(Object.entries({ periodo, desde, hasta }).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
   discrepanciasDetalle: (p: DiscrepanciasParams) =>
     request<DiscrepanciasDetalle>(`/discrepancias/detalle?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
@@ -66,6 +68,7 @@ export const api = {
   discrepanciasVias: (periodo: string) =>
     request<ViaConteo[]>(`/discrepancias/vias?periodo=${periodo}`),
   servicios: () => request<ServicioLive[]>('/servicios'),
+  servicioChecks: () => request<ServicioCheckLive[]>('/servicio-checks'),
   discrepanciasViaEvolucion: (p: { estacion: string; via: string; dias?: number }) =>
     request<ViaEvolucion>(`/discrepancias/via-evolucion?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
@@ -79,6 +82,8 @@ export const api = {
   ocrResumen: (periodo: string, soloPrepago = false) =>
     request<OcrResumen>(`/ocr/resumen?periodo=${periodo}&soloPrepago=${soloPrepago}`),
   ocrTransitosMes: () => request<TransitosMes>('/ocr/transitos-mes'),
+  ocrTodasVias: (periodo: string, soloPrepago = false) =>
+    request<OcrTodaVia[]>(`/ocr/todas-vias?periodo=${periodo}&soloPrepago=${soloPrepago}`),
   ocrAnalisis: (soloPrepago = false) =>
     request<OcrAnalisis>(`/ocr/analisis?soloPrepago=${soloPrepago}`),
   ocrMejoresVias: (periodo: string, soloPrepago = false) =>
@@ -89,7 +94,7 @@ export const api = {
     request<OcrDetalle>(`/ocr/detalle?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
-  ocrViaEvolucion: (p: { estacion: string; via: string; dias?: number; soloPrepago?: boolean }) =>
+  ocrViaEvolucion: (p: { estacion: string; via: string; dias?: number; horas?: number; soloPrepago?: boolean }) =>
     request<OcrViaEvolucion>(`/ocr/via-evolucion?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
@@ -184,6 +189,13 @@ export interface CamaraStatus { id: number; camara: number; ultimoEmail?: string
 
 // Servicios de plataforma (sin vía) — uptimePct es manual por ahora (ver Admin → Servicios);
 // el monitoreo real (servicio-checks) queda para una segunda etapa.
+// Chequeo de servicio (ping/TCP/HTTP) con su último resultado — alimenta los nodos de infraestructura del mapa
+export interface ServicioCheckLive {
+  id: number; servicioId: number; nombre: string; tipoCheck: string; host: string; puerto?: number; ubicacion?: string
+  monitorear: boolean; activo: boolean
+  ultimoEstado?: string; ultimaLatenciaMs?: number; ultimoCheckEn?: string
+  servicio?: { id: number; nombre: string }
+}
 export interface ServicioLive { id: number; nombre: string; descripcion?: string; uptimePct?: number; activo: boolean }
 
 export interface Mantenimiento {
@@ -265,7 +277,7 @@ export interface DiscrepanciasDetalle {
   items: DiscrepanciaItem[]
 }
 export interface DiscrepanciasParams {
-  periodo?: string; estacion?: string; placa?: string
+  periodo?: string; estacion?: string; placa?: string; desde?: string; hasta?: string
   pagina?: number; porPagina?: number
 }
 
@@ -299,6 +311,12 @@ export interface OcrResumen {
   porVia: OcrVia[]
 }
 // Mejores vías de referencia para el período elegido (score de Wilson: precisión ajustada por volumen)
+// Una vía con sus dos scores de Wilson (95 %): acierto mínimo seguro y error mínimo seguro
+export interface OcrTodaVia {
+  estacion: string; via: string; total: number
+  aciertos: number; noReconocidas: number; confusiones: number
+  efectividad: number; scoreAcierto: number; scoreError: number
+}
 export interface OcrMejorViaPeriodo {
   estacion: string; via: string; total: number; aciertos: number; tasaError: number; score: number
 }
@@ -343,6 +361,7 @@ export interface OcrDiaVia {
 }
 export interface OcrViaEvolucion {
   estacion: string; via: string; dias: number
+  horas?: number   // > 0: la serie `diaria` viene por hora (fecha = "yyyy-MM-dd HH:00")
   diaria: OcrDiaVia[]
   porHora: OcrCelda[]
 }

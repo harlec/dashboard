@@ -14,9 +14,15 @@ public class DiscrepanciasController(
     ILogger<DiscrepanciasController> log) : ControllerBase
 {
     [HttpGet("resumen")]
-    public async Task<IActionResult> Resumen([FromQuery] string periodo = "12h")
+    public async Task<IActionResult> Resumen(
+        [FromQuery] string periodo = "12h", [FromQuery] string? desde = null, [FromQuery] string? hasta = null)
     {
         if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
+        if (periodo == "rango")
+        {
+            if (!DiscrepanciasService.TryRango(desde, hasta, out var d, out var h)) return BadRequest("rango inválido");
+            return Ok(await svc.GetResumenAsync(periodo, d, h));
+        }
         return Ok(await svc.GetResumenAsync(periodo));
     }
 
@@ -59,23 +65,39 @@ public class DiscrepanciasController(
         [FromQuery] string? estacion  = null,
         [FromQuery] string? placa     = null,
         [FromQuery] int     pagina    = 1,
-        [FromQuery] int     porPagina = 50)
+        [FromQuery] int     porPagina = 50,
+        [FromQuery] string? desde     = null,
+        [FromQuery] string? hasta     = null)
     {
         if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
         pagina    = Math.Max(1, pagina);
         porPagina = Math.Clamp(porPagina, 10, 100);
-        return Ok(await svc.GetDetalleAsync(periodo, estacion, placa, pagina, porPagina));
+        DateTime? d = null, h = null;
+        if (periodo == "rango")
+        {
+            if (!DiscrepanciasService.TryRango(desde, hasta, out var dd, out var hh)) return BadRequest("rango inválido");
+            d = dd; h = hh;
+        }
+        return Ok(await svc.GetDetalleAsync(periodo, estacion, placa, pagina, porPagina, d, h));
     }
 
     [HttpGet("csv")]
     public async Task<IActionResult> Csv(
         [FromQuery] string  periodo  = "12h",
         [FromQuery] string? estacion = null,
-        [FromQuery] string? placa    = null)
+        [FromQuery] string? placa    = null,
+        [FromQuery] string? desde    = null,
+        [FromQuery] string? hasta    = null)
     {
         if (!DiscrepanciasService.EsPeriodoValido(periodo)) periodo = "12h";
+        DateTime? d = null, h = null;
+        if (periodo == "rango")
+        {
+            if (!DiscrepanciasService.TryRango(desde, hasta, out var dd, out var hh)) return BadRequest("rango inválido");
+            d = dd; h = hh;
+        }
 
-        var detalle = await svc.GetDetalleAsync(periodo, estacion, placa, 1, 100_000);
+        var detalle = await svc.GetDetalleAsync(periodo, estacion, placa, 1, 100_000, d, h);
         var csv = CsvExport.Build(
             ["Fecha", "Via", "Ticket", "Placa Tabulada", "Placa Detectada", "Tabulada", "Cat Tabulada", "Detectada", "Cat Detectada", "Tipo Operacion", "Estacion", "Cobrador"],
             detalle.Items.Select(i => new object?[] {

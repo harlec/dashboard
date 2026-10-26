@@ -325,6 +325,43 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             .ToList();
     }
 
+    // ── Todas las vías del período, con score de Wilson de acierto y de error ──
+    public async Task<List<OcrTodasViasDto>> GetTodasViasAsync(string periodo, bool soloPrepago = false)
+    {
+        await using var conn = new SqlConnection(await consolidado.GetAsync());
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+        string pw = PeriodWhere(periodo);
+        string fp = FiltroPrepago(soloPrepago);
+
+        var vias = (await conn.QueryAsync<OcrViaCrudaDto>($@"
+            SELECT
+                {EstacionCase} AS Estacion,
+                ISNULL(vd.via_nombr, 'Via ' + CAST(t.tra_nuvia AS VARCHAR)) AS Via,
+                COUNT(*) AS Total,
+                SUM(CASE WHEN tra_paten = tra_patocr THEN 1 ELSE 0 END) AS Aciertos,
+                SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = '' THEN 1 ELSE 0 END) AS NoReconocidas,
+                SUM(CASE WHEN tra_patocr IS NOT NULL AND tra_patocr <> ''
+                          AND tra_paten <> tra_patocr THEN 1 ELSE 0 END) AS Confusiones
+            FROM transitos t
+            LEFT JOIN viadef vd ON t.tra_coest = vd.via_coest AND t.tra_nuvia = vd.via_nuvia
+            WHERE {pw}
+              {FiltroBase}
+              {fp}
+              AND tra_paten IS NOT NULL AND tra_paten <> ''
+            GROUP BY t.tra_coest, t.tra_nuvia, vd.via_nombr",
+            commandTimeout: 60)).ToList();
+
+        return vias
+            .Select(v => new OcrTodasViasDto(
+                v.Estacion, v.Via, v.Total, v.Aciertos, v.NoReconocidas, v.Confusiones,
+                v.Total > 0 ? Math.Round((decimal)v.Aciertos * 100 / v.Total, 1) : 0m,
+                Math.Round((decimal)WilsonScore(v.Aciertos, v.Total), 1),
+                Math.Round((decimal)WilsonScore(v.NoReconocidas + v.Confusiones, v.Total), 1)))
+            .OrderByDescending(v => v.ScoreAcierto)
+            .ToList();
+    }
+
     // ── Análisis de confusión de caracteres + por hora + pares ──────────
     public async Task<OcrAnalisisDto> GetAnalisisAsync(bool soloPrepago = false)
     {
@@ -576,7 +613,7 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
     }
 
     // ── Evolución de una vía específica en el tiempo (día a día) ────────
-    public async Task<OcrViaEvolucionDto> GetViaEvolucionAsync(string estacion, string via, int dias, bool soloPrepago = false)
+    public async Task<OcrViaEvolucionDto> GetViaEvolucionAsync(string estacion, string via, int dias, bool soloPrepago = false, int horas = 0)
     {
         await using var conn = new SqlConnection(await consolidado.GetAsync());
         await conn.OpenAsync();
@@ -591,8 +628,10 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
         const string viaMatch = @"
             (vd.via_nombr = @via OR (vd.via_nombr IS NULL AND 'Via ' + CAST(t.tra_nuvia AS VARCHAR) = @via))";
 
+        // horas > 0 → ventana corta (p. ej. últimas 24 h) con serie por hora; si no, por día
+        string ventana = horas > 0 ? "tra_fecha >= DATEADD(HOUR, -@horas, GETDATE())" : "tra_fecha >= DATEADD(DAY, -@dias, GETDATE())";
         string filtroBase = $@"
-            tra_fecha >= DATEADD(DAY, -@dias, GETDATE())
+            {ventana}
             AND tra_tipop IN ('E','S','O','M','T')
             AND tra_titra = 'TR'
             AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)
@@ -612,10 +651,12 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             SUM(CASE WHEN tra_patocr IS NULL OR tra_patocr = ''
                           OR tra_paten <> tra_patocr THEN 1 ELSE 0 END)";
 
-        var param = new { coest, via, dias };
+        var param = new { coest, via, dias, horas };
 
+        string bucket = horas > 0 ? "CONVERT(varchar(13), tra_fecha, 120)" : "CAST(tra_fecha AS DATE)";
+        string etiqueta = horas > 0 ? "CONVERT(varchar(13), tra_fecha, 120) + ':00'" : "CONVERT(varchar(10), CAST(tra_fecha AS DATE), 23)";
         var diaria = (await conn.QueryAsync<OcrDiaViaDto>($@"
-            SELECT CONVERT(varchar(10), CAST(tra_fecha AS DATE), 23) AS Fecha,
+            SELECT {etiqueta} AS Fecha,
                    COUNT(*) AS Total,
                    ROUND(100.0 * {errSum}    / NULLIF(COUNT(*), 0), 1) AS TasaError,
                    ROUND(100.0 * {noDetSum}  / NULLIF(COUNT(*), 0), 1) AS TasaNoDetectada,
@@ -623,11 +664,11 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             FROM transitos t
             LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
             WHERE {filtroBase}
-            GROUP BY CAST(tra_fecha AS DATE)
+            GROUP BY {bucket}
             ORDER BY Fecha",
             param, commandTimeout: 90)).ToList();
 
-        var porHora = (await conn.QueryAsync<OcrCeldaDto>($@"
+        var porHora = horas > 0 ? new List<OcrCeldaDto>() : (await conn.QueryAsync<OcrCeldaDto>($@"
             SELECT DATEPART(HOUR, tra_fecha) AS Hora,
                    COUNT(*) AS Total,
                    ROUND(100.0 * {errSum} / NULLIF(COUNT(*), 0), 1) AS TasaError
@@ -638,6 +679,6 @@ public class OcrPlacasService(ConsolidadoConnectionProvider consolidado)
             ORDER BY Hora",
             param, commandTimeout: 90)).ToList();
 
-        return new OcrViaEvolucionDto(estacion, via, dias, diaria, porHora);
+        return new OcrViaEvolucionDto(estacion, via, horas > 0 ? 1 : dias, diaria, porHora, horas);
     }
 }

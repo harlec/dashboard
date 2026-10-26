@@ -3,7 +3,7 @@ import { WallTopbar } from '../components/WallTopbar'
 import {
   api,
   type ViaConteo, type IncidenteItem, type ServicioLive,
-  type IncidenteResumen, type OcrVia,
+  type IncidenteResumen, type OcrVia, type ServicioCheckLive,
   type SlaEstacion, type HoraAnalisis, type TransitosMes,
 } from '../api/client'
 import { useLiveDashboard } from '../hooks/useLiveDashboard'
@@ -282,7 +282,7 @@ function BarraApilada({ segmentos, total, sinConteo = false }: { segmentos: Segm
 
 // ── Alertas vivas del pie: solo lo que está pasando AHORA (equipos sin respuesta y vías con
 // discrepancia en la última hora). Lo acumulado o histórico (mes, 30 días) no entra al feed. ──
-interface AlertaFeed { sev: 'critico' | 'warn' | 'info'; tag: 'RED' | 'DAC' | 'TOP DAC' | 'TOP OCR'; texto: string }
+interface AlertaFeed { sev: 'critico' | 'warn'; tag: 'RED' | 'DAC' | 'OCR'; texto: string }
 
 export function Dashboard() {
   const escala = useEscalaTablero(1920)
@@ -371,6 +371,15 @@ export function Dashboard() {
     return () => clearInterval(id)
   }, [])
 
+  // Chequeos de servicio (CCO / Nuevo Chimbote): son los nodos de infraestructura del mapa. Mismo ciclo que el mapa (30 s).
+  const [checksServ, setChecksServ] = useState<ServicioCheckLive[]>([])
+  useEffect(() => {
+    const cargar = () => { api.servicioChecks().then(setChecksServ).catch(() => {}) }
+    cargar()
+    const id = setInterval(cargar, 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const [servicios, setServicios] = useState<ServicioLive[]>([])
   useEffect(() => {
     const cargar = () => { api.servicios().then(setServicios).catch(() => {}) }
@@ -444,21 +453,28 @@ export function Dashboard() {
     return out.sort((a, b) => (a.sev === b.sev ? 0 : a.sev === 'critico' ? -1 : 1))
   }, [equiposCaidos, incidentesAbiertos, viasDegradadas, viasVigilancia])
 
-  // Rankings (no son fallas): las vías con más discrepancias y peor lectura OCR, ordenadas por el
-  // límite inferior de Wilson para que una vía con pocos tránsitos no encabece la lista.
+  // Peores vías de DAC (12 h) y de lectura OCR (24 h), ordenadas por el límite inferior de Wilson
+  // para que una vía con pocos tránsitos no encabece la lista. Son fallas de calidad: solo entran las
+  // que están fuera de meta, en rojo si son severas y en naranja si no.
   const rankings = useMemo<AlertaFeed[]>(() => {
     const out: AlertaFeed[] = []
-    viasTop.slice(0, 3).filter(v => v.total > 0).forEach((v, i) => out.push({
-      sev: 'info', tag: 'TOP DAC',
-      texto: `#${i + 1} Vía ${v.via} ${v.estacion} · ${v.pct.toFixed(1)}% de discrepancia 12 h (${v.total}/${v.totalTransitos}) · confirmado ${v.pctWilson.toFixed(1)}%`,
-    }))
-    ocrVias24.slice(0, 3).filter(v => v.noReconocidas + v.confusiones > 0).forEach((v, i) => out.push({
-      sev: 'info', tag: 'TOP OCR',
-      texto: `#${i + 1} Vía ${v.via} ${v.estacion} · ${v.efectividad.toFixed(1)}% de acierto OCR 24 h (${v.aciertos}/${v.total}) · ${v.noReconocidas} no legibles`,
+    const yaAlertadas = new Set([...viasDegradadas, ...viasVigilancia].map(v => `${v.estacion}-${v.via}`))
+    // El número es la posición real entre las peores (#1 = la peor), aunque otra vía ya esté alertada
+    viasTop.slice(0, 3).map((v, i) => ({ v, i }))
+      .filter(({ v }) => v.total > 0 && v.pct > 100 - META && !yaAlertadas.has(`${v.estacion}-${v.via}`))
+      .forEach(({ v, i }) => out.push({
+        sev: severidadDac(v) === 'critico' ? 'critico' : 'warn', tag: 'DAC',
+        texto: `#${i + 1} Vía ${v.via} ${v.estacion} · ${v.pct.toFixed(1)}% de discrepancia en 12 h (${v.total}/${v.totalTransitos}) · confirmado ${v.pctWilson.toFixed(1)}%`,
+      }))
+    ocrVias24.slice(0, 3).map((v, i) => ({ v, i })).filter(({ v }) => v.noReconocidas + v.confusiones > 0 && v.efectividad < 95).forEach(({ v, i }) => out.push({
+      sev: v.efectividad < 85 ? 'critico' : 'warn', tag: 'OCR',
+      texto: `#${i + 1} Vía ${v.via} ${v.estacion} · ${v.efectividad.toFixed(1)}% de acierto OCR en 24 h (${v.aciertos}/${v.total}) · ${v.noReconocidas} no legibles`,
     }))
     return out
-  }, [viasTop, ocrVias24])
-  const feedItems = [...alertas, ...rankings]
+  }, [viasTop, ocrVias24, viasDegradadas, viasVigilancia])
+  // Rojo primero, luego naranja; todo lo que aparece es una alerta y cuenta en el encabezado
+  const feedItems = [...alertas, ...rankings].sort((a, b) => (a.sev === 'critico' ? 0 : 1) - (b.sev === 'critico' ? 0 : 1))
+  const feedActivas = feedItems
 
   if (!data) return (
     <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#04100f', color: TEXTO.secundario }}>
@@ -608,7 +624,7 @@ export function Dashboard() {
 
           {/* Centro · fila 1 — Conectividad de nodos */}
             <Card id="conectividad" foco={foco} onFocus={onFocus} style={{ padding: '14px 18px' }}>
-              <SigmaTopologia estaciones={estaciones} hud={hud} />
+              <SigmaTopologia estaciones={estaciones} servicioChecks={checksServ} hud={hud} />
             </Card>
 
           {/* Der · fila 1 — Disponibilidad 30 días + equipos caídos o sin dato */}
@@ -804,10 +820,10 @@ export function Dashboard() {
 
         {/* ── Feed de alertas actuales ── */}
         <style>{`@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
-        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 14, height: 38, padding: '0 16px', borderRadius: hud ? 8 : 999, background: 'oklch(0.200 0.026 190)', boxShadow: `inset 0 0 0 1px ${alertas.some(a => a.sev === 'critico') ? 'oklch(0.50 0.12 25)' : 'oklch(0.360 0.028 190)'}` }}>
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, letterSpacing: '.12em', color: alertas.length ? PANEL.rojo : SEM.ok }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: alertas.length ? PANEL.rojo : SEM.ok, animation: alertas.length ? 'breathe 1.4s ease-in-out infinite' : undefined }} />
-            ALERTAS · {alertas.length}
+        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 14, height: 38, padding: '0 16px', borderRadius: hud ? 8 : 999, background: 'oklch(0.200 0.026 190)', boxShadow: `inset 0 0 0 1px ${feedItems.some(a => a.sev === 'critico') ? 'oklch(0.50 0.12 25)' : 'oklch(0.360 0.028 190)'}` }}>
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, letterSpacing: '.12em', color: feedItems.some(a => a.sev === 'critico') ? PANEL.rojo : feedActivas.length ? PANEL.naranja : SEM.ok }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: feedItems.some(a => a.sev === 'critico') ? PANEL.rojo : feedActivas.length ? PANEL.naranja : SEM.ok, animation: feedActivas.length ? 'breathe 1.4s ease-in-out infinite' : undefined }} />
+            ALERTAS · {feedActivas.length}
           </div>
           <div style={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', position: 'relative' }}>
             {feedItems.length === 0
@@ -818,7 +834,7 @@ export function Dashboard() {
                     <div key={copia} style={{ display: 'flex', alignItems: 'center', gap: 34, paddingRight: 34 }}>
                       {feedItems.map((a, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, whiteSpace: 'nowrap', fontSize: 15, fontWeight: 500 }}>
-                          <span style={{ padding: '1px 8px', borderRadius: 6, fontSize: 12, fontWeight: 700, letterSpacing: '.08em', color: 'oklch(0.16 0.03 200)', background: a.sev === 'critico' ? PANEL.rojo : a.sev === 'warn' ? SEM.warn : SEM.info }}>{a.tag}</span>
+                          <span style={{ padding: '1px 8px', borderRadius: 6, fontSize: 12, fontWeight: 700, letterSpacing: '.08em', color: 'oklch(0.16 0.03 200)', background: a.sev === 'critico' ? PANEL.rojo : SEM.warn }}>{a.tag}</span>
                           {a.texto}
                         </div>
                       ))}

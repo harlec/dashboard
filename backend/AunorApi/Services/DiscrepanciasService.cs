@@ -9,11 +9,28 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
 
     // Períodos válidos → fragmento WHERE que usa GETDATE() del propio SQL Server
     private static readonly HashSet<string> PeriodosValidos =
-        ["1h", "4h", "12h", "24h", "ayer", "mes"];
+        ["1h", "4h", "12h", "24h", "ayer", "mes", "rango"];
 
     public static bool EsPeriodoValido(string p) => PeriodosValidos.Contains(p);
 
-    private static string PeriodWhere(string periodo) => periodo switch {
+    // Rango personalizado: fechas yyyy-MM-dd (hasta inclusive). Se incrustan como
+    // literales ya parseados a DateTime, así que no hay inyección posible.
+    public static bool TryRango(string? desde, string? hasta, out DateTime d, out DateTime h)
+    {
+        d = h = default;
+        if (!DateTime.TryParse(desde, System.Globalization.CultureInfo.InvariantCulture, out var a)) return false;
+        if (!DateTime.TryParse(hasta, System.Globalization.CultureInfo.InvariantCulture, out var b)) return false;
+        d = a.Date; h = b.Date.AddDays(1);
+        if (h <= d) return false;
+        if ((h - d).TotalDays > 92) d = h.AddDays(-92);
+        return true;
+    }
+
+    private static string RangoWhere(DateTime d, DateTime h) =>
+        $"tra_fecha >= '{d:yyyy-MM-dd}T00:00:00' AND tra_fecha < '{h:yyyy-MM-dd}T00:00:00'";
+
+    private static string PeriodWhere(string periodo, DateTime? d = null, DateTime? h = null) =>
+        periodo == "rango" && d != null && h != null ? RangoWhere(d.Value, h.Value) : periodo switch {
         "1h"   => "tra_fecha >= DATEADD(HOUR,  -1, GETDATE())",
         "4h"   => "tra_fecha >= DATEADD(HOUR,  -4, GETDATE())",
         "12h"  => "tra_fecha >= DATEADD(HOUR, -12, GETDATE())",
@@ -24,7 +41,12 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         _      => "tra_fecha >= DATEADD(HOUR, -12, GETDATE())"
     };
 
-    private static string PeriodBucket(string periodo) => periodo switch {
+    private static string PeriodBucket(string periodo, DateTime? d = null, DateTime? h = null) =>
+        periodo == "rango" && d != null && h != null
+            ? ((h.Value - d.Value).TotalDays <= 1
+                ? "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/60*60, 0)"
+                : "CAST(CAST(tra_fecha AS DATE) AS DATETIME)")
+            : periodo switch {
         "1h"           => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/10*10, 0)",
         "4h"           => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/20*20, 0)",
         "12h"          => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/30*30, 0)",
@@ -33,8 +55,9 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         _              => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/30*30, 0)"
     };
 
-    private static string FormatBucket(DateTime dt, string periodo) =>
-        periodo == "mes" ? dt.ToString("dd/MM") : dt.ToString("HH:mm");
+    private static string FormatBucket(DateTime dt, string periodo, DateTime? d = null, DateTime? h = null) =>
+        periodo == "mes" || (periodo == "rango" && d != null && h != null && (h.Value - d.Value).TotalDays > 1)
+            ? dt.ToString("dd/MM") : dt.ToString("HH:mm");
 
     private const string EstacionCase = @"CASE tra_coest
         WHEN 1 THEN 'FORTALEZA' WHEN 2 THEN 'HUARMEY'
@@ -55,11 +78,11 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         INNER JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
                          AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
 
-    public async Task<DiscrepanciasResumenDto> GetResumenAsync(string periodo)
+    public async Task<DiscrepanciasResumenDto> GetResumenAsync(string periodo, DateTime? desde = null, DateTime? hasta = null)
     {
         await using var conn = new SqlConnection(await consolidado.GetAsync());
-        string pw     = PeriodWhere(periodo);
-        string bucket = PeriodBucket(periodo);
+        string pw     = PeriodWhere(periodo, desde, hasta);
+        string bucket = PeriodBucket(periodo, desde, hasta);
 
         // 1. Total discrepancias
         var total = await conn.ExecuteScalarAsync<int>($@"
@@ -140,7 +163,7 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
             ORDER BY Bucket ASC")).ToList();
 
         var trend = trendRaw
-            .Select(r => new TrendPuntoDto(FormatBucket(r.Bucket, periodo), r.Estacion, r.Total))
+            .Select(r => new TrendPuntoDto(FormatBucket(r.Bucket, periodo, desde, hasta), r.Estacion, r.Total))
             .ToList();
 
         // 6. Vías — discrepancias y tránsitos totales, para ordenar por TASA de
@@ -287,10 +310,11 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
     }
 
     public async Task<DiscrepanciasDetalleDto> GetDetalleAsync(
-        string periodo, string? estacion, string? placa, int pagina, int porPagina)
+        string periodo, string? estacion, string? placa, int pagina, int porPagina,
+        DateTime? desde = null, DateTime? hasta = null)
     {
         await using var conn = new SqlConnection(await consolidado.GetAsync());
-        string pw = PeriodWhere(periodo);
+        string pw = PeriodWhere(periodo, desde, hasta);
 
         int? coest = estacion switch {
             "FORTALEZA" => 1, "HUARMEY" => 2, "402" => 3, "VIRU" => 4, "SANTA" => 5, _ => null

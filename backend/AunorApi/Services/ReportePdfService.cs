@@ -1,4 +1,5 @@
 using AunorApi.Data;
+using AunorApi.DTOs;
 using Microsoft.EntityFrameworkCore;
 using MigraDocCore.DocumentObjectModel;
 using MigraDocCore.DocumentObjectModel.Tables;
@@ -114,6 +115,66 @@ public class ReportePdfService(AppDbContext db, ReporteService reporteService, I
         using var ms = new MemoryStream();
         renderer.PdfDocument.Save(ms, false);  // closeStream:false — necesitamos leer ms.ToArray() después
         return ms.ToArray();
+    }
+
+    // ── Ranking OCR · todas las vías (con score de Wilson) ───────
+    public byte[] GenerarOcrTodasVias(IReadOnlyList<OcrTodasViasDto> filas, string subtitulo, int pocosDatos)
+    {
+        var (doc, section) = Encabezado("Ranking OCR · todas las vías", subtitulo);
+
+        var nota = section.AddParagraph(
+            "Score de Wilson (confianza 95 %): lo que se puede afirmar con ese volumen de tránsitos. " +
+            "\"Acierto mín. seguro\" es el límite inferior de la tasa de acierto; \"Error mín. seguro\", el de la tasa de error. " +
+            "Con pocos tránsitos el score queda bajo aunque la tasa cruda sea perfecta.");
+        nota.Format.Font.Size = 7.5;
+        nota.Format.Font.Color = Gray;
+        nota.Format.SpaceAfter = "0.35cm";
+
+        var table = NuevaTabla(section,
+            ("#", "1cm"), ("Vía", "3.4cm"), ("Estación", "3cm"), ("Tránsitos", "2.4cm"), ("Aciertos", "2.4cm"),
+            ("No legibles", "2.5cm"), ("Confusiones", "2.6cm"), ("Acierto", "2.2cm"),
+            ("Acierto mín. seguro", "3.2cm"), ("Error mín. seguro", "3.2cm"));
+        for (int k = 3; k <= 9; k++) table.Rows[0].Cells[k].Format.Alignment = ParagraphAlignment.Right;
+
+        int i = 0;
+        bool hayPocos = false;
+        foreach (var v in filas)
+        {
+            var row = FilaDatos(table, i);
+            bool poco = v.Total < pocosDatos;
+            hayPocos |= poco;
+            row.Cells[0].AddParagraph((++i).ToString());
+            row.Cells[1].AddParagraph(poco ? v.Via + " *" : v.Via);
+            row.Cells[2].AddParagraph(v.Estacion);
+            row.Cells[3].AddParagraph(v.Total.ToString("N0"));
+            row.Cells[4].AddParagraph(v.Aciertos.ToString("N0"));
+            row.Cells[5].AddParagraph(v.NoReconocidas.ToString("N0"));
+            row.Cells[6].AddParagraph(v.Confusiones.ToString("N0"));
+            var pAc = row.Cells[7].AddParagraph($"{v.Efectividad:0.0}%");
+            pAc.Format.Font.Bold = true;
+            if (v.Efectividad < 85) pAc.Format.Font.Color = Danger;
+            row.Cells[8].AddParagraph($"{v.ScoreAcierto:0.0}%");
+            row.Cells[9].AddParagraph($"{v.ScoreError:0.0}%");
+            for (int k = 3; k <= 9; k++) row.Cells[k].Format.Alignment = ParagraphAlignment.Right;
+            if (poco) row.Format.Font.Color = Gray;
+        }
+        if (filas.Count == 0)
+        {
+            var row = table.AddRow();
+            row.Cells[0].MergeRight = 9;
+            row.Cells[0].AddParagraph("Sin tránsitos con placa de referencia en el período seleccionado");
+            row.Cells[0].Format.Alignment = ParagraphAlignment.Center;
+            row.Cells[0].Format.Font.Color = Gray;
+        }
+        if (hayPocos)
+        {
+            var pie = section.AddParagraph($"* Menos de {pocosDatos} tránsitos: poca evidencia estadística.");
+            pie.Format.Font.Size = 7.5;
+            pie.Format.Font.Color = Gray;
+            pie.Format.SpaceBefore = "0.2cm";
+        }
+
+        return Render(doc);
     }
 
     // ── Informe de Incidentes ───────────────────────────────────

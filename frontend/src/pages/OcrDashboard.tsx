@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, type CSSProperties } from 'react'
 import { api } from '../api/client'
-import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion, OcrMejorViaPeriodo } from '../api/client'
+import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion, OcrMejorViaPeriodo, OcrTodaVia } from '../api/client'
 import { ScaledStage } from '../components/ScaledStage'
 import { WallTopbar } from '../components/WallTopbar'
 
@@ -210,8 +210,13 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
         <polyline points={ptsNoDet}  fill="none" stroke="#e0991f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         <polyline points={ptsErrRec} fill="none" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         {datos.map((d, i) => i % step === 0 ? (
-          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#67798c" fontSize="8" fontFamily="var(--app-font)">{d.fecha.slice(5)}</text>
+          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="#67798c" fontSize="8" fontFamily="var(--app-font)">{d.fecha.length > 10 ? d.fecha.slice(11, 16) : d.fecha.slice(5)}</text>
         ) : null)}
+        {n <= 48 && datos.map((d, i) => (
+          <circle key={`p${i}`} cx={xOf(i)} cy={yOf(Number(d.tasaError))} r={2.4} fill="#ef4b54">
+            <title>{`${d.fecha} · ${d.total.toLocaleString()} tránsitos · ${Number(d.tasaError).toFixed(1)}% error (${Number(d.tasaNoDetectada).toFixed(1)}% no detectada, ${Number(d.tasaReconocidaError).toFixed(1)}% con error)`}</title>
+          </circle>
+        ))}
       </svg>
       <div style={{ display: 'flex', gap: 16, padding: '0 4px 4px', fontFamily: 'var(--app-font)', fontSize: 10 }}>
         <span style={{ color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -373,6 +378,118 @@ function MejoresViasPanel({ vias }: { vias: OcrMejorViaPeriodo[] }) {
   )
 }
 
+// Todas las vías del período en una sola tabla, con el score de Wilson (95 %). Se puede ordenar de
+// mejor a peor (acierto mínimo seguro) o de peor a mejor (error mínimo seguro), y filtrar por estación.
+// Las vías con pocos tránsitos se muestran, pero marcadas: su intervalo es ancho y el score queda bajo.
+const POCOS_DATOS = 30
+function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; periodo: string; soloPrepago: boolean }) {
+  const [orden, setOrden] = useState<'mejor' | 'peor'>('mejor')
+  const [estacion, setEstacion] = useState('')
+
+  const filas = useMemo(() => {
+    const base = estacion ? vias.filter(v => v.estacion === estacion) : vias
+    return [...base].sort((a, b) => orden === 'mejor'
+      ? b.scoreAcierto - a.scoreAcierto || b.total - a.total
+      : b.scoreError - a.scoreError || b.total - a.total)
+  }, [vias, orden, estacion])
+
+  const chip = (activo: boolean): CSSProperties => ({
+    padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: activo ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
+    color: activo ? '#e7ecf2' : '#8b9dab', background: activo ? 'rgba(80,140,200,.22)' : 'transparent',
+    boxShadow: activo ? 'inset 0 0 0 1px rgba(110,170,230,.4)' : 'inset 0 0 0 1px rgba(255,255,255,.08)',
+  })
+  // Descarga lo que se ve: mismo período, orden y estación (la descarga la arma el backend)
+  const exportar = (formato: 'csv' | 'xlsx' | 'pdf') => {
+    const q = new URLSearchParams({ formato, periodo, soloPrepago: String(soloPrepago), orden })
+    if (estacion) q.set('estacion', estacion)
+    window.open(`/api/ocr/todas-vias/exportar?${q}`, '_blank')
+  }
+  const th: CSSProperties = { padding: '8px 10px', textAlign: 'right', fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.1em', color: '#7d92a0', fontWeight: 700, position: 'sticky', top: 0, background: '#0a121a', whiteSpace: 'nowrap' }
+  const td: CSSProperties = { padding: '7px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontSize: 13, color: '#ccd0d8', whiteSpace: 'nowrap' }
+
+  if (!vias.length) return (
+    <div style={{ padding: 48, textAlign: 'center', color: '#7d92a0', fontFamily: 'var(--app-font)', fontSize: 13 }}>Sin tránsitos con placa de referencia en este período</div>
+  )
+
+  return (
+    <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(110,170,230,.2)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ padding: '11px 18px', borderBottom: '1px solid rgba(110,170,230,.12)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fb4dc', fontWeight: 700 }}>
+          TODAS LAS VÍAS · {filas.length} {filas.length === 1 ? 'VÍA' : 'VÍAS'}
+        </span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <div onClick={() => setOrden('mejor')} style={chip(orden === 'mejor')}>Mejor → peor</div>
+          <div onClick={() => setOrden('peor')} style={chip(orden === 'peor')}>Peor → mejor</div>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {ESTACIONES.map(e => (
+            <div key={e || 'todas'} onClick={() => setEstacion(e)} style={chip(estacion === e)}>{e || 'Todas las estaciones'}</div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.1em', color: '#7d92a0', fontWeight: 700 }}>EXPORTAR</span>
+          {([['csv', 'CSV'], ['xlsx', 'Excel'], ['pdf', 'PDF']] as const).map(([f, label]) => (
+            <div key={f} onClick={() => exportar(f)} title={`Descargar ${label} con el período, orden y estación actuales`}
+              style={{ ...chip(false), color: '#8fd6a8', boxShadow: 'inset 0 0 0 1px rgba(63,185,120,.4)' }}>⬇ {label}</div>
+          ))}
+        </div>
+        <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8196', marginLeft: 'auto', maxWidth: 560, textAlign: 'right' }}>
+          Score de Wilson (95 %): lo que se puede afirmar con ese volumen. «Mejor» ordena por acierto mínimo seguro; «Peor», por error mínimo seguro.
+          Con pocos tránsitos el score queda bajo aunque la tasa cruda sea perfecta.
+        </span>
+      </div>
+      <div style={{ maxHeight: 640, overflowY: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ ...th, width: 44 }}>#</th>
+              <th style={{ ...th, textAlign: 'left' }}>VÍA</th>
+              <th style={{ ...th, textAlign: 'left' }}>ESTACIÓN</th>
+              <th style={th}>TRÁNSITOS</th>
+              <th style={th}>ACIERTOS</th>
+              <th style={th}>NO LEGIBLES</th>
+              <th style={th}>CONFUSIONES</th>
+              <th style={{ ...th, minWidth: 190 }}>ACIERTO</th>
+              <th style={{ ...th, color: orden === 'mejor' ? '#8fd6a8' : '#7d92a0' }} title="Límite inferior de Wilson (95 %) de la tasa de acierto">ACIERTO MÍN. SEGURO</th>
+              <th style={{ ...th, color: orden === 'peor' ? '#f0a0a0' : '#7d92a0' }} title="Límite inferior de Wilson (95 %) de la tasa de error">ERROR MÍN. SEGURO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((v, i) => {
+              const poco = v.total < POCOS_DATOS
+              const color = colorTasa(v.efectividad)
+              return (
+                <tr key={`${v.estacion}-${v.via}`} style={{ borderTop: '1px solid rgba(255,255,255,.04)', opacity: poco ? 0.6 : 1 }}>
+                  <td style={{ ...td, color: '#7d92a0', fontWeight: 700 }}>{i + 1}</td>
+                  <td style={{ ...td, textAlign: 'left', fontWeight: 600 }}>
+                    {v.via}
+                    {poco && <span title={`Menos de ${POCOS_DATOS} tránsitos: poca evidencia`} style={{ marginLeft: 8, fontSize: 10, color: '#c9a24a', fontWeight: 600 }}>pocos datos</span>}
+                  </td>
+                  <td style={{ ...td, textAlign: 'left', color: ESTACION_COLOR[v.estacion] ?? '#8d94a3', fontWeight: 600, fontSize: 12 }}>{v.estacion}</td>
+                  <td style={td}>{v.total.toLocaleString()}</td>
+                  <td style={td}>{v.aciertos.toLocaleString()}</td>
+                  <td style={{ ...td, color: v.noReconocidas > 0 ? '#ef4b54' : '#5f7184' }}>{v.noReconocidas.toLocaleString()}</td>
+                  <td style={{ ...td, color: v.confusiones > 0 ? '#e0991f' : '#5f7184' }}>{v.confusiones.toLocaleString()}</td>
+                  <td style={td}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                      <div style={{ width: 90, height: 8, borderRadius: 4, background: 'rgba(255,255,255,.07)', overflow: 'hidden' }}>
+                        <div style={{ width: `${Math.max(0, Math.min(100, v.efectividad))}%`, height: '100%', background: color }} />
+                      </div>
+                      <span style={{ width: 50, color, fontWeight: 700 }}>{v.efectividad.toFixed(1)}%</span>
+                    </div>
+                  </td>
+                  <td style={{ ...td, color: '#8fd6a8', fontWeight: orden === 'mejor' ? 700 : 500 }}>{v.scoreAcierto.toFixed(1)}%</td>
+                  <td style={{ ...td, color: '#f0a0a0', fontWeight: orden === 'peor' ? 700 : 500 }}>{v.scoreError.toFixed(1)}%</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // Resalta caracteres distintos entre dos placas — monoespaciada: la comparación
 // carácter a carácter es el propósito de esta tabla (sistema-visual.md)
 function PlacaDiff({ cajero, ocr }: { cajero: string; ocr: string }) {
@@ -403,10 +520,12 @@ export function OcrDashboard() {
   const [detalle,    setDetalle]    = useState<OcrDetalle | null>(null)
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
-  const [tab,        setTab]        = useState<'ranking' | 'mejores' | 'confusion' | 'tendencias' | 'porvia' | 'detalle'>('ranking')
+  const [tab,        setTab]        = useState<'ranking' | 'mejores' | 'todas' | 'confusion' | 'tendencias' | 'porvia' | 'detalle'>('ranking')
   const [soloPrepago, setSoloPrepago] = useState(false)
   const [mejoresVias,    setMejoresVias]    = useState<OcrMejorViaPeriodo[] | null>(null)
   const [loadingMejores, setLoadingMejores] = useState(false)
+  const [todasVias,     setTodasVias]     = useState<OcrTodaVia[] | null>(null)
+  const [loadingTodas,  setLoadingTodas]  = useState(false)
 
   // Evolución por vía
   const [viaEstacion,  setViaEstacion]  = useState('')
@@ -462,9 +581,18 @@ export function OcrDashboard() {
   }, [periodo, soloPrepago])
 
   useEffect(() => { loadResumen() }, [loadResumen])
+  // Todas las vías: respeta el período y el filtro de prepago elegidos arriba
+  const loadTodasVias = useCallback(async () => {
+    setLoadingTodas(true)
+    try { setTodasVias(await api.ocrTodasVias(periodo, soloPrepago)) }
+    catch { setTodasVias([]) }
+    finally { setLoadingTodas(false) }
+  }, [periodo, soloPrepago])
+
   useEffect(() => { if (tab === 'detalle') loadDetalle() }, [tab, loadDetalle])
   useEffect(() => { if (tab === 'porvia') loadTendencias() }, [tab, loadTendencias])
   useEffect(() => { if (tab === 'mejores') loadMejoresVias() }, [tab, loadMejoresVias])
+  useEffect(() => { if (tab === 'todas') loadTodasVias() }, [tab, loadTodasVias])
 
   // Lista de vías disponibles (con datos) por estación, sacada del heatmap ya cargado
   const viasPorEstacion = useMemo(() => {
@@ -490,7 +618,8 @@ export function OcrDashboard() {
   const loadViaEvolucion = useCallback(async () => {
     if (!viaEstacion || !viaSeleccion) return
     setLoadingVia(true)
-    try { setViaEvolucion(await api.ocrViaEvolucion({ estacion: viaEstacion, via: viaSeleccion, dias: viaDias, soloPrepago })) }
+    // viaDias = 1 significa "últimas 24 horas" (serie por hora); el resto son días
+    try { setViaEvolucion(await api.ocrViaEvolucion({ estacion: viaEstacion, via: viaSeleccion, dias: viaDias === 1 ? 30 : viaDias, horas: viaDias === 1 ? 24 : 0, soloPrepago })) }
     catch { setViaEvolucion(null) }
     finally { setLoadingVia(false) }
   }, [viaEstacion, viaSeleccion, viaDias, soloPrepago])
@@ -560,6 +689,7 @@ export function OcrDashboard() {
             {([
               ['ranking',    'Ranking de Vías'],
               ['mejores',    'Mejores Vías'],
+              ['todas',      'Todas las Vías'],
               ['confusion',  'Análisis de Caracteres'],
               ['tendencias', 'Tendencias 30d'],
               ['porvia',     'Evolución por Vía'],
@@ -583,6 +713,14 @@ export function OcrDashboard() {
               <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 13 }}>Calculando mejores vías…</div>
             ) : (
               <MejoresViasPanel vias={mejoresVias ?? []} />
+            )
+          )}
+
+          {tab === 'todas' && (
+            loadingTodas ? (
+              <div style={{ padding: 48, textAlign: 'center', color: '#9aa7b6', fontFamily: 'var(--app-font)', fontSize: 13 }}>Calculando todas las vías…</div>
+            ) : (
+              <TodasViasPanel vias={todasVias ?? []} periodo={periodo} soloPrepago={soloPrepago} />
             )
           )}
 
@@ -856,10 +994,10 @@ export function OcrDashboard() {
                   {(viasPorEstacion.get(viaEstacion) ?? []).map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
                 <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
-                  {[30, 60, 90].map(d => (
+                  {([[1, '24 h'], [7, 'Semana'], [30, '30 días'], [60, '60 días'], [90, '90 días']] as const).map(([d, etiqueta]) => (
                     <button key={d} onClick={() => setViaDias(d)}
                       style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgba(255,255,255,.1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : '#8b9dab' }}>
-                      {d}d
+                      {etiqueta}
                     </button>
                   ))}
                 </div>
@@ -877,7 +1015,9 @@ export function OcrDashboard() {
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
                       <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c07777', fontWeight: 700 }}>
-                        {viaEvolucion.estacion} · {viaEvolucion.via} — % ERROR POR DÍA · ÚLTIMOS {viaEvolucion.dias}D
+                        {viaEvolucion.estacion} · {viaEvolucion.via} — {(viaEvolucion.horas ?? 0) > 0
+                          ? `% ERROR POR HORA · ÚLTIMAS ${viaEvolucion.horas} H`
+                          : viaEvolucion.dias === 7 ? '% ERROR POR DÍA · ÚLTIMA SEMANA' : `% ERROR POR DÍA · ÚLTIMOS ${viaEvolucion.dias}D`}
                       </span>
                     </div>
                     <div style={{ padding: '12px 18px 8px' }}>
@@ -885,16 +1025,18 @@ export function OcrDashboard() {
                     </div>
                   </div>
 
+                  {(viaEvolucion.horas ?? 0) === 0 && (
                   <div style={{ background: 'linear-gradient(180deg,#0c141d,#080e15)', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
                       <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
-                        PERFIL HORARIO · MISMA VÍA · {viaEvolucion.dias}D
+                        PERFIL HORARIO · MISMA VÍA · {viaEvolucion.dias === 7 ? 'ÚLTIMA SEMANA' : `${viaEvolucion.dias}D`}
                       </span>
                     </div>
                     <div style={{ padding: '12px 18px' }}>
                       <EvolucionHoraChart datos={viaEvolucion.porHora} />
                     </div>
                   </div>
+                  )}
                 </>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, type ReactNode, type CSSProperties } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef, type ReactNode, type CSSProperties } from 'react'
 import { api, type DiscrepanciasResumen, type DiscrepanciasDetalle, type DiscrepanciasAnalisis } from '../api/client'
 import { ESTACION_COLOR } from '../lib/theme'
 import { ScaledStage } from '../components/ScaledStage'
@@ -12,6 +12,7 @@ const PERIODOS = [
   { key: '1h',   label: 'Última hora' }, { key: '4h',   label: '4 h' },
   { key: '12h',  label: '12 h' },        { key: '24h',  label: '24 h' },
   { key: 'ayer', label: 'Ayer' },        { key: 'mes',  label: 'Mes actual' },
+  { key: 'rango', label: 'Rango' },
 ] as const
 type Periodo = typeof PERIODOS[number]['key']
 const ESTACIONES = ['FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA'] as const
@@ -44,23 +45,46 @@ function Panel({ children, style }: { children: ReactNode; style?: CSSProperties
 
 export function Discrepancias() {
   const [periodo, setPeriodo]       = useState<Periodo>('12h')
+  const hoy = new Date().toISOString().slice(0, 10)
+  const [desde, setDesde]           = useState(hoy)
+  const [hasta, setHasta]           = useState(hoy)
   const [resumen, setResumen]       = useState<DiscrepanciasResumen | null>(null)
   const [detalle, setDetalle]       = useState<DiscrepanciasDetalle | null>(null)
   const [analisis, setAnalisis]     = useState<DiscrepanciasAnalisis | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
   const [panelInferior, setPanelInferior] = useState<'mantenimiento' | 'detalle'>('mantenimiento')
 
+  // `cargando` solo se activa al cambiar período/rango (no en el refresco de 60 s):
+  // evita mostrar cifras del período anterior mientras llegan las nuevas y que
+  // los números "salten". `seq` descarta respuestas viejas que lleguen tarde.
+  const [cargando, setCargando] = useState(true)
+  const seq = useRef(0)
+  const rangoInvalido = periodo === 'rango' && (!desde || !hasta || desde > hasta)
+
   const loadResumen = useCallback(async () => {
-    try { setResumen(await api.discrepanciasResumen(periodo)); setLastUpdate(new Date()) }
-    catch { /* mantiene el último dato bueno */ }
-  }, [periodo])
+    if (rangoInvalido) return
+    const id = seq.current
+    try {
+      const r = await api.discrepanciasResumen(periodo, desde, hasta)
+      if (id === seq.current) { setResumen(r); setLastUpdate(new Date()) }
+    } catch { /* mantiene el último dato bueno */ }
+  }, [periodo, desde, hasta, rangoInvalido])
 
   const loadDetalle = useCallback(async () => {
-    try { setDetalle(await api.discrepanciasDetalle({ periodo, pagina: 1, porPagina: 12 })) }
-    catch { /* mantiene el último dato bueno */ }
-  }, [periodo])
+    if (rangoInvalido) return
+    const id = seq.current
+    try {
+      const d = await api.discrepanciasDetalle({ periodo, desde, hasta, pagina: 1, porPagina: 12 })
+      if (id === seq.current) setDetalle(d)
+    } catch { /* mantiene el último dato bueno */ }
+  }, [periodo, desde, hasta, rangoInvalido])
 
-  useEffect(() => { loadResumen(); loadDetalle() }, [loadResumen, loadDetalle])
+  useEffect(() => {
+    seq.current++
+    if (rangoInvalido) return
+    setCargando(true)
+    Promise.all([loadResumen(), loadDetalle()]).finally(() => setCargando(false))
+  }, [loadResumen, loadDetalle, rangoInvalido])
   useEffect(() => {
     const t = setInterval(() => { loadResumen(); loadDetalle() }, 60_000)
     return () => clearInterval(t)
@@ -186,7 +210,7 @@ export function Discrepancias() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.015em' }}>Discrepancias DAC</div>
           <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.56 0.015 265)' }}>
-            tabulado del cobrador vs. clasificación automática · actualizado {lastUpdate.toLocaleTimeString('es-PE', { hour12: false })} · refresco 60 s
+            tabulado del cobrador vs. clasificación automática · {cargando ? 'cargando…' : `actualizado ${lastUpdate.toLocaleTimeString('es-PE', { hour12: false })}`} · refresco 60 s
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'oklch(0.24 0.018 262 / 0.80)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.05)' }}>
@@ -197,17 +221,23 @@ export function Discrepancias() {
               background: periodo === key ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
             }}>{label}</div>
           ))}
+          {periodo === 'rango' && (['desde', 'hasta'] as const).map(k => (
+            <input key={k} type="date" title={k === 'desde' ? 'Fecha de inicio' : 'Fecha de fin'}
+              value={k === 'desde' ? desde : hasta} max={hoy}
+              onChange={e => (k === 'desde' ? setDesde : setHasta)(e.target.value)}
+              style={{ colorScheme: 'dark', padding: '5px 8px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 500, color: 'oklch(0.90 0.01 265)', background: 'oklch(0.30 0.02 262)' }} />
+          ))}
         </div>
       </div>
 
       {/* ── KPI ────────────────────────────────────────────── */}
-      <div style={{ height: 112, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '1.05fr 0.78fr 0.78fr 2.1fr', gap: 14 }}>
+      <div style={{ height: 112, flex: '0 0 auto', display: 'grid', opacity: cargando ? 0.35 : 1, transition: 'opacity .2s', pointerEvents: cargando ? 'none' : undefined, gridTemplateColumns: '1.05fr 0.78fr 0.78fr 2.1fr', gap: 14 }}>
 
         <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
           <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.84 0.09 62)' }}>Efectividad</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.90 0.11 62)' }}>
-              {ef.toFixed(1)}<span style={{ fontSize: 24 }}>%</span>
+              {cargando ? '···' : ef.toFixed(1)}<span style={{ fontSize: 24 }}>%</span>
             </div>
             <div style={{ fontSize: 17, fontWeight: 400, color: 'oklch(0.68 0.05 62)' }}>meta 99.5% · faltan {brecha} pp</div>
           </div>
@@ -219,15 +249,15 @@ export function Discrepancias() {
         <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.30 0.04 265 / 0.60) 0%, oklch(0.21 0.022 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
           <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.72 0.03 265)' }}>Discrepancias</div>
           <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.95 0.01 265)' }}>
-            {(resumen?.total ?? 0).toLocaleString('en-US')}
+            {cargando ? '···' : (resumen?.total ?? 0).toLocaleString('en-US')}
           </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.58 0.02 265)' }}>{PERIODOS.find(p => p.key === periodo)?.label}</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.58 0.02 265)' }}>{periodo === 'rango' ? `${desde} → ${hasta}` : PERIODOS.find(p => p.key === periodo)?.label}</div>
         </div>
 
         <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.30 0.045 200 / 0.55) 0%, oklch(0.22 0.025 250 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
           <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.76 0.06 200)' }}>Tránsitos</div>
           <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.92 0.06 200)' }}>
-            {(resumen?.totalTransacciones ?? 0).toLocaleString('en-US')}
+            {cargando ? '···' : (resumen?.totalTransacciones ?? 0).toLocaleString('en-US')}
           </div>
           <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.60 0.03 200)' }}>base del cálculo</div>
         </div>
@@ -255,7 +285,7 @@ export function Discrepancias() {
       </div>
 
       {/* ── Fila 350: confusiones · tendencia · vías críticas ── */}
-      <div style={{ height: 350, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '1fr 1.7fr 1.05fr', gap: 14 }}>
+      <div style={{ height: 350, flex: '0 0 auto', display: 'grid', opacity: cargando ? 0.35 : 1, transition: 'opacity .2s', gridTemplateColumns: '1fr 1.7fr 1.05fr', gap: 14 }}>
 
         <Panel>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: '0 0 auto' }}>
@@ -287,7 +317,7 @@ export function Discrepancias() {
                 </div>
               ))}
               <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.48 0.015 265)' }}>
-                {periodo === 'mes' ? 'por día' : 'cada 30 min'}
+                {periodo === 'mes' || (periodo === 'rango' && desde !== hasta) ? 'por día' : periodo === 'rango' ? 'por hora' : 'cada 30 min'}
               </div>
             </div>
           </div>

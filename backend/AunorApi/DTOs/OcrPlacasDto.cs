@@ -52,6 +52,22 @@ public record OcrMejorViaPeriodoDto(
     decimal Score
 );
 
+// TODAS las vías del período (no solo las peores o las mejores). Dos scores de Wilson (95 %):
+//   ScoreAcierto = límite inferior de la tasa de ACIERTO  → "acierto mínimo seguro" (mayor = mejor vía confiable)
+//   ScoreError   = límite inferior de la tasa de ERROR    → "error mínimo seguro"   (mayor = peor vía confiable)
+// Con pocos tránsitos ambos quedan bajos: el intervalo es ancho y no se puede afirmar nada.
+public record OcrTodasViasDto(
+    string  Estacion,
+    string  Via,
+    int     Total,
+    int     Aciertos,
+    int     NoReconocidas,
+    int     Confusiones,
+    decimal Efectividad,
+    decimal ScoreAcierto,
+    decimal ScoreError
+);
+
 public record OcrEstacionDto(
     string  Estacion,
     int     Total,
@@ -133,8 +149,9 @@ public record OcrMejorViaDto(
 // ── Evolución de una vía específica en el tiempo ──────────────
 public record OcrViaEvolucionDto(
     string Estacion, string Via, int Dias,
-    List<OcrDiaViaDto> Diaria,
-    List<OcrCeldaDto>  PorHora
+    List<OcrDiaViaDto> Diaria,    // por día; con Horas > 0 es por HORA (Fecha = "yyyy-MM-dd HH:00")
+    List<OcrCeldaDto>  PorHora,   // perfil por hora del día (vacío cuando Horas > 0: la serie ya es horaria)
+    int Horas = 0
 );
 
 public record OcrDiaViaDto(
