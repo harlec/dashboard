@@ -46,7 +46,7 @@ export function Vias() {
   const titulo: React.CSSProperties = { fontSize: 14, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--tx-muted)' }
   const leyenda = [
     { color: '#72BF44', val: kpis.ups,       label: 'Operativos' },
-    { color: 'light-dark(#F04545, oklch(0.598 0.170 25))', val: kpis.downs,      label: 'Caídos' },
+    { color: 'light-dark(oklch(0.598 0.170 25), #F04545)', val: kpis.downs,      label: 'Caídos' },
     { color: '#F99B1C', val: kpis.incActivos, label: 'Incidentes' },
     { color: '#4b5263', val: sinD,            label: 'Sin datos' },
   ]
@@ -54,11 +54,11 @@ export function Vias() {
   const banner = (key: string | number, rojo: boolean, titulo: string, texto: React.ReactNode) => (
     <div key={key} style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderRadius: 14, fontSize: 17,
-      background: rojo ? 'linear-gradient(100deg, light-dark(oklch(0.34 0.085 15 / 0.42), oklch(0.916 0.059 15 / 0.42)), light-dark(oklch(0.26 0.04 15 / 0.22), oklch(0.945 0.028 15 / 0.22)))'
-                       : 'linear-gradient(100deg, light-dark(oklch(0.34 0.07 250 / 0.40), oklch(0.916 0.049 250 / 0.4)), rgb(var(--s2) / 0.20))',
-      boxShadow: rojo ? 'inset 0 0 0 1px light-dark(oklch(0.60 0.12 15 / 0.25), oklch(0.620 0.132 15 / 0.25))' : 'inset 0 0 0 1px light-dark(oklch(0.62 0.10 250 / 0.25), oklch(0.609 0.110 250 / 0.25))',
+      background: rojo ? 'linear-gradient(100deg, light-dark(oklch(0.916 0.059 15 / 0.42), oklch(0.34 0.085 15 / 0.42)), light-dark(oklch(0.945 0.028 15 / 0.22), oklch(0.26 0.04 15 / 0.22)))'
+                       : 'linear-gradient(100deg, light-dark(oklch(0.916 0.049 250 / 0.4), oklch(0.34 0.07 250 / 0.40)), rgb(var(--s2) / 0.20))',
+      boxShadow: rojo ? 'inset 0 0 0 1px light-dark(oklch(0.620 0.132 15 / 0.25), oklch(0.60 0.12 15 / 0.25))' : 'inset 0 0 0 1px light-dark(oklch(0.609 0.110 250 / 0.25), oklch(0.62 0.10 250 / 0.25))',
     }}>
-      <span style={{ fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 15, color: rojo ? 'light-dark(oklch(0.80 0.12 15), oklch(0.510 0.132 15))' : 'light-dark(oklch(0.80 0.10 250), oklch(0.510 0.110 250))' }}>{titulo}</span>
+      <span style={{ fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 15, color: rojo ? 'light-dark(oklch(0.510 0.132 15), oklch(0.80 0.12 15))' : 'light-dark(oklch(0.510 0.110 250), oklch(0.80 0.10 250))' }}>{titulo}</span>
       <span style={{ fontWeight: 500 }}>{texto}</span>
     </div>
   )
@@ -117,10 +117,10 @@ export function Vias() {
                 <div style={{ height: 9, borderRadius: 999, background: 'rgb(var(--ov) / 0.07)', overflow: 'hidden' }}>
                   <div style={{
                     width: `${pct}%`, height: '100%', borderRadius: 999,
-                    background: ok ? 'linear-gradient(90deg, light-dark(oklch(0.68 0.10 200), oklch(0.576 0.110 200)), light-dark(oklch(0.84 0.12 175), oklch(0.488 0.132 175)))' : 'linear-gradient(90deg, light-dark(oklch(0.70 0.10 90), oklch(0.565 0.110 90)), light-dark(oklch(0.84 0.13 62), oklch(0.488 0.143 62)))',
+                    background: ok ? 'linear-gradient(90deg, light-dark(oklch(0.576 0.110 200), oklch(0.68 0.10 200)), light-dark(oklch(0.488 0.132 175), oklch(0.84 0.12 175)))' : 'linear-gradient(90deg, light-dark(oklch(0.565 0.110 90), oklch(0.70 0.10 90)), light-dark(oklch(0.488 0.143 62), oklch(0.84 0.13 62)))',
                   }} />
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: ok ? 'light-dark(oklch(0.84 0.11 175), oklch(0.488 0.121 175))' : 'light-dark(oklch(0.86 0.12 62), oklch(0.477 0.132 62))' }}>{e.up}/{e.total}</span>
+                <span style={{ fontSize: 16, fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: ok ? 'light-dark(oklch(0.488 0.121 175), oklch(0.84 0.11 175))' : 'light-dark(oklch(0.477 0.132 62), oklch(0.86 0.12 62))' }}>{e.up}/{e.total}</span>
               </div>
             )
           })}
@@ -131,7 +131,7 @@ export function Vias() {
           <div style={{ fontSize: 64, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#B6EA94' }}>
             {kpis.uptimePct}<span style={{ fontSize: 32 }}>%</span>
           </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.62 0.03 145), oklch(0.530 0.030 145))' }}>{kpis.ups} de {kpis.total} equipos en línea</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.530 0.030 145), oklch(0.62 0.03 145))' }}>{kpis.ups} de {kpis.total} equipos en línea</div>
         </div>
       </div>
 

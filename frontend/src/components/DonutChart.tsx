@@ -31,7 +31,7 @@ export function DonutChart({ ups, downs, incActivos, total }: Props) {
         strokeDasharray={`${arcUp} ${C}`} strokeDashoffset={offUp}
         filter="url(#glow)" strokeLinecap="butt" transform="rotate(-90 65 65)" />
       {/* DOWN */}
-      <circle cx="65" cy="65" r="52" fill="none" stroke="light-dark(#F04545, oklch(0.598 0.170 25))" strokeWidth="16"
+      <circle cx="65" cy="65" r="52" fill="none" stroke="light-dark(oklch(0.598 0.170 25), #F04545)" strokeWidth="16"
         strokeDasharray={`${arcDown} ${C}`} strokeDashoffset={offDown}
         filter="url(#glow)" strokeLinecap="butt" transform="rotate(-90 65 65)" />
       {/* INC */}

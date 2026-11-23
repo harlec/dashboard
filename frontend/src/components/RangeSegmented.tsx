@@ -16,7 +16,7 @@ export function RangeSegmented<T extends string>({ options, value, onChange }: P
         <button key={o.key} onClick={() => onChange(o.key)}
           className={`px-3 py-1.5 rounded-[10px] text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
             value === o.key ? 'text-[#0a0d13]' : 'text-ink/50 hover:text-ink/80'}`}
-          style={value === o.key ? { background: 'light-dark(oklch(0.82 0.13 62), oklch(0.499 0.143 62))' } : undefined}>
+          style={value === o.key ? { background: 'light-dark(oklch(0.499 0.143 62), oklch(0.82 0.13 62))' } : undefined}>
           {o.label}
         </button>
       ))}

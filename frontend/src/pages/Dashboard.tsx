@@ -23,19 +23,19 @@ import { severidadDac, UMBRAL_DAC, UMBRAL_DAC_VIGILANCIA } from '../lib/dac'
 // Meta de coincidencia DAC (discrepancias). Es SOLO de discrepancias: la disponibilidad
 // de conexión (incidentes de comunicación) no tiene meta, se compara contra el 100%.
 const META = 99.5
-const LILA = 'light-dark(oklch(0.68 0.12 305), oklch(0.576 0.132 305))'
+const LILA = 'light-dark(oklch(0.576 0.132 305), oklch(0.68 0.12 305))'
 
 // Paleta mutable: el estilo HUD (Admin → Configuración) la pasa a un solo tono
 // verde azulado de SIGMA; el rojo de falla se mantiene para que lo crítico destaque.
 // Naranja/rojo del Panel SIGMA v2 en lugar de los del semáforo compartido (que no se toca)
 const BASE_SEM = { ...SEMAFORO, warn: PANEL.naranja, critico: PANEL.rojo, lila: LILA }
 const SEM: Record<string, string> = { ...BASE_SEM }
-const EST_HUD = 'light-dark(oklch(0.80 0.10 190), oklch(0.510 0.110 190))'
+const EST_HUD = 'light-dark(oklch(0.510 0.110 190), oklch(0.80 0.10 190))'
 let hudActivo = false
 function aplicarPaleta(hud: boolean) {
   hudActivo = hud
   Object.assign(SEM, hud
-    ? { ok: 'light-dark(oklch(0.82 0.11 190), oklch(0.499 0.121 190))', warn: PANEL.naranja, critico: PANEL.rojo, info: 'light-dark(oklch(0.74 0.10 195), oklch(0.543 0.110 195))', lila: 'light-dark(oklch(0.66 0.09 195), oklch(0.587 0.099 195))' }
+    ? { ok: 'light-dark(oklch(0.499 0.121 190), oklch(0.82 0.11 190))', warn: PANEL.naranja, critico: PANEL.rojo, info: 'light-dark(oklch(0.543 0.110 195), oklch(0.74 0.10 195))', lila: 'light-dark(oklch(0.587 0.099 195), oklch(0.66 0.09 195))' }
     : { ...BASE_SEM })
 }
 const estColor = (nombre: string) => hudActivo ? EST_HUD : estacionColor(nombre)
@@ -139,7 +139,7 @@ function BarTrack({ children, height = 16, radius = 8, border }: { children: Rea
   return (
     <div style={{
       position: 'relative', height, borderRadius: radius, overflow: 'hidden', flex: 1,
-      boxShadow: `inset 0 0 0 1px ${border ?? 'light-dark(oklch(0.34 0.03 190), oklch(0.916 0.021 190))'}`, boxSizing: 'border-box', padding: 3,
+      boxShadow: `inset 0 0 0 1px ${border ?? 'light-dark(oklch(0.916 0.021 190), oklch(0.34 0.03 190))'}`, boxSizing: 'border-box', padding: 3,
     }}>
       {children}
     </div>
@@ -151,7 +151,7 @@ function PeriodChip({ label }: { label: string }) {
   return (
     <span style={{
       padding: '4px 12px', borderRadius: 8, fontSize: 15, fontWeight: 500,
-      color: hud ? 'light-dark(oklch(0.88 0.09 192), oklch(0.466 0.099 192))' : 'light-dark(oklch(0.86 0.10 75), oklch(0.477 0.110 75))', background: hud ? 'light-dark(oklch(0.29 0.05 192), oklch(0.934 0.035 192))' : 'light-dark(oklch(0.29 0.045 75), oklch(0.934 0.032 75))', boxShadow: hud ? 'inset 0 0 0 1px light-dark(oklch(0.46 0.08 192), oklch(0.697 0.088 192))' : 'inset 0 0 0 1px light-dark(oklch(0.44 0.06 75), oklch(0.880 0.042 75))',
+      color: hud ? 'light-dark(oklch(0.466 0.099 192), oklch(0.88 0.09 192))' : 'light-dark(oklch(0.477 0.110 75), oklch(0.86 0.10 75))', background: hud ? 'light-dark(oklch(0.934 0.035 192), oklch(0.29 0.05 192))' : 'light-dark(oklch(0.934 0.032 75), oklch(0.29 0.045 75))', boxShadow: hud ? 'inset 0 0 0 1px light-dark(oklch(0.697 0.088 192), oklch(0.46 0.08 192))' : 'inset 0 0 0 1px light-dark(oklch(0.880 0.042 75), oklch(0.44 0.06 75))',
     }}>{label}</span>
   )
 }
@@ -161,8 +161,8 @@ const FondoCtx = createContext(false)
 
 // Esquinas luminosas cian de las tarjetas de vidrio
 function Esquinas({ r = 22 }: { r?: number }) {
-  const c = 'light-dark(oklch(0.80 0.12 195), oklch(0.510 0.132 195))'
-  const base: CSSProperties = { position: 'absolute', width: 22, height: 22, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px light-dark(oklch(0.80 0.12 195 / 0.7), oklch(0.510 0.132 195 / 0.7)))' }
+  const c = 'light-dark(oklch(0.510 0.132 195), oklch(0.80 0.12 195))'
+  const base: CSSProperties = { position: 'absolute', width: 22, height: 22, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px light-dark(oklch(0.510 0.132 195 / 0.7), oklch(0.80 0.12 195 / 0.7)))' }
   return (
     <>
       <div style={{ ...base, top: 0, left: 0, borderTop: `2px solid ${c}`, borderLeft: `2px solid ${c}`, borderTopLeftRadius: r }} />
@@ -181,15 +181,15 @@ function Card({ children, style, id, foco, onFocus }: { children: ReactNode; sty
       position: 'relative',
       boxSizing: 'border-box', borderRadius: hud ? 10 : 22, padding: '18px 22px',
       background: vidrio
-        ? 'linear-gradient(170deg, light-dark(oklch(0.250 0.030 190 / 0.62), oklch(0.948 0.021 190 / 0.62)) 0%, light-dark(oklch(0.170 0.024 190 / 0.52), oklch(0.977 0.017 190 / 0.52)) 100%)'
-        : 'linear-gradient(170deg, light-dark(oklch(0.250 0.030 190), oklch(0.948 0.021 190)) 0%, light-dark(oklch(0.185 0.024 190), oklch(0.972 0.017 190)) 100%)',
+        ? 'linear-gradient(170deg, light-dark(oklch(0.948 0.021 190 / 0.62), oklch(0.250 0.030 190 / 0.62)) 0%, light-dark(oklch(0.977 0.017 190 / 0.52), oklch(0.170 0.024 190 / 0.52)) 100%)'
+        : 'linear-gradient(170deg, light-dark(oklch(0.948 0.021 190), oklch(0.250 0.030 190)) 0%, light-dark(oklch(0.972 0.017 190), oklch(0.185 0.024 190)) 100%)',
       backdropFilter: vidrio ? 'blur(14px) saturate(1.25)' : undefined,
       boxShadow: hud
-        ? 'inset 0 0 0 1px light-dark(oklch(0.70 0.10 190 / 0.38), oklch(0.565 0.110 190 / 0.38)), inset 0 0 40px light-dark(oklch(0.50 0.08 190 / 0.10), oklch(0.675 0.088 190 / 0.1)), 0 18px 44px light-dark(oklch(0.05 0.02 190 / 0.5), oklch(0.400 0.030 190 / 0.125))'
+        ? 'inset 0 0 0 1px light-dark(oklch(0.565 0.110 190 / 0.38), oklch(0.70 0.10 190 / 0.38)), inset 0 0 40px light-dark(oklch(0.675 0.088 190 / 0.1), oklch(0.50 0.08 190 / 0.10)), 0 18px 44px light-dark(oklch(0.400 0.030 190 / 0.125), oklch(0.05 0.02 190 / 0.5))'
         : vidrio
-        ? 'inset 0 0 0 1px light-dark(oklch(0.70 0.08 195 / 0.30), oklch(0.565 0.088 195 / 0.3)), inset 0 1px 0 rgb(var(--ov) / 0.10), 0 18px 44px light-dark(oklch(0.05 0.02 190 / 0.5), oklch(0.400 0.030 190 / 0.125))'
-        : `inset 0 0 0 1px light-dark(oklch(0.340 0.030 190), oklch(0.916 0.021 190)), 0 18px 44px light-dark(oklch(0.09 0.02 190 / 0.55), oklch(0.400 0.030 190 / 0.138))`,
-      outline: activo ? '2px solid light-dark(oklch(0.760 0.090 200), oklch(0.532 0.099 200))' : '2px solid transparent', outlineOffset: -1,
+        ? 'inset 0 0 0 1px light-dark(oklch(0.565 0.088 195 / 0.3), oklch(0.70 0.08 195 / 0.30)), inset 0 1px 0 rgb(var(--ov) / 0.10), 0 18px 44px light-dark(oklch(0.400 0.030 190 / 0.125), oklch(0.05 0.02 190 / 0.5))'
+        : `inset 0 0 0 1px light-dark(oklch(0.916 0.021 190), oklch(0.340 0.030 190)), 0 18px 44px light-dark(oklch(0.400 0.030 190 / 0.138), oklch(0.09 0.02 190 / 0.55))`,
+      outline: activo ? '2px solid light-dark(oklch(0.532 0.099 200), oklch(0.760 0.090 200))' : '2px solid transparent', outlineOffset: -1,
       opacity: atenuado ? 0.34 : 1, transition: 'opacity 0.5s ease, outline-color 0.5s ease',
       display: 'flex', flexDirection: 'column', minHeight: 0, cursor: 'pointer', overflow: 'hidden',
       ...style,
@@ -204,7 +204,7 @@ function CardHeader({ title, right }: { title: string; right?: ReactNode }) {
   const hud = useContext(HudCtx)
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: '0 0 auto' }}>
-      <div style={{ fontSize: hud ? 17 : 19, fontWeight: hud ? 600 : 500, letterSpacing: hud ? '0.14em' : undefined, textTransform: hud ? 'uppercase' : undefined, color: hud ? 'light-dark(oklch(0.86 0.09 192), oklch(0.477 0.099 192))' : undefined }}>{hud && <span style={{ display: 'inline-block', width: 6, height: 16, marginRight: 10, verticalAlign: -2, background: 'light-dark(oklch(0.80 0.11 192), oklch(0.510 0.121 192))' }} />}{title}</div>
+      <div style={{ fontSize: hud ? 17 : 19, fontWeight: hud ? 600 : 500, letterSpacing: hud ? '0.14em' : undefined, textTransform: hud ? 'uppercase' : undefined, color: hud ? 'light-dark(oklch(0.477 0.099 192), oklch(0.86 0.09 192))' : undefined }}>{hud && <span style={{ display: 'inline-block', width: 6, height: 16, marginRight: 10, verticalAlign: -2, background: 'light-dark(oklch(0.510 0.121 192), oklch(0.80 0.11 192))' }} />}{title}</div>
       {right}
     </div>
   )
@@ -224,8 +224,8 @@ function KpiCard({ k, foco, onFocus }: { k: KpiSpec; foco: string | null; onFocu
   return (
     <div onClick={() => onFocus(k.id)} style={{
       position: 'relative', boxSizing: 'border-box', height: 112, overflow: 'hidden', borderRadius: hud ? 10 : 18, padding: '10px 16px 10px', cursor: 'pointer',
-      background: k.grad, boxShadow: `inset 0 0 0 1px ${k.borde}, 0 16px 38px light-dark(oklch(0.06 0.02 190 / 0.5), oklch(0.400 0.030 190 / 0.125))`,
-      outline: foco === k.id ? '2px solid light-dark(oklch(0.760 0.090 200), oklch(0.532 0.099 200))' : '2px solid transparent', outlineOffset: -1,
+      background: k.grad, boxShadow: `inset 0 0 0 1px ${k.borde}, 0 16px 38px light-dark(oklch(0.400 0.030 190 / 0.125), oklch(0.06 0.02 190 / 0.5))`,
+      outline: foco === k.id ? '2px solid light-dark(oklch(0.532 0.099 200), oklch(0.760 0.090 200))' : '2px solid transparent', outlineOffset: -1,
       opacity: atenuado ? 0.34 : 1, transition: 'opacity 0.5s ease, outline-color 0.5s ease',
     }}>
       {hud && <Esquinas r={10} />}
@@ -238,7 +238,7 @@ function KpiCard({ k, foco, onFocus }: { k: KpiSpec; foco: string | null; onFocu
           fontSize: 34, fontWeight: 300, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: k.fg,
           textShadow: flash ? `0 0 22px ${k.accent}` : '0 0 0 transparent', transition: 'text-shadow 1.1s ease-out',
         }}>{k.figura}</div>
-        {k.sufijo && <div style={{ fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.780 0.020 190), oklch(0.370 0.020 190))' }}>{k.sufijo}</div>}
+        {k.sufijo && <div style={{ fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.370 0.020 190), oklch(0.780 0.020 190))' }}>{k.sufijo}</div>}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, minHeight: 18 }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: k.nota_fg, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k.nota}</div>
@@ -258,7 +258,7 @@ function BarraApilada({ segmentos, total, sinConteo = false }: { segmentos: Segm
   const hud = useContext(HudCtx)
   return (
     <>
-      <div style={{ display: 'flex', height: 20, borderRadius: 8, overflow: 'hidden', gap: 2, boxShadow: `inset 0 0 0 1px ${hud ? 'light-dark(oklch(0.46 0.07 190), oklch(0.697 0.077 190))' : 'light-dark(oklch(0.460 0.035 190), oklch(0.690 0.035 190))'}`, padding: 3, boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', height: 20, borderRadius: 8, overflow: 'hidden', gap: 2, boxShadow: `inset 0 0 0 1px ${hud ? 'light-dark(oklch(0.697 0.077 190), oklch(0.46 0.07 190))' : 'light-dark(oklch(0.690 0.035 190), oklch(0.460 0.035 190))'}`, padding: 3, boxSizing: 'border-box' }}>
         {segmentos.map(sg => (
           <div key={sg.nombre} title={`${sg.nombre}: ${sg.n.toLocaleString('es-PE')}`} style={{
             width: `${total > 0 ? sg.n / total * 100 : 0}%`, backgroundImage: stripedImage(sg.color), borderRadius: 3,
@@ -477,7 +477,7 @@ export function Dashboard() {
   const feedActivas = feedItems
 
   if (!data) return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'light-dark(#04100f, oklch(0.980 0.013 189))', color: TEXTO.secundario }}>
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'light-dark(oklch(0.980 0.013 189), #04100f)', color: TEXTO.secundario }}>
       Cargando…
     </div>
   )
@@ -488,40 +488,40 @@ export function Dashboard() {
       id: 'transitos', eyebrow: 'TRÁNSITOS · MES', figura: tm ? tm.total.toLocaleString('es-PE') : '—',
       nota: tm ? `proy. ${tm.proyeccion.toLocaleString('es-PE')}` : 'cargando…',
       barPct: tm ? tm.diasTranscurridos / tm.diasMes * 100 : 0,
-      accent: SEM.info, fg: 'light-dark(oklch(0.870 0.090 200), oklch(0.471 0.099 200))', nota_fg: 'light-dark(oklch(0.740 0.035 200), oklch(0.410 0.035 200))',
-      grad: 'linear-gradient(150deg, light-dark(oklch(0.275 0.055 205), oklch(0.939 0.038 205)), light-dark(oklch(0.188 0.024 190), oklch(0.971 0.017 190)) 68%)', borde: 'light-dark(oklch(0.415 0.060 205), oklch(0.889 0.042 205))',
+      accent: SEM.info, fg: 'light-dark(oklch(0.471 0.099 200), oklch(0.870 0.090 200))', nota_fg: 'light-dark(oklch(0.410 0.035 200), oklch(0.740 0.035 200))',
+      grad: 'linear-gradient(150deg, light-dark(oklch(0.939 0.038 205), oklch(0.275 0.055 205)), light-dark(oklch(0.971 0.017 190), oklch(0.188 0.024 190)) 68%)', borde: 'light-dark(oklch(0.889 0.042 205), oklch(0.415 0.060 205))',
       delta: null, dec: 0, bueno: d => d > 0,
     },
     {
       id: 'conectividad', eyebrow: 'EQUIPOS EN LÍNEA', figura: String(kpis?.ups ?? '—'), sufijo: `de ${kpis?.total ?? '—'}`,
       nota: fueraDeLinea === 0 ? 'todos respondiendo' : `${fueraDeLinea} sin respuesta`,
       barPct: kpis && kpis.total > 0 ? kpis.ups / kpis.total * 100 : 0,
-      accent: SEM.ok, fg: 'light-dark(oklch(0.900 0.140 172), oklch(0.455 0.154 172))', nota_fg: 'light-dark(oklch(0.740 0.030 172), oklch(0.410 0.030 172))',
-      grad: 'linear-gradient(150deg, light-dark(oklch(0.280 0.060 172), oklch(0.937 0.042 172)), light-dark(oklch(0.190 0.026 185), oklch(0.970 0.018 185)) 68%)', borde: 'light-dark(oklch(0.420 0.070 172), oklch(0.887 0.049 172))',
+      accent: SEM.ok, fg: 'light-dark(oklch(0.455 0.154 172), oklch(0.900 0.140 172))', nota_fg: 'light-dark(oklch(0.410 0.030 172), oklch(0.740 0.030 172))',
+      grad: 'linear-gradient(150deg, light-dark(oklch(0.937 0.042 172), oklch(0.280 0.060 172)), light-dark(oklch(0.970 0.018 185), oklch(0.190 0.026 185)) 68%)', borde: 'light-dark(oklch(0.887 0.049 172), oklch(0.420 0.070 172))',
       delta: fueraDelta, dec: 0, bueno: d => d < 0,
     },
     {
       id: 'discrepancias', eyebrow: 'COINCIDENCIA DAC', figura: pctCoincidenciaDac.toFixed(1), sufijo: `% · meta ${META}%`,
       nota: `${totalDiscrepancias.toLocaleString('es-PE')} de ${totalTransitos.toLocaleString('es-PE')} · 12 h`,
       barPct: pctCoincidenciaDac, marca: META,
-      accent: SEM.warn, fg: 'light-dark(oklch(0.880 0.110 78), oklch(0.466 0.121 78))', nota_fg: 'light-dark(oklch(0.760 0.055 78), oklch(0.390 0.055 78))',
-      grad: 'linear-gradient(150deg, light-dark(oklch(0.278 0.055 78), oklch(0.938 0.038 78)), light-dark(oklch(0.188 0.024 190), oklch(0.971 0.017 190)) 68%)', borde: 'light-dark(oklch(0.418 0.062 78), oklch(0.888 0.043 78))',
+      accent: SEM.warn, fg: 'light-dark(oklch(0.466 0.121 78), oklch(0.880 0.110 78))', nota_fg: 'light-dark(oklch(0.390 0.055 78), oklch(0.760 0.055 78))',
+      grad: 'linear-gradient(150deg, light-dark(oklch(0.938 0.038 78), oklch(0.278 0.055 78)), light-dark(oklch(0.971 0.017 190), oklch(0.188 0.024 190)) 68%)', borde: 'light-dark(oklch(0.888 0.043 78), oklch(0.418 0.062 78))',
       delta: dacDelta, dec: 1, bueno: d => d > 0,
     },
     {
       id: 'ocr', eyebrow: 'ACIERTO OCR', figura: ocr ? ocr.tasaEfectividad.toFixed(1) : '—', sufijo: '%',
       nota: ocr ? 'lectura de placas · mes' : 'cargando…',
       barPct: ocr?.tasaEfectividad ?? 0,
-      accent: SEM.lila, fg: 'light-dark(oklch(0.880 0.090 305), oklch(0.466 0.099 305))', nota_fg: 'light-dark(oklch(0.750 0.045 305), oklch(0.400 0.045 305))',
-      grad: 'linear-gradient(150deg, light-dark(oklch(0.272 0.050 305), oklch(0.940 0.035 305)), light-dark(oklch(0.188 0.024 190), oklch(0.971 0.017 190)) 68%)', borde: 'light-dark(oklch(0.410 0.060 305), oklch(0.891 0.042 305))',
+      accent: SEM.lila, fg: 'light-dark(oklch(0.466 0.099 305), oklch(0.880 0.090 305))', nota_fg: 'light-dark(oklch(0.400 0.045 305), oklch(0.750 0.045 305))',
+      grad: 'linear-gradient(150deg, light-dark(oklch(0.940 0.035 305), oklch(0.272 0.050 305)), light-dark(oklch(0.971 0.017 190), oklch(0.188 0.024 190)) 68%)', borde: 'light-dark(oklch(0.891 0.042 305), oklch(0.410 0.060 305))',
       delta: ocrDelta, dec: 1, bueno: d => d > 0,
     },
     {
       id: 'incidentes', eyebrow: 'INCIDENTES · 7 DÍAS', figura: String(resumenInc?.total ?? '—'), sufijo: `${equiposCaidos.length} activos`,
       nota: resumenInc?.mttrMin != null ? `MTTR ${fmtDur(resumenInc.mttrMin)}` : 'MTTR —',
       barPct: resumenInc ? Math.min(100, equiposCaidos.length / 18 * 100) : 0,
-      accent: PANEL.rojo, fg: 'light-dark(oklch(0.870 0.130 25), oklch(0.471 0.143 25))', nota_fg: 'light-dark(oklch(0.760 0.070 25), oklch(0.532 0.077 25))',
-      grad: 'linear-gradient(150deg, light-dark(oklch(0.272 0.058 25), oklch(0.940 0.041 25)), light-dark(oklch(0.188 0.024 190), oklch(0.971 0.017 190)) 68%)', borde: 'light-dark(oklch(0.410 0.070 25), oklch(0.891 0.049 25))',
+      accent: PANEL.rojo, fg: 'light-dark(oklch(0.471 0.143 25), oklch(0.870 0.130 25))', nota_fg: 'light-dark(oklch(0.532 0.077 25), oklch(0.760 0.070 25))',
+      grad: 'linear-gradient(150deg, light-dark(oklch(0.940 0.041 25), oklch(0.272 0.058 25)), light-dark(oklch(0.971 0.017 190), oklch(0.188 0.024 190)) 68%)', borde: 'light-dark(oklch(0.891 0.049 25), oklch(0.410 0.070 25))',
       delta: eventosDelta ?? activosDelta, dec: 0, bueno: d => d < 0,
     },
   ]
@@ -529,29 +529,29 @@ export function Dashboard() {
   // Estilo HUD: todos los KPI en el verde azulado de SIGMA salvo el de incidentes (rojo)
   const kpiSpecs: KpiSpec[] = hud
     ? kpiSpecsBase.map(k => k.eyebrow.startsWith('INCIDENTES') ? k : {
-        ...k, accent: 'light-dark(oklch(0.80 0.10 192), oklch(0.510 0.110 192))', fg: 'light-dark(oklch(0.89 0.09 192), oklch(0.460 0.099 192))', nota_fg: 'light-dark(oklch(0.74 0.04 192), oklch(0.410 0.040 192))',
-        grad: 'linear-gradient(150deg, light-dark(oklch(0.275 0.055 192), oklch(0.939 0.038 192)), light-dark(oklch(0.188 0.024 190), oklch(0.971 0.017 190)) 68%)', borde: 'light-dark(oklch(0.42 0.065 192), oklch(0.887 0.045 192))',
+        ...k, accent: 'light-dark(oklch(0.510 0.110 192), oklch(0.80 0.10 192))', fg: 'light-dark(oklch(0.460 0.099 192), oklch(0.89 0.09 192))', nota_fg: 'light-dark(oklch(0.410 0.040 192), oklch(0.74 0.04 192))',
+        grad: 'linear-gradient(150deg, light-dark(oklch(0.939 0.038 192), oklch(0.275 0.055 192)), light-dark(oklch(0.971 0.017 190), oklch(0.188 0.024 190)) 68%)', borde: 'light-dark(oklch(0.887 0.045 192), oklch(0.42 0.065 192))',
       })
     : kpiSpecsBase
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'light-dark(#04100f, oklch(0.980 0.013 189))', overflowX: 'hidden' }}>
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'light-dark(oklch(0.980 0.013 189), #04100f)', overflowX: 'hidden' }}>
     <div style={{ width: 1920 * escala, height: 1080 * escala, flex: '0 0 auto', margin: '0 auto', overflow: 'hidden' }}>
       <div style={{
         width: 1920, height: 1080, flex: '0 0 auto', transform: `scale(${escala})`, transformOrigin: 'top left',
         boxSizing: 'border-box', padding: '14px 22px 14px', display: 'flex', flexDirection: 'column', gap: 10,
-        fontFamily: 'var(--app-font)', color: TEXTO.primario, overflow: 'hidden', backgroundColor: 'light-dark(#061413, oklch(0.974 0.014 190))',
+        fontFamily: 'var(--app-font)', color: TEXTO.primario, overflow: 'hidden', backgroundColor: 'light-dark(oklch(0.974 0.014 190), #061413)',
         backgroundImage: (fondo ? [
           `linear-gradient(180deg, oklch(0.12 0.02 190 / ${(oscuridad / 100).toFixed(2)}), oklch(0.09 0.02 190 / ${Math.min(1, oscuridad / 100 + 0.12).toFixed(2)}))`,
           `url(/api/audio/${fondo})`,
         ] : hud ? [
-          'radial-gradient(900px 600px at 50% 45%, light-dark(oklch(0.30 0.06 190 / 0.35), oklch(0.930 0.042 190 / 0.35)), transparent 70%)',
-          'linear-gradient(light-dark(oklch(0.80 0.10 190 / 0.05), oklch(0.510 0.110 190 / 0.05)) 1px, transparent 1px)',
-          'linear-gradient(90deg, light-dark(oklch(0.80 0.10 190 / 0.05), oklch(0.510 0.110 190 / 0.05)) 1px, transparent 1px)',
+          'radial-gradient(900px 600px at 50% 45%, light-dark(oklch(0.930 0.042 190 / 0.35), oklch(0.30 0.06 190 / 0.35)), transparent 70%)',
+          'linear-gradient(light-dark(oklch(0.510 0.110 190 / 0.05), oklch(0.80 0.10 190 / 0.05)) 1px, transparent 1px)',
+          'linear-gradient(90deg, light-dark(oklch(0.510 0.110 190 / 0.05), oklch(0.80 0.10 190 / 0.05)) 1px, transparent 1px)',
         ] : [
-          'radial-gradient(1200px 700px at 8% -12%, light-dark(oklch(0.33 0.045 185 / 0.65), oklch(0.919 0.032 185 / 0.65)), transparent 66%)',
-          'radial-gradient(1000px 620px at 98% 2%, light-dark(oklch(0.30 0.040 200 / 0.45), oklch(0.930 0.028 200 / 0.45)), transparent 64%)',
-          'radial-gradient(1100px 700px at 55% 120%, light-dark(oklch(0.26 0.035 190 / 0.55), oklch(0.945 0.025 190 / 0.55)), transparent 70%)',
+          'radial-gradient(1200px 700px at 8% -12%, light-dark(oklch(0.919 0.032 185 / 0.65), oklch(0.33 0.045 185 / 0.65)), transparent 66%)',
+          'radial-gradient(1000px 620px at 98% 2%, light-dark(oklch(0.930 0.028 200 / 0.45), oklch(0.30 0.040 200 / 0.45)), transparent 64%)',
+          'radial-gradient(1100px 700px at 55% 120%, light-dark(oklch(0.945 0.025 190 / 0.55), oklch(0.26 0.035 190 / 0.55)), transparent 70%)',
         ]).join(', '),
         backgroundSize: fondo ? 'cover' : hud ? 'auto, 44px 44px, 44px 44px' : undefined, backgroundPosition: fondo ? 'center' : undefined,
       }}>
@@ -590,7 +590,7 @@ export function Dashboard() {
               const maxDia = Math.max(1, ...porDia.values(), ...esperado.values())
               return (
                 <div>
-                  <div style={{ height: 62, display: 'flex', alignItems: 'flex-end', gap: 3, boxShadow: 'inset 0 -1px 0 light-dark(oklch(0.400 0.028 190), oklch(0.894 0.020 190))' }}>
+                  <div style={{ height: 62, display: 'flex', alignItems: 'flex-end', gap: 3, boxShadow: 'inset 0 -1px 0 light-dark(oklch(0.894 0.020 190), oklch(0.400 0.028 190))' }}>
                     {Array.from({ length: dias }, (_, i) => {
                       const dia = i + 1
                       const real = porDia.get(dia)
@@ -610,14 +610,14 @@ export function Dashboard() {
                 </div>
               )
             })()}
-            <div style={{ paddingTop: 10, boxShadow: 'inset 0 1px 0 light-dark(oklch(0.330 0.026 190), oklch(0.919 0.018 190))' }}>
+            <div style={{ paddingTop: 10, boxShadow: 'inset 0 1px 0 light-dark(oklch(0.919 0.018 190), oklch(0.330 0.026 190))' }}>
               <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 7 }}>Forma de cobro</div>
               <BarraApilada sinConteo total={tm?.total ?? 0} segmentos={[
                 { nombre: 'Efectivo', n: tm?.efectivo ?? 0, color: SEM.warn },
                 { nombre: 'Tarjeta', n: tm?.tarjeta ?? 0, color: SEM.ok },
                 { nombre: 'Prepago', n: tm?.tag ?? 0, color: SEM.info },
-                { nombre: 'Tarifa diferenciada', n: tm?.porPlaca ?? 0, color: 'light-dark(oklch(0.72 0.10 230), oklch(0.554 0.110 230))' },
-                { nombre: 'Exento + otros', n: (tm?.exento ?? 0) + (tm?.otros ?? 0), color: 'light-dark(oklch(0.50 0.02 190), oklch(0.650 0.020 190))' },
+                { nombre: 'Tarifa diferenciada', n: tm?.porPlaca ?? 0, color: 'light-dark(oklch(0.554 0.110 230), oklch(0.72 0.10 230))' },
+                { nombre: 'Exento + otros', n: (tm?.exento ?? 0) + (tm?.otros ?? 0), color: 'light-dark(oklch(0.650 0.020 190), oklch(0.50 0.02 190))' },
               ]} />
             </div>
           </Card>
@@ -633,7 +633,7 @@ export function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'baseline' }}>
                 <div style={{ fontSize: 46, fontWeight: 200, letterSpacing: '-0.045em' }}>{slaGlobal != null ? slaGlobal.toFixed(2) : '—'}</div>
-                <div style={{ fontSize: 26, fontWeight: 200, color: 'light-dark(oklch(0.900 0.015 190), oklch(0.250 0.015 190))' }}>%</div>
+                <div style={{ fontSize: 26, fontWeight: 200, color: 'light-dark(oklch(0.250 0.015 190), oklch(0.900 0.015 190))' }}>%</div>
               </div>
               <div style={{ fontSize: 14, fontWeight: 500, color: TEXTO.secundario }}>
                 {slaGlobal != null ? `${Math.max(0, 100 - slaGlobal).toFixed(2)} pp sin conexión` : '—'}
@@ -644,7 +644,7 @@ export function Dashboard() {
                 // Ámbar: la estación queda claramente por debajo del promedio de la red
                 const bajo = slaGlobal != null && e.uptimePct < slaGlobal - 0.1
                 return (
-                  <div key={e.estacionId} style={{ padding: '6px 4px', borderRadius: 10, background: 'light-dark(oklch(0.215 0.026 190), oklch(0.961 0.018 190))', boxShadow: bajo ? `inset 0 0 0 1px ${SEM.warn}` : 'inset 0 0 0 1px light-dark(oklch(0.310 0.028 190), oklch(0.927 0.020 190))' }}>
+                  <div key={e.estacionId} style={{ padding: '6px 4px', borderRadius: 10, background: 'light-dark(oklch(0.961 0.018 190), oklch(0.215 0.026 190))', boxShadow: bajo ? `inset 0 0 0 1px ${SEM.warn}` : 'inset 0 0 0 1px light-dark(oklch(0.927 0.020 190), oklch(0.310 0.028 190))' }}>
                     <div style={{ fontSize: 17, fontWeight: 600, color: bajo ? SEM.warn : SEM.info }}>{e.uptimePct.toFixed(2)}</div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: estColor(e.estacion), marginTop: 2 }}>{e.estacion}</div>
                   </div>
@@ -664,13 +664,13 @@ export function Dashboard() {
               const MAX = 3
               const visibles = filas.length > MAX ? filas.slice(0, MAX - 1) : filas
               return (
-                <div style={{ paddingTop: 8, boxShadow: 'inset 0 1px 0 light-dark(oklch(0.330 0.026 190), oklch(0.919 0.018 190))' }}>
+                <div style={{ paddingTop: 8, boxShadow: 'inset 0 1px 0 light-dark(oklch(0.919 0.018 190), oklch(0.330 0.026 190))' }}>
                   <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '.12em', color: TEXTO.terciario, marginBottom: 6 }}>EQUIPOS Y SERVICIOS</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     {filas.length === 0
-                      ? <div style={{ padding: '8px 12px', borderRadius: 10, background: 'light-dark(oklch(0.215 0.026 190), oklch(0.961 0.018 190))', fontSize: 14, fontWeight: 500, color: SEM.ok }}>Todos los equipos y servicios operativos</div>
+                      ? <div style={{ padding: '8px 12px', borderRadius: 10, background: 'light-dark(oklch(0.961 0.018 190), oklch(0.215 0.026 190))', fontSize: 14, fontWeight: 500, color: SEM.ok }}>Todos los equipos y servicios operativos</div>
                       : visibles.map(f => (
-                        <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', borderRadius: 10, background: 'light-dark(oklch(0.215 0.026 190), oklch(0.961 0.018 190))' }}>
+                        <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', borderRadius: 10, background: 'light-dark(oklch(0.961 0.018 190), oklch(0.215 0.026 190))' }}>
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: f.color, flex: '0 0 auto' }} />
                           <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.nombre}</span>
                           <span style={{ fontSize: 13, fontWeight: 500, color: f.color, whiteSpace: 'nowrap' }}>{f.estado}</span>
@@ -695,18 +695,18 @@ export function Dashboard() {
                 { nombre: 'Reconocidas', n: ocr?.aciertos ?? 0, color: SEM.ok },
                 { nombre: 'No legibles', n: ocr?.sinDetectar ?? 0, color: SEM.critico },
                 { nombre: 'Error de detección', n: ocr?.errores ?? 0, color: SEM.warn },
-                { nombre: 'Sin placa de referencia', n: sinPlaca, color: 'light-dark(oklch(0.50 0.02 190), oklch(0.650 0.020 190))' },
+                { nombre: 'Sin placa de referencia', n: sinPlaca, color: 'light-dark(oklch(0.650 0.020 190), oklch(0.50 0.02 190))' },
               ]
               return (
                 <>
-                  <div style={{ display: 'flex', height: 22, borderRadius: 8, overflow: 'hidden', gap: 2, boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.460 0.035 190), oklch(0.690 0.035 190))', padding: 3, boxSizing: 'border-box' }}>
+                  <div style={{ display: 'flex', height: 22, borderRadius: 8, overflow: 'hidden', gap: 2, boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.690 0.035 190), oklch(0.460 0.035 190))', padding: 3, boxSizing: 'border-box' }}>
                     {filas.map(f => (
                       <div key={f.nombre} style={{ width: `${total > 0 ? f.n / total * 100 : 0}%`, backgroundImage: stripedImage(f.color), borderRadius: 3, transition: 'width 1.2s cubic-bezier(0.4,0,0.2,1)' }} />
                     ))}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {filas.map((f, i) => (
-                      <div key={f.nombre} title={f.nombre === 'Sin placa de referencia' ? 'Tránsitos sin placa capturada en el sistema: no hay con qué comparar la lectura del OCR' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 2px', boxShadow: i > 0 ? 'inset 0 1px 0 light-dark(oklch(0.290 0.024 190), oklch(0.934 0.017 190))' : undefined }}>
+                      <div key={f.nombre} title={f.nombre === 'Sin placa de referencia' ? 'Tránsitos sin placa capturada en el sistema: no hay con qué comparar la lectura del OCR' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 2px', boxShadow: i > 0 ? 'inset 0 1px 0 light-dark(oklch(0.934 0.017 190), oklch(0.290 0.024 190))' : undefined }}>
                         <span style={{ width: 8, height: 8, borderRadius: 2, background: f.color, flex: '0 0 auto' }} />
                         <span style={{ flex: 1, fontSize: 16, fontWeight: 500 }}>{f.nombre}</span>
                         <span style={{ fontSize: 14, fontWeight: 500, color: TEXTO.terciario, fontVariantNumeric: 'tabular-nums' }}>{f.n.toLocaleString('es-PE')}</span>
@@ -720,7 +720,7 @@ export function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: TEXTO.terciario, flex: '0 0 auto', marginRight: 4 }}>Acierto · últimos 5 días</div>
               {(tm?.porDia ?? []).filter(d => d.ocrConPlaca > 0).slice(-5).map(d => (
-                <div key={d.fecha} title={d.fecha} style={{ flex: 1, textAlign: 'center', padding: '6px 0', borderRadius: 8, background: 'light-dark(oklch(0.215 0.026 190), oklch(0.961 0.018 190))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.310 0.028 190), oklch(0.927 0.020 190))', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                <div key={d.fecha} title={d.fecha} style={{ flex: 1, textAlign: 'center', padding: '6px 0', borderRadius: 8, background: 'light-dark(oklch(0.961 0.018 190), oklch(0.215 0.026 190))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.927 0.020 190), oklch(0.310 0.028 190))', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                   {(d.ocrAciertos / d.ocrConPlaca * 100).toFixed(1)}
                 </div>
               ))}
@@ -733,13 +733,13 @@ export function Dashboard() {
               <CardHeader title="Discrepancias DAC" right={<div style={{ fontSize: 14, fontWeight: 500, color: TEXTO.terciario }}>12 h · meta {META}%</div>} />
               <div>
                 <div style={{ fontSize: 13, fontWeight: 500, color: TEXTO.terciario, marginBottom: 6 }}>Coincidencia por hora · patrón 7 días</div>
-                <div style={{ height: 70, display: 'flex', alignItems: 'flex-end', gap: 3, boxShadow: 'inset 0 -1px 0 light-dark(oklch(0.400 0.028 190), oklch(0.894 0.020 190))' }}>
+                <div style={{ height: 70, display: 'flex', alignItems: 'flex-end', gap: 3, boxShadow: 'inset 0 -1px 0 light-dark(oklch(0.894 0.020 190), oklch(0.400 0.028 190))' }}>
                   {Array.from({ length: 24 }, (_, h) => {
                     const row = porHora.find(pp => pp.hora === h)
                     const coincidencia = row ? 100 - row.tasaError : null
                     const v = coincidencia ?? 90
                     const alto = Math.max(4, Math.min(100, ((v - 89) / (100 - 89)) * 100))
-                    const color = coincidencia == null ? 'light-dark(oklch(0.36 0.02 190), oklch(0.909 0.014 190))' : coincidencia >= 94 ? SEM.ok : coincidencia >= 92 ? SEM.warn : SEM.critico
+                    const color = coincidencia == null ? 'light-dark(oklch(0.909 0.014 190), oklch(0.36 0.02 190))' : coincidencia >= 94 ? SEM.ok : coincidencia >= 92 ? SEM.warn : SEM.critico
                     return <div key={h} title={coincidencia != null ? `${h}h — ${coincidencia.toFixed(1)}%` : `${h}h — sin datos`} style={{ flex: '1 1 0', height: `${alto}%`, background: color, borderRadius: '3px 3px 0 0', transition: 'height 1.2s cubic-bezier(0.4,0,0.2,1)' }} />
                   })}
                 </div>
@@ -749,7 +749,7 @@ export function Dashboard() {
                   ))}
                 </div>
               </div>
-              <div style={{ paddingTop: 8, boxShadow: 'inset 0 1px 0 light-dark(oklch(0.330 0.026 190), oklch(0.919 0.018 190))' }}>
+              <div style={{ paddingTop: 8, boxShadow: 'inset 0 1px 0 light-dark(oklch(0.919 0.018 190), oklch(0.330 0.026 190))' }}>
                 <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '.12em', color: TEXTO.terciario, marginBottom: 6 }}>VÍAS MÁS CRÍTICAS</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {viasTop.slice(0, 3).length === 0
@@ -801,7 +801,7 @@ export function Dashboard() {
                   const color = inc.tipo === 'Real' ? SEM.critico : SEM.warn
                   const hora = new Date(inc.inicio)
                   return (
-                    <div key={inc.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', borderRadius: 10, background: 'light-dark(oklch(0.215 0.026 190), oklch(0.961 0.018 190))' }}>
+                    <div key={inc.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', borderRadius: 10, background: 'light-dark(oklch(0.961 0.018 190), oklch(0.215 0.026 190))' }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flex: '0 0 auto' }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 16, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inc.equipoNombre}</div>
@@ -820,7 +820,7 @@ export function Dashboard() {
 
         {/* ── Feed de alertas actuales ── */}
         <style>{`@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
-        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 14, height: 38, padding: '0 16px', borderRadius: hud ? 8 : 999, background: 'light-dark(oklch(0.200 0.026 190), oklch(0.966 0.018 190))', boxShadow: `inset 0 0 0 1px ${feedItems.some(a => a.sev === 'critico') ? 'light-dark(oklch(0.50 0.12 25), oklch(0.675 0.132 25))' : 'light-dark(oklch(0.360 0.028 190), oklch(0.909 0.020 190))'}` }}>
+        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 14, height: 38, padding: '0 16px', borderRadius: hud ? 8 : 999, background: 'light-dark(oklch(0.966 0.018 190), oklch(0.200 0.026 190))', boxShadow: `inset 0 0 0 1px ${feedItems.some(a => a.sev === 'critico') ? 'light-dark(oklch(0.675 0.132 25), oklch(0.50 0.12 25))' : 'light-dark(oklch(0.909 0.020 190), oklch(0.360 0.028 190))'}` }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, letterSpacing: '.12em', color: feedItems.some(a => a.sev === 'critico') ? PANEL.rojo : feedActivas.length ? PANEL.naranja : SEM.ok }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: feedItems.some(a => a.sev === 'critico') ? PANEL.rojo : feedActivas.length ? PANEL.naranja : SEM.ok, animation: feedActivas.length ? 'breathe 1.4s ease-in-out infinite' : undefined }} />
             ALERTAS · {feedActivas.length}
@@ -834,7 +834,7 @@ export function Dashboard() {
                     <div key={copia} style={{ display: 'flex', alignItems: 'center', gap: 34, paddingRight: 34 }}>
                       {feedItems.map((a, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, whiteSpace: 'nowrap', fontSize: 15, fontWeight: 500 }}>
-                          <span style={{ padding: '1px 8px', borderRadius: 6, fontSize: 12, fontWeight: 700, letterSpacing: '.08em', color: 'light-dark(oklch(0.16 0.03 200), oklch(0.981 0.021 200))', background: a.sev === 'critico' ? PANEL.rojo : SEM.warn }}>{a.tag}</span>
+                          <span style={{ padding: '1px 8px', borderRadius: 6, fontSize: 12, fontWeight: 700, letterSpacing: '.08em', color: 'light-dark(oklch(0.981 0.021 200), oklch(0.16 0.03 200))', background: a.sev === 'critico' ? PANEL.rojo : SEM.warn }}>{a.tag}</span>
                           {a.texto}
                         </div>
                       ))}
@@ -844,7 +844,7 @@ export function Dashboard() {
               )}
           </div>
           {foco != null && (
-            <div onClick={() => setFoco(null)} style={{ flex: '0 0 auto', cursor: 'pointer', fontSize: 14, fontWeight: 600, letterSpacing: '.04em', color: 'light-dark(oklch(0.860 0.100 195), oklch(0.477 0.110 195))' }}>VER TODO</div>
+            <div onClick={() => setFoco(null)} style={{ flex: '0 0 auto', cursor: 'pointer', fontSize: 14, fontWeight: 600, letterSpacing: '.04em', color: 'light-dark(oklch(0.477 0.110 195), oklch(0.860 0.100 195))' }}>VER TODO</div>
           )}
         </div>
         </HudCtx.Provider>

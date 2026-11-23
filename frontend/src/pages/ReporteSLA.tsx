@@ -12,13 +12,13 @@ const META = 99.5
 const gris = 'var(--tx-muted)'
 
 function barraPct(p: number) { return Math.max(0, Math.min(100, (p - 90) / 10 * 100)) }
-function fgPct(p: number) { return p >= META ? 'light-dark(oklch(0.86 0.11 160), oklch(0.477 0.121 160))' : p >= 97 ? 'light-dark(oklch(0.88 0.12 62), oklch(0.466 0.132 62))' : 'light-dark(oklch(0.84 0.14 22), oklch(0.488 0.154 22))' }
+function fgPct(p: number) { return p >= META ? 'light-dark(oklch(0.477 0.121 160), oklch(0.86 0.11 160))' : p >= 97 ? 'light-dark(oklch(0.466 0.132 62), oklch(0.88 0.12 62))' : 'light-dark(oklch(0.488 0.154 22), oklch(0.84 0.14 22))' }
 function barraColor(p: number) {
   return p >= META
-    ? 'linear-gradient(90deg, light-dark(oklch(0.60 0.12 165), oklch(0.620 0.132 165)), light-dark(oklch(0.78 0.13 160), oklch(0.521 0.143 160)))'
+    ? 'linear-gradient(90deg, light-dark(oklch(0.620 0.132 165), oklch(0.60 0.12 165)), light-dark(oklch(0.521 0.143 160), oklch(0.78 0.13 160)))'
     : p >= 97
-      ? 'linear-gradient(90deg, light-dark(oklch(0.68 0.12 70), oklch(0.576 0.132 70)), light-dark(oklch(0.82 0.13 62), oklch(0.499 0.143 62)))'
-      : 'linear-gradient(90deg, light-dark(oklch(0.56 0.15 20), oklch(0.642 0.165 20)), light-dark(oklch(0.72 0.16 22), oklch(0.554 0.170 22)))'
+      ? 'linear-gradient(90deg, light-dark(oklch(0.576 0.132 70), oklch(0.68 0.12 70)), light-dark(oklch(0.499 0.143 62), oklch(0.82 0.13 62)))'
+      : 'linear-gradient(90deg, light-dark(oklch(0.642 0.165 20), oklch(0.56 0.15 20)), light-dark(oklch(0.554 0.170 22), oklch(0.72 0.16 22)))'
 }
 function dur(min: number) {
   const h = Math.floor(min / 60), m = min % 60
@@ -102,10 +102,10 @@ export function ReporteSLA() {
     const max = motivos[0]?.minutos ?? 1
     return motivos.slice(0, 4).map(m => ({
       nombre: m.causa, horas: dur(m.minutos),
-      fg: m === motivos[0] ? 'light-dark(oklch(0.86 0.13 22), oklch(0.477 0.143 22))' : 'var(--tx-muted)',
+      fg: m === motivos[0] ? 'light-dark(oklch(0.477 0.143 22), oklch(0.86 0.13 22))' : 'var(--tx-muted)',
       barra: m === motivos[0]
-        ? 'linear-gradient(90deg, light-dark(oklch(0.56 0.15 20), oklch(0.642 0.165 20)), light-dark(oklch(0.72 0.16 22), oklch(0.554 0.170 22)))'
-        : 'linear-gradient(90deg, light-dark(oklch(0.42 0.015 265), oklch(0.887 0.010 265)), var(--tx-dim))',
+        ? 'linear-gradient(90deg, light-dark(oklch(0.642 0.165 20), oklch(0.56 0.15 20)), light-dark(oklch(0.554 0.170 22), oklch(0.72 0.16 22)))'
+        : 'linear-gradient(90deg, light-dark(oklch(0.887 0.010 265), oklch(0.42 0.015 265)), var(--tx-dim))',
       share: `${m.pct}%`, ancho: `${Math.round(m.minutos / max * 100)}%`,
     }))
   }, [motivos])
@@ -123,7 +123,7 @@ export function ReporteSLA() {
     return [...rows].sort(cmp[orden]).slice(0, 9).map(r => ({
       est: r.estacion, estFg: COLORS[r.estacion] ?? gris, equipo: r.nombre, tipo: r.tipoNombre, via: r.via,
       pct: `${r.uptimePct.toFixed(2)}%`, pctFg: fgPct(r.uptimePct), ancho: `${barraPct(r.uptimePct)}%`, barra: barraColor(r.uptimePct),
-      caido: dur(r.downMin), caidoFg: r.uptimePct >= META ? gris : 'light-dark(oklch(0.84 0.13 22), oklch(0.488 0.143 22))',
+      caido: dur(r.downMin), caidoFg: r.uptimePct >= META ? gris : 'light-dark(oklch(0.488 0.143 22), oklch(0.84 0.13 22))',
       eventos: r.eventos, motivo: r.motivos ?? '—',
     }))
   }, [rows, orden])
@@ -155,20 +155,20 @@ export function ReporteSLA() {
             <option value="">Todos los peajes</option>
             {porEstacion.map(e => <option key={e.estacionId} value={e.estacionId}>{e.estacion}</option>)}
           </select>
-          <div onClick={load} style={{ padding: '8px 18px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))', background: 'linear-gradient(180deg, light-dark(oklch(0.84 0.11 200), oklch(0.488 0.121 200)), light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200)))' }}>Consultar</div>
+          <div onClick={load} style={{ padding: '8px 18px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.973 0.028 200), oklch(0.18 0.04 200))', background: 'linear-gradient(180deg, light-dark(oklch(0.488 0.121 200), oklch(0.84 0.11 200)), light-dark(oklch(0.543 0.121 200), oklch(0.74 0.11 200)))' }}>Consultar</div>
         </div>
       </div>
 
       {/* ── KPI ────────────────────────────────────────────── */}
       <div style={{ height: 106, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '1.45fr repeat(5, 1fr)', gap: 13 }}>
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.38 0.09 62 / 0.50), oklch(0.901 0.063 62 / 0.5)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.84 0.09 62), oklch(0.488 0.099 62))' }}>Uptime global</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.901 0.063 62 / 0.5), oklch(0.38 0.09 62 / 0.50)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.488 0.099 62), oklch(0.84 0.09 62))' }}>Uptime global</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.90 0.11 62), oklch(0.455 0.121 62))' }}>{global.pct}</div>
-            <div style={{ fontSize: 17, fontWeight: 400, color: 'light-dark(oklch(0.68 0.05 62), oklch(0.470 0.050 62))' }}>{global.brecha}</div>
+            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.455 0.121 62), oklch(0.90 0.11 62))' }}>{global.pct}</div>
+            <div style={{ fontSize: 17, fontWeight: 400, color: 'light-dark(oklch(0.470 0.050 62), oklch(0.68 0.05 62))' }}>{global.brecha}</div>
           </div>
           <div style={{ height: 6, borderRadius: 999, background: 'rgb(var(--ov) / 0.08)', overflow: 'hidden' }}>
-            <div style={{ width: global.barra, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, light-dark(oklch(0.74 0.13 85), oklch(0.543 0.143 85)), light-dark(oklch(0.84 0.13 62), oklch(0.488 0.143 62)))' }} />
+            <div style={{ width: global.barra, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, light-dark(oklch(0.543 0.143 85), oklch(0.74 0.13 85)), light-dark(oklch(0.488 0.143 62), oklch(0.84 0.13 62)))' }} />
           </div>
         </div>
 
@@ -200,10 +200,10 @@ export function ReporteSLA() {
                   <div style={{ width: 132, flex: '0 0 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 15, fontWeight: 600 }}>{i.equipo}</div>
                   <div style={{ width: 78, flex: '0 0 auto', fontSize: 13, fontWeight: 600, color: i.color }}>{i.est}</div>
                   <div style={{ flex: '1 1 auto', minWidth: 0, height: 9, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
-                    <div style={{ width: i.ancho, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, light-dark(oklch(0.56 0.15 20), oklch(0.642 0.165 20)), light-dark(oklch(0.72 0.16 22), oklch(0.554 0.170 22)))' }} />
+                    <div style={{ width: i.ancho, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, light-dark(oklch(0.642 0.165 20), oklch(0.56 0.15 20)), light-dark(oklch(0.554 0.170 22), oklch(0.72 0.16 22)))' }} />
                   </div>
                   <div style={{ width: 66, flex: '0 0 auto', textAlign: 'right', fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-muted)' }}>{i.caido}</div>
-                  <div style={{ width: 62, flex: '0 0 auto', textAlign: 'right', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.84 0.13 22), oklch(0.488 0.143 22))' }}>{i.pct}</div>
+                  <div style={{ width: 62, flex: '0 0 auto', textAlign: 'right', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.488 0.143 22), oklch(0.84 0.13 22))' }}>{i.pct}</div>
                 </div>
               ))}
           </div>
@@ -252,7 +252,7 @@ export function ReporteSLA() {
                 </div>
               </div>
             ))}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'light-dark(oklch(0.80 0.06 200), oklch(0.510 0.066 200))', background: 'light-dark(oklch(0.32 0.04 210 / 0.45), oklch(0.923 0.028 210 / 0.45))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>{motivoInsight}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'light-dark(oklch(0.510 0.066 200), oklch(0.80 0.06 200))', background: 'light-dark(oklch(0.923 0.028 210 / 0.45), oklch(0.32 0.04 210 / 0.45))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>{motivoInsight}</div>
           </div>
         </Panel>
       </div>
@@ -269,11 +269,11 @@ export function ReporteSLA() {
               <div key={o} onClick={() => setOrden(o)} style={{
                 padding: '7px 15px', borderRadius: 11, fontSize: 15, fontWeight: orden === o ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
                 color: orden === o ? 'var(--tx)' : 'var(--tx-muted)',
-                background: orden === o ? 'light-dark(oklch(0.32 0.04 210 / 0.70), oklch(0.923 0.028 210 / 0.7))' : 'transparent',
-                boxShadow: orden === o ? 'inset 0 0 0 1px light-dark(oklch(0.70 0.09 200 / 0.32), oklch(0.565 0.099 200 / 0.32))' : 'none',
+                background: orden === o ? 'light-dark(oklch(0.923 0.028 210 / 0.7), oklch(0.32 0.04 210 / 0.70))' : 'transparent',
+                boxShadow: orden === o ? 'inset 0 0 0 1px light-dark(oklch(0.565 0.099 200 / 0.32), oklch(0.70 0.09 200 / 0.32))' : 'none',
               }}>{o}</div>
             ))}
-            <a href={csvUrl} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.90 0.10 160), oklch(0.455 0.110 160))', background: 'light-dark(oklch(0.38 0.08 165 / 0.40), oklch(0.901 0.056 165 / 0.4))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.65 0.10 165 / 0.30), oklch(0.592 0.110 165 / 0.3))' }}>Descargar CSV</a>
+            <a href={csvUrl} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.455 0.110 160), oklch(0.90 0.10 160))', background: 'light-dark(oklch(0.901 0.056 165 / 0.4), oklch(0.38 0.08 165 / 0.40))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.592 0.110 165 / 0.3), oklch(0.65 0.10 165 / 0.30))' }}>Descargar CSV</a>
           </div>
         </div>
 

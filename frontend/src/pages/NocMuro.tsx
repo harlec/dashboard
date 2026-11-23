@@ -12,14 +12,14 @@ import { severidadDac as severidadDacBase } from '../lib/dac'
 const ALEATICA = {
   verde:       '#72BF44', // Verde ALEATICA — primario
   musgo:       '#0DB14B', // Musgo Secundario
-  lima:        'light-dark(#D3DF4E, oklch(0.473 0.170 114))', // Lima Secundario
+  lima:        'light-dark(oklch(0.473 0.170 114), #D3DF4E)', // Lima Secundario
   naranja:     '#F99B1C', // Naranja ALEATICA — primario
   naranjaSec:  '#F57E20', // Naranja Secundario
   gris:        '#6F605A', // Gris ALEATICA
   grisSec:     '#F2F1EF', // Gris Secundario
   verdeCrema:  '#D9E8AE', // Verde Crema ALEATICA
-  azul:        'light-dark(#00BBE7, oklch(0.546 0.150 223))', // Azul ALEATICA
-  amarillo:    'light-dark(#FFDD00, oklch(0.456 0.170 98))', // Amarillo ALEATICA
+  azul:        'light-dark(oklch(0.546 0.150 223), #00BBE7)', // Azul ALEATICA
+  amarillo:    'light-dark(oklch(0.456 0.170 98), #FFDD00)', // Amarillo ALEATICA
 } as const
 
 // Mismos destinos que NavBar.tsx — el muro es una pantalla aparte (sin el nav normal
@@ -82,21 +82,21 @@ interface ChipStyle { bg: string; fg: string; sh: string }
 // "degraded" usa el naranja ALEATICA a color completo en ambos modos (siempre debe
 // llamar la atención). "down" se queda en rojo — la guía de marca no trae un rojo y
 // es el color de peligro universal, no tiene sentido reemplazarlo por fidelidad.
-const UP_EXCEPCION: ChipStyle = { bg: 'light-dark(oklch(0.32 0.03 145 / 0.80), oklch(0.923 0.021 145 / 0.8))', fg: 'light-dark(oklch(0.80 0.05 145), oklch(0.350 0.050 145))', sh: 'inset 0 1px 0 rgb(var(--ov) / 0.05)' }
+const UP_EXCEPCION: ChipStyle = { bg: 'light-dark(oklch(0.923 0.021 145 / 0.8), oklch(0.32 0.03 145 / 0.80))', fg: 'light-dark(oklch(0.350 0.050 145), oklch(0.80 0.05 145))', sh: 'inset 0 1px 0 rgb(var(--ov) / 0.05)' }
 const UP_COLOREADO: ChipStyle = {
-  bg: `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})`, fg: 'light-dark(#0B2E12, oklch(0.942 0.045 147))',
+  bg: `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})`, fg: 'light-dark(oklch(0.942 0.045 147), #0B2E12)',
   sh: `0 0 14px ${ALEATICA.verde}59, inset 0 1px 0 rgb(var(--ov) / 0.30)`,
 }
 const CHIP_ESTATICO: Record<'degraded' | 'down' | 'na' | 'blank', ChipStyle> = {
   degraded: {
-    bg: `linear-gradient(180deg, light-dark(#FCC067, oklch(0.485 0.139 75)), ${ALEATICA.naranja})`, fg: 'light-dark(#3A2205, oklch(0.938 0.039 67))',
+    bg: `linear-gradient(180deg, light-dark(oklch(0.485 0.139 75), #FCC067), ${ALEATICA.naranja})`, fg: 'light-dark(oklch(0.938 0.039 67), #3A2205)',
     sh: `0 0 18px ${ALEATICA.naranja}6B, inset 0 1px 0 rgb(var(--ov) / 0.35)`,
   },
   down: {
-    bg: 'linear-gradient(180deg, light-dark(oklch(0.66 0.17 15), oklch(0.587 0.170 15)), light-dark(oklch(0.53 0.16 15), oklch(0.658 0.170 15)))', fg: 'light-dark(oklch(0.99 0.02 15), oklch(0.200 0.020 15))',
-    sh: '0 0 20px light-dark(oklch(0.66 0.18 15 / 0.55), oklch(0.587 0.170 15 / 0.55)), inset 0 1px 0 rgb(var(--ov) / 0.28)',
+    bg: 'linear-gradient(180deg, light-dark(oklch(0.587 0.170 15), oklch(0.66 0.17 15)), light-dark(oklch(0.658 0.170 15), oklch(0.53 0.16 15)))', fg: 'light-dark(oklch(0.200 0.020 15), oklch(0.99 0.02 15))',
+    sh: '0 0 20px light-dark(oklch(0.587 0.170 15 / 0.55), oklch(0.66 0.18 15 / 0.55)), inset 0 1px 0 rgb(var(--ov) / 0.28)',
   },
-  na: { bg: 'transparent', fg: 'light-dark(oklch(0.42 0.012 265), oklch(0.887 0.008 265))', sh: 'inset 0 0 0 1px rgb(var(--s3))' },
+  na: { bg: 'transparent', fg: 'light-dark(oklch(0.887 0.008 265), oklch(0.42 0.012 265))', sh: 'inset 0 0 0 1px rgb(var(--s3))' },
   blank: { bg: 'transparent', fg: 'transparent', sh: 'none' },
 }
 // Estado de transición — ~5s tras un cambio de red, antes de asentarse en su color
@@ -105,11 +105,11 @@ const CHIP_ESTATICO: Record<'degraded' | 'down' | 'na' | 'blank', ChipStyle> = {
 // (0.5s) para que se note claramente que ACABA de cambiar, distinto del parpadeo
 // lento (2s) de un "down" que ya lleva rato así.
 const TRANSICION_CAYENDO: ChipStyle = {
-  bg: `linear-gradient(180deg, light-dark(#FCC067, oklch(0.485 0.139 75)), ${ALEATICA.naranja})`, fg: 'light-dark(#3A2205, oklch(0.938 0.039 67))',
+  bg: `linear-gradient(180deg, light-dark(oklch(0.485 0.139 75), #FCC067), ${ALEATICA.naranja})`, fg: 'light-dark(oklch(0.938 0.039 67), #3A2205)',
   sh: `0 0 22px ${ALEATICA.naranja}B0, inset 0 1px 0 rgb(var(--ov) / 0.40)`,
 }
 const TRANSICION_SUBIENDO: ChipStyle = {
-  bg: `linear-gradient(180deg, light-dark(#A6F08A, oklch(0.464 0.168 138)), ${ALEATICA.verde})`, fg: 'light-dark(#0B2E12, oklch(0.942 0.045 147))',
+  bg: `linear-gradient(180deg, light-dark(oklch(0.464 0.168 138), #A6F08A), ${ALEATICA.verde})`, fg: 'light-dark(oklch(0.942 0.045 147), #0B2E12)',
   sh: `0 0 22px ${ALEATICA.verde}B0, inset 0 1px 0 rgb(var(--ov) / 0.45)`,
 }
 
@@ -437,9 +437,9 @@ export function NocMuro() {
       {/* ── Header ── */}
       <div style={{ height: 64, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '0.2em', color: 'light-dark(oklch(0.84 0.11 195), oklch(0.488 0.121 195))' }}>SIGMA</div>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'light-dark(oklch(0.45 0.02 265), oklch(0.700 0.020 265))' }} />
-          <div style={{ fontSize: 25, fontWeight: 500, letterSpacing: '-0.01em', color: 'light-dark(oklch(0.90 0.006 265), oklch(0.250 0.012 265))' }}>Centro de operaciones</div>
+          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '0.2em', color: 'light-dark(oklch(0.488 0.121 195), oklch(0.84 0.11 195))' }}>SIGMA</div>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'light-dark(oklch(0.700 0.020 265), oklch(0.45 0.02 265))' }} />
+          <div style={{ fontSize: 25, fontWeight: 500, letterSpacing: '-0.01em', color: 'light-dark(oklch(0.250 0.012 265), oklch(0.90 0.006 265))' }}>Centro de operaciones</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px 7px 12px', borderRadius: 999, background: `${ALEATICA.verde}29`, boxShadow: `inset 0 0 0 1px ${ALEATICA.verde}47` }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: ALEATICA.verde, animation: 'breathe 2.6s ease-in-out infinite' }} />
             <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.04em', color: ALEATICA.lima }}>EN VIVO</span>
@@ -471,7 +471,7 @@ export function NocMuro() {
                   {MENU_LINKS.map(l => (
                     <Link key={l.to} to={l.to} onClick={() => setMenuAbierto(false)} className="noc-menu-item" style={{
                       display: 'block', padding: '9px 14px', borderRadius: 8, textDecoration: 'none',
-                      fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.85 0.006 265), oklch(0.300 0.012 265))',
+                      fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.300 0.012 265), oklch(0.85 0.006 265))',
                     }}>{l.label}</Link>
                   ))}
                 </div>
@@ -488,25 +488,25 @@ export function NocMuro() {
           <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: ALEATICA.verde }}>Operativos</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <div style={{ fontSize: 46, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: ALEATICA.verdeCrema }}>{kpis?.ups ?? '—'}</div>
-            <div style={{ fontSize: 21, fontWeight: 400, color: 'light-dark(oklch(0.62 0.03 200), oklch(0.530 0.030 200))' }}>de {kpis?.total ?? '—'}</div>
+            <div style={{ fontSize: 21, fontWeight: 400, color: 'light-dark(oklch(0.530 0.030 200), oklch(0.62 0.03 200))' }}>de {kpis?.total ?? '—'}</div>
           </div>
           <div style={{ height: 6, borderRadius: 999, background: 'rgb(var(--ov) / 0.08)', overflow: 'hidden' }}>
             <div style={{ width: `${kpis && kpis.total > 0 ? Math.round(kpis.ups / kpis.total * 100) : 0}%`, height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${ALEATICA.musgo}, ${ALEATICA.verde})`, boxShadow: `0 0 12px ${ALEATICA.verde}8C` }} />
           </div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 22, padding: '16px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.36 0.10 15 / 0.55), oklch(0.909 0.070 15 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 22, padding: '16px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.909 0.070 15 / 0.55), oklch(0.36 0.10 15 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'light-dark(oklch(0.72 0.17 15), oklch(0.554 0.170 15))', animation: 'breathe 1.8s ease-in-out infinite' }} />
-            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.80 0.10 15), oklch(0.510 0.110 15))' }}>Caídos</div>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'light-dark(oklch(0.554 0.170 15), oklch(0.72 0.17 15))', animation: 'breathe 1.8s ease-in-out infinite' }} />
+            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.510 0.110 15), oklch(0.80 0.10 15))' }}>Caídos</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <div style={{ fontSize: 46, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.85 0.13 15), oklch(0.482 0.143 15))' }}>{kpis?.downs ?? '—'}</div>
-            <div style={{ fontSize: 19, fontWeight: 400, color: 'light-dark(oklch(0.66 0.05 15), oklch(0.490 0.050 15))' }}>
+            <div style={{ fontSize: 46, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.482 0.143 15), oklch(0.85 0.13 15))' }}>{kpis?.downs ?? '—'}</div>
+            <div style={{ fontSize: 19, fontWeight: 400, color: 'light-dark(oklch(0.490 0.050 15), oklch(0.66 0.05 15))' }}>
               {kpis?.downs ? 'equipos sin respuesta' : ''}
             </div>
           </div>
-          <div style={{ fontSize: 16, fontWeight: 500, color: 'light-dark(oklch(0.62 0.035 15), oklch(0.530 0.035 15))' }}>
+          <div style={{ fontSize: 16, fontWeight: 500, color: 'light-dark(oklch(0.530 0.035 15), oklch(0.62 0.035 15))' }}>
             {colaRed.length > 0 ? `más antiguo: ${colaRed[0].duracion}` : 'sin caídas abiertas'}
           </div>
         </div>
@@ -514,7 +514,7 @@ export function NocMuro() {
         <div style={{ boxSizing: 'border-box', borderRadius: 22, padding: '16px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: `linear-gradient(160deg, ${ALEATICA.naranja}45 0%, rgb(var(--s1) / 0.55) 100%)`, boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: ALEATICA.naranja }}>Degradados</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <div style={{ fontSize: 46, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(#FCC067, oklch(0.485 0.139 75))' }}>{degradadosCount}</div>
+            <div style={{ fontSize: 46, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.485 0.139 75), #FCC067)' }}>{degradadosCount}</div>
             <div style={{ fontSize: 19, fontWeight: 400, color: `${ALEATICA.naranja}B3` }}>fuera de parámetro</div>
           </div>
           <div style={{ fontSize: 16, fontWeight: 500, color: `${ALEATICA.naranja}99` }}>
@@ -544,12 +544,12 @@ export function NocMuro() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, fontSize: 15, fontWeight: 500, color: 'var(--tx-muted)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 14, height: 14, borderRadius: 5, background: resaltarSoloFallas ? 'light-dark(oklch(0.32 0.03 145 / 0.85), oklch(0.923 0.021 145 / 0.85))' : `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})` }} />
+              <div style={{ width: 14, height: 14, borderRadius: 5, background: resaltarSoloFallas ? 'light-dark(oklch(0.923 0.021 145 / 0.85), oklch(0.32 0.03 145 / 0.85))' : `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})` }} />
               operativo
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 14, height: 14, borderRadius: 5, background: `linear-gradient(180deg, light-dark(#FCC067, oklch(0.485 0.139 75)), ${ALEATICA.naranja})` }} />degradado</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 14, height: 14, borderRadius: 5, background: 'linear-gradient(180deg, light-dark(oklch(0.66 0.17 15), oklch(0.587 0.170 15)), light-dark(oklch(0.54 0.16 15), oklch(0.653 0.170 15)))' }} />caído</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 14, height: 14, borderRadius: 5, boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.40 0.012 265), oklch(0.894 0.008 265))' }} />no instalado</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 14, height: 14, borderRadius: 5, background: `linear-gradient(180deg, light-dark(oklch(0.485 0.139 75), #FCC067), ${ALEATICA.naranja})` }} />degradado</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 14, height: 14, borderRadius: 5, background: 'linear-gradient(180deg, light-dark(oklch(0.587 0.170 15), oklch(0.66 0.17 15)), light-dark(oklch(0.653 0.170 15), oklch(0.54 0.16 15)))' }} />caído</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 14, height: 14, borderRadius: 5, boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.894 0.008 265), oklch(0.40 0.012 265))' }} />no instalado</div>
 
             {/* Switch "Resaltar solo fallas" */}
             <div onClick={toggleResaltar} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', paddingLeft: 18, borderLeft: '1px solid rgb(var(--s2))' }}>
@@ -557,7 +557,7 @@ export function NocMuro() {
               <div style={{
                 width: 34, height: 19, borderRadius: 999, flex: '0 0 auto', position: 'relative',
                 background: resaltarSoloFallas ? `${ALEATICA.verde}55` : 'rgb(var(--ov) / 0.10)',
-                boxShadow: resaltarSoloFallas ? `inset 0 0 0 1px ${ALEATICA.verde}80` : 'inset 0 0 0 1px light-dark(oklch(0.40 0.012 265), oklch(0.894 0.008 265))',
+                boxShadow: resaltarSoloFallas ? `inset 0 0 0 1px ${ALEATICA.verde}80` : 'inset 0 0 0 1px light-dark(oklch(0.894 0.008 265), oklch(0.40 0.012 265))',
                 transition: 'background 0.15s ease',
               }}>
                 <div style={{
@@ -578,8 +578,8 @@ export function NocMuro() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{
                   fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', padding: '3px 9px', borderRadius: 999,
-                  color: est.completo ? 'light-dark(oklch(0.82 0.09 175), oklch(0.499 0.099 175))' : 'light-dark(oklch(0.84 0.13 15), oklch(0.488 0.143 15))',
-                  background: est.completo ? 'light-dark(oklch(0.50 0.09 175 / 0.18), oklch(0.675 0.099 175 / 0.18))' : 'light-dark(oklch(0.55 0.14 15 / 0.20), oklch(0.647 0.154 15 / 0.2))',
+                  color: est.completo ? 'light-dark(oklch(0.499 0.099 175), oklch(0.82 0.09 175))' : 'light-dark(oklch(0.488 0.143 15), oklch(0.84 0.13 15))',
+                  background: est.completo ? 'light-dark(oklch(0.675 0.099 175 / 0.18), oklch(0.50 0.09 175 / 0.18))' : 'light-dark(oklch(0.647 0.154 15 / 0.2), oklch(0.55 0.14 15 / 0.20))',
                 }}>{est.ratio}</span>
                 <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-dim)' }}>{est.latencia != null ? `${est.latencia} ms` : '—'}</span>
               </div>
@@ -641,24 +641,24 @@ export function NocMuro() {
                 <div key={ev.key} style={{
                   display: 'grid', gridTemplateColumns: '1fr auto', gap: 14, alignItems: 'center', padding: '8px 16px', borderRadius: 14,
                   background: crit
-                    ? 'linear-gradient(100deg, light-dark(oklch(0.34 0.085 15 / 0.42), oklch(0.916 0.059 15 / 0.42)), light-dark(oklch(0.26 0.04 15 / 0.22), oklch(0.945 0.028 15 / 0.22)))'
-                    : 'linear-gradient(100deg, light-dark(oklch(0.36 0.075 62 / 0.34), oklch(0.909 0.052 62 / 0.34)), light-dark(oklch(0.26 0.035 62 / 0.18), oklch(0.945 0.025 62 / 0.18)))',
+                    ? 'linear-gradient(100deg, light-dark(oklch(0.916 0.059 15 / 0.42), oklch(0.34 0.085 15 / 0.42)), light-dark(oklch(0.945 0.028 15 / 0.22), oklch(0.26 0.04 15 / 0.22)))'
+                    : 'linear-gradient(100deg, light-dark(oklch(0.909 0.052 62 / 0.34), oklch(0.36 0.075 62 / 0.34)), light-dark(oklch(0.945 0.025 62 / 0.18), oklch(0.26 0.035 62 / 0.18)))',
                   boxShadow: crit
-                    ? 'inset 0 0 0 1px light-dark(oklch(0.60 0.12 15 / 0.22), oklch(0.620 0.132 15 / 0.22))'
-                    : 'inset 0 0 0 1px light-dark(oklch(0.62 0.10 62 / 0.20), oklch(0.609 0.110 62 / 0.2))',
+                    ? 'inset 0 0 0 1px light-dark(oklch(0.620 0.132 15 / 0.22), oklch(0.60 0.12 15 / 0.22))'
+                    : 'inset 0 0 0 1px light-dark(oklch(0.609 0.110 62 / 0.2), oklch(0.62 0.10 62 / 0.20))',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
                     <div style={{
                       width: 9, height: 9, borderRadius: '50%', flex: '0 0 auto',
-                      background: crit ? 'light-dark(oklch(0.72 0.17 15), oklch(0.554 0.170 15))' : 'light-dark(oklch(0.82 0.13 62), oklch(0.499 0.143 62))',
-                      boxShadow: crit ? '0 0 12px light-dark(oklch(0.72 0.17 15 / 0.8), oklch(0.554 0.170 15 / 0.8))' : '0 0 12px light-dark(oklch(0.82 0.13 62 / 0.7), oklch(0.499 0.143 62 / 0.7))',
+                      background: crit ? 'light-dark(oklch(0.554 0.170 15), oklch(0.72 0.17 15))' : 'light-dark(oklch(0.499 0.143 62), oklch(0.82 0.13 62))',
+                      boxShadow: crit ? '0 0 12px light-dark(oklch(0.554 0.170 15 / 0.8), oklch(0.72 0.17 15 / 0.8))' : '0 0 12px light-dark(oklch(0.499 0.143 62 / 0.7), oklch(0.82 0.13 62 / 0.7))',
                     }} />
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.3 }}>{ev.titulo}</div>
-                      <div style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.3, color: 'light-dark(oklch(0.66 0.02 265), oklch(0.490 0.020 265))' }}>{ev.causa}</div>
+                      <div style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.3, color: 'light-dark(oklch(0.490 0.020 265), oklch(0.66 0.02 265))' }}>{ev.causa}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 19, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: crit ? 'light-dark(oklch(0.82 0.12 15), oklch(0.499 0.132 15))' : 'light-dark(oklch(0.86 0.11 62), oklch(0.477 0.121 62))' }}>{ev.duracion}</div>
+                  <div style={{ fontSize: 19, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: crit ? 'light-dark(oklch(0.499 0.132 15), oklch(0.82 0.12 15))' : 'light-dark(oklch(0.477 0.121 62), oklch(0.86 0.11 62))' }}>{ev.duracion}</div>
                 </div>
               )
             })}
@@ -686,23 +686,23 @@ export function NocMuro() {
                     <span style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.25 }}>{e.nombre}</span>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
                       <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-dim)' }}>{e.latMin}–{e.latMax} ms</span>
-                      <span style={{ fontSize: 19, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: alto ? 'light-dark(oklch(0.86 0.12 62), oklch(0.477 0.132 62))' : 'light-dark(oklch(0.84 0.11 175), oklch(0.488 0.121 175))' }}>{e.latencia} ms</span>
+                      <span style={{ fontSize: 19, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: alto ? 'light-dark(oklch(0.477 0.132 62), oklch(0.86 0.12 62))' : 'light-dark(oklch(0.488 0.121 175), oklch(0.84 0.11 175))' }}>{e.latencia} ms</span>
                     </div>
                   </div>
                   <div style={{ height: 8, borderRadius: 999, background: 'rgb(var(--ov) / 0.07)', overflow: 'hidden' }}>
                     <div style={{
                       width: `${Math.min(100, Math.round((e.latencia ?? 0) / 40 * 100))}%`, height: '100%', borderRadius: 999,
-                      background: alto ? 'linear-gradient(90deg, light-dark(oklch(0.70 0.10 90), oklch(0.565 0.110 90)), light-dark(oklch(0.84 0.13 62), oklch(0.488 0.143 62)))' : 'linear-gradient(90deg, light-dark(oklch(0.68 0.10 200), oklch(0.576 0.110 200)), light-dark(oklch(0.84 0.12 175), oklch(0.488 0.132 175)))',
-                      boxShadow: `0 0 10px ${alto ? 'light-dark(oklch(0.84 0.12 62 / 0.45), oklch(0.488 0.132 62 / 0.45))' : 'light-dark(oklch(0.82 0.11 175 / 0.45), oklch(0.499 0.121 175 / 0.45))'}`,
+                      background: alto ? 'linear-gradient(90deg, light-dark(oklch(0.565 0.110 90), oklch(0.70 0.10 90)), light-dark(oklch(0.488 0.143 62), oklch(0.84 0.13 62)))' : 'linear-gradient(90deg, light-dark(oklch(0.576 0.110 200), oklch(0.68 0.10 200)), light-dark(oklch(0.488 0.132 175), oklch(0.84 0.12 175)))',
+                      boxShadow: `0 0 10px ${alto ? 'light-dark(oklch(0.488 0.132 62 / 0.45), oklch(0.84 0.12 62 / 0.45))' : 'light-dark(oklch(0.499 0.121 175 / 0.45), oklch(0.82 0.11 175 / 0.45))'}`,
                     }} />
                   </div>
                 </div>
               )
             })}
 
-            <div style={{ marginTop: 'auto', fontSize: 16, fontWeight: 500, lineHeight: 1.4, color: 'light-dark(oklch(0.60 0.018 265), oklch(0.550 0.018 265))' }}>
+            <div style={{ marginTop: 'auto', fontSize: 16, fontWeight: 500, lineHeight: 1.4, color: 'light-dark(oklch(0.550 0.018 265), oklch(0.60 0.018 265))' }}>
               {maxRed > 0 && maxRed < 40
-                ? <>Nadie pasa del {Math.round(maxRed / 40 * 100)}% del umbral. <span style={{ color: 'light-dark(oklch(0.90 0.006 265), oklch(0.250 0.012 265))' }}>La red no explica los degradados.</span></>
+                ? <>Nadie pasa del {Math.round(maxRed / 40 * 100)}% del umbral. <span style={{ color: 'light-dark(oklch(0.250 0.012 265), oklch(0.90 0.006 265))' }}>La red no explica los degradados.</span></>
                 : 'Latencia dentro de parámetro en todas las estaciones.'}
             </div>
           </div>
@@ -723,12 +723,12 @@ export function NocMuro() {
                 const alto = Math.max(4, Math.min(100, (d.pct - 80) / 20 * 100))
                 const esUltimo = i === arr.length - 1
                 const color = d.pct < 90
-                  ? 'linear-gradient(180deg, light-dark(oklch(0.68 0.16 15), oklch(0.576 0.170 15)), light-dark(oklch(0.54 0.15 15), oklch(0.653 0.165 15)))'
+                  ? 'linear-gradient(180deg, light-dark(oklch(0.576 0.170 15), oklch(0.68 0.16 15)), light-dark(oklch(0.653 0.165 15), oklch(0.54 0.15 15)))'
                   : d.pct < 97
-                    ? `linear-gradient(180deg, light-dark(#FCC067, oklch(0.485 0.139 75)), ${ALEATICA.naranja})`
+                    ? `linear-gradient(180deg, light-dark(oklch(0.485 0.139 75), #FCC067), ${ALEATICA.naranja})`
                     : esUltimo
                       ? `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})`
-                      : 'light-dark(oklch(0.46 0.055 190 / 0.75), oklch(0.690 0.055 190 / 0.75))'
+                      : 'light-dark(oklch(0.690 0.055 190 / 0.75), oklch(0.46 0.055 190 / 0.75))'
                 return <div key={d.fecha} title={`${d.fecha} — ${d.pct}%`} style={{ height: `${alto}%`, borderRadius: 4, background: color }} />
               })}
             </div>
@@ -759,14 +759,14 @@ export function NocMuro() {
               <div style={{
                 marginTop: 'auto', borderRadius: 14, padding: '11px 15px',
                 background: critico
-                  ? 'linear-gradient(100deg, light-dark(oklch(0.34 0.085 15 / 0.38), oklch(0.916 0.059 15 / 0.38)), light-dark(oklch(0.26 0.04 15 / 0.20), oklch(0.945 0.028 15 / 0.2)))'
+                  ? 'linear-gradient(100deg, light-dark(oklch(0.916 0.059 15 / 0.38), oklch(0.34 0.085 15 / 0.38)), light-dark(oklch(0.945 0.028 15 / 0.2), oklch(0.26 0.04 15 / 0.20)))'
                   : 'rgb(var(--ov) / 0.045)',
-                boxShadow: critico ? 'inset 0 0 0 1px light-dark(oklch(0.60 0.12 15 / 0.22), oklch(0.620 0.132 15 / 0.22))' : 'none',
+                boxShadow: critico ? 'inset 0 0 0 1px light-dark(oklch(0.620 0.132 15 / 0.22), oklch(0.60 0.12 15 / 0.22))' : 'none',
               }}>
-                <div style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.3, color: critico ? 'light-dark(oklch(0.84 0.12 15), oklch(0.488 0.132 15))' : 'light-dark(oklch(0.90 0.006 265), oklch(0.250 0.012 265))' }}>
+                <div style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.3, color: critico ? 'light-dark(oklch(0.488 0.132 15), oklch(0.84 0.12 15))' : 'light-dark(oklch(0.250 0.012 265), oklch(0.90 0.006 265))' }}>
                   Peor día: {peor.fecha} ({peor.pct}%)
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.3, color: 'light-dark(oklch(0.68 0.02 265), oklch(0.470 0.020 265))' }}>
+                <div style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.3, color: 'light-dark(oklch(0.470 0.020 265), oklch(0.68 0.02 265))' }}>
                   {disponibilidadDiaria.caidas} caídas en 30 días · MTBF {disponibilidadDiaria.mtbfDias} d
                 </div>
               </div>

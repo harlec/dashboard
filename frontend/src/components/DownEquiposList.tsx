@@ -37,12 +37,12 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
       {compact ? (
         <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(239,75,84,.14)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: caidos.length > 0 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : 'light-dark(#3fb978, oklch(0.564 0.159 156))', boxShadow: caidos.length > 0 ? '0 0 8px light-dark(#ef4b54, oklch(0.595 0.170 22))' : '0 0 6px light-dark(#3fb978, oklch(0.564 0.159 156))', flexShrink: 0 }} className={caidos.length > 0 ? 'animate-blink-down' : ''} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: caidos.length > 0 ? 'light-dark(oklch(0.595 0.170 22), #ef4b54)' : 'light-dark(oklch(0.564 0.159 156), #3fb978)', boxShadow: caidos.length > 0 ? '0 0 8px light-dark(oklch(0.595 0.170 22), #ef4b54)' : '0 0 6px light-dark(oklch(0.564 0.159 156), #3fb978)', flexShrink: 0 }} className={caidos.length > 0 ? 'animate-blink-down' : ''} />
             <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#7d8a9c', fontWeight: 700, textTransform: 'uppercase' as const }}>
               Equipos Caídos
             </span>
           </div>
-          <span style={{ fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: caidos.length > 0 ? 'rgba(239,75,84,.15)' : 'rgba(63,185,120,.12)', color: caidos.length > 0 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : 'light-dark(#3fb978, oklch(0.564 0.159 156))', border: `1px solid ${caidos.length > 0 ? 'rgba(239,75,84,.35)' : 'rgba(63,185,120,.35)'}` }}>
+          <span style={{ fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: caidos.length > 0 ? 'rgba(239,75,84,.15)' : 'rgba(63,185,120,.12)', color: caidos.length > 0 ? 'light-dark(oklch(0.595 0.170 22), #ef4b54)' : 'light-dark(oklch(0.564 0.159 156), #3fb978)', border: `1px solid ${caidos.length > 0 ? 'rgba(239,75,84,.35)' : 'rgba(63,185,120,.35)'}` }}>
             {caidos.length > 0 ? `${caidos.length} caído${caidos.length > 1 ? 's' : ''}` : 'Todo OK'}
           </span>
         </div>
@@ -62,7 +62,7 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
       {caidos.length === 0 ? (
         <div className={`flex flex-col items-center justify-center gap-1.5 text-center ${compact ? 'py-6' : 'py-10'}`}>
           <div className={compact ? 'text-xl' : 'text-2xl'}>✓</div>
-          <div style={compact ? { fontWeight: 600, fontSize: 14, color: 'light-dark(#3fb978, oklch(0.564 0.159 156))' } : undefined} className={compact ? '' : 'font-bold text-brand-light text-[0.88rem]'}>
+          <div style={compact ? { fontWeight: 600, fontSize: 14, color: 'light-dark(oklch(0.564 0.159 156), #3fb978)' } : undefined} className={compact ? '' : 'font-bold text-brand-light text-[0.88rem]'}>
             Todos operativos
           </div>
           {!compact && (
@@ -81,12 +81,12 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'rgb(var(--ov) / .22)', width: 18, flexShrink: 0 }}>{idx + 1}</span>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', flexShrink: 0, boxShadow: '0 0 8px light-dark(#ef4b54, oklch(0.595 0.170 22))' }} className="animate-blink-down" />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'light-dark(oklch(0.595 0.170 22), #ef4b54)', flexShrink: 0, boxShadow: '0 0 8px light-dark(oklch(0.595 0.170 22), #ef4b54)' }} className="animate-blink-down" />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eq.nombre}</div>
                 <div style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#5f7186', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{estacion} · {eq.tipoNombre}</div>
               </div>
-              <span style={{ fontFamily: 'var(--app-font)', fontSize: 13, fontWeight: 700, flexShrink: 0, color: (eq.incMin ?? 0) > 60 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : 'light-dark(#e0991f, oklch(0.546 0.163 74))' }}>
+              <span style={{ fontFamily: 'var(--app-font)', fontSize: 13, fontWeight: 700, flexShrink: 0, color: (eq.incMin ?? 0) > 60 ? 'light-dark(oklch(0.595 0.170 22), #ef4b54)' : 'light-dark(oklch(0.546 0.163 74), #e0991f)' }}>
                 {dur(eq.incMin)}
               </span>
             </div>

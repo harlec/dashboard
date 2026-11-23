@@ -10,8 +10,8 @@ const COLOR: Record<RedEstadoEnlace, string> = {
 const ETIQUETA: Record<RedEstadoEnlace, string> = {
   ok: 'Normal', warn: 'Atención', critico: 'Saturado', info: 'Informativo', sin_datos: 'Sin datos',
 }
-const COLOR_IN  = 'light-dark(oklch(0.78 0.11 205), oklch(0.521 0.121 205))'
-const COLOR_OUT = 'light-dark(oklch(0.82 0.13 62), oklch(0.499 0.143 62))'
+const COLOR_IN  = 'light-dark(oklch(0.521 0.121 205), oklch(0.78 0.11 205))'
+const COLOR_OUT = 'light-dark(oklch(0.499 0.143 62), oklch(0.82 0.13 62))'
 
 const fmtPct  = (v: number | null) => v == null ? '—' : `${v.toFixed(v < 10 ? 1 : 0)}%`
 const fmtMbps = (v: number | null) => v == null ? '—' : v.toFixed(v < 10 ? 2 : 1)

@@ -24,7 +24,7 @@ function EstadoBadge({ c }: { c: ServicioCheck }) {
   if (!c.ultimoEstado) return <span className="text-muted text-xs">sin datos aún</span>
   const up = c.ultimoEstado === 'UP'
   return (
-    <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${up ? 'bg-[color:light-dark(#1a2a1a,oklch(0.943 0.025 144))] text-brand' : 'bg-[color:light-dark(#2d1212,oklch(0.958 0.031 21))] text-danger'}`}>
+    <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${up ? 'bg-[color:light-dark(oklch(0.943 0.025 144), #1a2a1a)] text-brand' : 'bg-[color:light-dark(oklch(0.958 0.031 21), #2d1212)] text-danger'}`}>
       {up ? '● Arriba' : '● Caído'}
     </span>
   )
