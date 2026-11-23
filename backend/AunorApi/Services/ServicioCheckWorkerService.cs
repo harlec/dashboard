@@ -13,6 +13,8 @@ public class ServicioCheckWorkerService(
     IConnectionStringProvider cs,
     IcmpGate icmpGate,
     IHttpClientFactory httpClientFactory,
+    EmailAlertService emailAlert,
+    TelegramAlertService telegramAlert,
     IConfiguration config,
     ILogger<ServicioCheckWorkerService> log) : BackgroundService
 {
@@ -107,6 +109,7 @@ public class ServicioCheckWorkerService(
         var check = await db.ServicioChecks.FindAsync([checkId], ct);
         if (check is null || check.UltimoEstado == estado) return;
 
+        var estadoPrevio = check.UltimoEstado;
         check.UltimoEstado = estado;
         await db.SaveChangesAsync(ct);
 
@@ -141,6 +144,45 @@ public class ServicioCheckWorkerService(
         }
 
         await db.SaveChangesAsync(ct);
+
+        // Primer chequeo UP (sin estado previo) no es una recuperación: no se avisa.
+        if (estado == "UP" && estadoPrevio != "DOWN") return;
+
+        // Fire-and-forget: un SMTP lento no debe frenar el ciclo de chequeos.
+        var duracion = estado == "UP" ? (await db.ServicioIncidentes.Where(i => i.ServicioCheckId == checkId && i.Fin != null)
+            .OrderByDescending(i => i.Fin).Select(i => i.DuracionMin).FirstOrDefaultAsync(ct)) ?? 0 : 0;
+        _ = Task.Run(() => EnviarAlertasAsync(checkId, estado == "DOWN", duracion, detalle));
+    }
+
+    private async Task EnviarAlertasAsync(int checkId, bool down, int duracionMin, string? detalle)
+    {
+        try
+        {
+            using var db = NewDb();
+            var activas = await db.Configuraciones.Where(c => c.Clave == "alertas_activas")
+                .Select(c => c.Valor).FirstOrDefaultAsync();
+            if (activas != "1") return;
+
+            var chk = await db.ServicioChecks.Where(c => c.Id == checkId)
+                .Select(c => new { Servicio = c.Servicio.Nombre, c.Nombre, c.Host, c.Puerto }).FirstOrDefaultAsync();
+            if (chk is null) return;
+
+            var destino = chk.Puerto is > 0 ? $"{chk.Host}:{chk.Puerto}" : chk.Host;
+            var interp  = detalle is null ? null : $"Detalle: {detalle}";
+
+            if (down)
+                await Task.WhenAll(
+                    emailAlert.SendServicioDownAsync(chk.Servicio, chk.Nombre, destino, interp),
+                    telegramAlert.SendServicioDownAsync(chk.Servicio, chk.Nombre, destino, interp));
+            else
+                await Task.WhenAll(
+                    emailAlert.SendServicioUpAsync(chk.Servicio, chk.Nombre, destino, duracionMin),
+                    telegramAlert.SendServicioUpAsync(chk.Servicio, chk.Nombre, destino, duracionMin));
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error enviando alertas del chequeo de servicio {id}", checkId);
+        }
     }
 
     private AppDbContext NewDb() =>

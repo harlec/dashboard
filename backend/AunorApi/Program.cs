@@ -2,6 +2,9 @@ using System.Text;
 using AunorApi.Data;
 using AunorApi.Hubs;
 using AunorApi.Services;
+using AunorApi.Services.NetMon;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -42,15 +45,41 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = ctx =>
             {
                 ctx.Token = ctx.Request.Cookies["aunor_token"];
-                // Permitir también token de SignalR query string
-                if (string.IsNullOrEmpty(ctx.Token))
+                // SignalR (WebSocket) no puede mandar cookies/headers en todos los transportes:
+                // el token por query string se acepta SOLO para el hub, nunca para la API REST
+                // (las URLs con token terminan en logs de proxy).
+                if (string.IsNullOrEmpty(ctx.Token) && ctx.HttpContext.Request.Path.StartsWithSegments("/hub"))
                     ctx.Token = ctx.Request.Query["access_token"];
                 return Task.CompletedTask;
+            },
+            // Revoca la sesión si el usuario fue dado de baja o cambió de rol
+            OnTokenValidated = async ctx =>
+            {
+                var idStr = ctx.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var rol   = ctx.Principal?.FindFirstValue(ClaimTypes.Role) ?? "";
+                var sp    = ctx.HttpContext.RequestServices;
+                if (!int.TryParse(idStr, out var id) ||
+                    !await sp.GetRequiredService<SesionValidator>()
+                             .EsValidaAsync(id, rol, sp.GetRequiredService<AppDbContext>()))
+                    ctx.Fail("Sesión inválida");
             }
         };
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<SesionValidator>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuditService>();
+
+// ── Rate limiting: freno a fuerza bruta en /api/auth/login ───
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy("login", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        AuditService.IpCliente(ctx) ?? "sin-ip",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
 
 // ── SignalR ───────────────────────────────────────────────────
 builder.Services.AddSignalR();
@@ -108,6 +137,10 @@ builder.Services.AddHostedService<CamaraWorkerService>();
 builder.Services.AddHostedService<EnlaceMonitorService>();
 builder.Services.AddHostedService<TelegramQueueWorker>();
 builder.Services.AddHostedService<ServicioCheckWorkerService>();
+// Monitoreo de saturación de red (firewalls WAN): clientes por marca + alertas + sondeo
+builder.Services.AddSingleton<IDeviceClient, PaloAltoClient>();
+builder.Services.AddSingleton<NetAlertaService>();
+builder.Services.AddHostedService<NetMonitorService>();
 builder.Services.AddSingleton<ReporteSemanalService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteSemanalService>());
 
@@ -131,8 +164,10 @@ builder.Services.AddSingleton<ConsolidadoConnectionProvider>();
 builder.Services.AddSingleton<DiscrepanciasService>();
 builder.Services.AddSingleton<OcrPlacasService>();
 builder.Services.AddSingleton<TransitosPlacaService>();
+builder.Services.AddSingleton<TransitosViaService>();
 builder.Services.AddSingleton<DahuaVideoService>();
 builder.Services.AddHostedService<OficiosLimpiezaService>();
+builder.Services.AddHostedService<RetencionDatosService>();
 builder.Services.AddSingleton<ReporteDiscrepanciasDiarioService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteDiscrepanciasDiarioService>());
 builder.Services.AddSingleton<AlertaDiscrepanciasService>();
@@ -151,31 +186,70 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    // Primer arranque sin ningún admin: se crea uno con ADMIN_INITIAL_PASSWORD, o con una
+    // contraseña aleatoria que se imprime UNA vez en el log del backend (ya no hay admin123 sembrado).
+    if (!db.Usuarios.Any(u => u.Rol == "admin"))
+    {
+        var inicial = Environment.GetEnvironmentVariable("ADMIN_INITIAL_PASSWORD");
+        var generada = string.IsNullOrEmpty(inicial);
+        if (generada)
+            inicial = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(18))
+                .Replace('+', 'x').Replace('/', 'y').TrimEnd('=') + "aA1";
+        db.Usuarios.Add(new AunorApi.Models.Usuario
+        {
+            Username = "admin",
+            Password = BCrypt.Net.BCrypt.HashPassword(inicial),
+            Nombre   = "Administrador",
+            Rol      = "admin"
+        });
+        db.SaveChanges();
+        var logInicial = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Seed");
+        if (generada)
+            logInicial.LogWarning("Usuario 'admin' creado con contraseña generada: {Password} — cámbiela al ingresar", inicial);
+        else
+            logInicial.LogWarning("Usuario 'admin' creado con ADMIN_INITIAL_PASSWORD");
+    }
 }
 
-// ── Swagger UI (disponible siempre, proteger en prod si hace falta) ──
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// ── Swagger UI: apagado en producción (expone el mapa completo de la API sin auth).
+// Para activarlo temporalmente: ENABLE_SWAGGER=true
+if (app.Environment.IsDevelopment() || Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true")
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AUNOR Monitor API v1");
-    c.RoutePrefix      = "swagger";
-    c.DocumentTitle    = "AUNOR API Docs";
-    c.DefaultModelsExpandDepth(-1);  // oculta modelos por defecto (más limpio)
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AUNOR Monitor API v1");
+        c.RoutePrefix      = "swagger";
+        c.DocumentTitle    = "AUNOR API Docs";
+        c.DefaultModelsExpandDepth(-1);  // oculta modelos por defecto (más limpio)
+    });
+}
 
 app.UseCors();
 
-// ── Tonos de alerta (mp3 subidos por Admin) — estático, sin auth ──
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
+
+// ── Tonos de alerta (mp3 subidos por Admin) — requiere sesión ──
 var audioPath = Path.Combine(app.Environment.ContentRootPath, "audio");
 Directory.CreateDirectory(audioPath);
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Path.StartsWithSegments("/api/audio") && ctx.User.Identity?.IsAuthenticated != true)
+    {
+        ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return;
+    }
+    await next();
+});
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(audioPath),
     RequestPath  = "/api/audio"
 });
 
-app.UseAuthentication();
-app.UseAuthorization();
 app.MapControllers();
 app.MapHub<MonitorHub>("/hub/monitor");
 

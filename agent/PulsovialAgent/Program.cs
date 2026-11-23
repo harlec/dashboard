@@ -11,7 +11,11 @@ var app = builder.Build();
 app.MapPost("/restart-service", (HttpContext ctx, RestartRequest req, IOptions<AgentOptions> opt, ILogger<Program> log) =>
 {
     var apiKey = ctx.Request.Headers["X-Api-Key"].ToString();
-    if (string.IsNullOrEmpty(opt.Value.ApiKey) || apiKey != opt.Value.ApiKey)
+    var esperada = opt.Value.ApiKey;
+    // Rechaza la clave vacía o el valor de plantilla, y compara en tiempo constante
+    if (string.IsNullOrEmpty(esperada) || esperada == "REPLACE_ME" ||
+        !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.UTF8.GetBytes(apiKey), System.Text.Encoding.UTF8.GetBytes(esperada)))
         return Results.Unauthorized();
 
     if (!opt.Value.ServiciosPermitidos.Any(s => string.Equals(s, req.Servicio, StringComparison.OrdinalIgnoreCase)))

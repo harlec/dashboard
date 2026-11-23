@@ -9,7 +9,7 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
 
     // Períodos válidos → fragmento WHERE que usa GETDATE() del propio SQL Server
     private static readonly HashSet<string> PeriodosValidos =
-        ["1h", "4h", "12h", "24h", "ayer", "mes", "rango"];
+        ["1h", "4h", "12h", "24h", "ayer", "mes", "mesant", "rango"];
 
     public static bool EsPeriodoValido(string p) => PeriodosValidos.Contains(p);
 
@@ -29,7 +29,7 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
     private static string RangoWhere(DateTime d, DateTime h) =>
         $"tra_fecha >= '{d:yyyy-MM-dd}T00:00:00' AND tra_fecha < '{h:yyyy-MM-dd}T00:00:00'";
 
-    private static string PeriodWhere(string periodo, DateTime? d = null, DateTime? h = null) =>
+    internal static string PeriodWhere(string periodo, DateTime? d = null, DateTime? h = null) =>
         periodo == "rango" && d != null && h != null ? RangoWhere(d.Value, h.Value) : periodo switch {
         "1h"   => "tra_fecha >= DATEADD(HOUR,  -1, GETDATE())",
         "4h"   => "tra_fecha >= DATEADD(HOUR,  -4, GETDATE())",
@@ -38,10 +38,12 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         "ayer" => @"tra_fecha >= CAST(DATEADD(DAY,-1,CAST(GETDATE() AS DATE)) AS DATETIME)
                 AND tra_fecha <  CAST(CAST(GETDATE() AS DATE) AS DATETIME)",
         "mes"  => "tra_fecha >= CAST(DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AS DATETIME)",
+        "mesant" => @"tra_fecha >= CAST(DATEADD(MONTH,-1,DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1)) AS DATETIME)
+                AND tra_fecha <  CAST(DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AS DATETIME)",
         _      => "tra_fecha >= DATEADD(HOUR, -12, GETDATE())"
     };
 
-    private static string PeriodBucket(string periodo, DateTime? d = null, DateTime? h = null) =>
+    internal static string PeriodBucket(string periodo, DateTime? d = null, DateTime? h = null) =>
         periodo == "rango" && d != null && h != null
             ? ((h.Value - d.Value).TotalDays <= 1
                 ? "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/60*60, 0)"
@@ -51,15 +53,15 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         "4h"           => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/20*20, 0)",
         "12h"          => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/30*30, 0)",
         "24h" or "ayer"=> "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/60*60, 0)",
-        "mes"          => "CAST(CAST(tra_fecha AS DATE) AS DATETIME)",
+        "mes" or "mesant" => "CAST(CAST(tra_fecha AS DATE) AS DATETIME)",
         _              => "DATEADD(MINUTE, DATEDIFF(MINUTE,0,tra_fecha)/30*30, 0)"
     };
 
-    private static string FormatBucket(DateTime dt, string periodo, DateTime? d = null, DateTime? h = null) =>
-        periodo == "mes" || (periodo == "rango" && d != null && h != null && (h.Value - d.Value).TotalDays > 1)
+    internal static string FormatBucket(DateTime dt, string periodo, DateTime? d = null, DateTime? h = null) =>
+        periodo is "mes" or "mesant" || (periodo == "rango" && d != null && h != null && (h.Value - d.Value).TotalDays > 1)
             ? dt.ToString("dd/MM") : dt.ToString("HH:mm");
 
-    private const string EstacionCase = @"CASE tra_coest
+    internal const string EstacionCase = @"CASE tra_coest
         WHEN 1 THEN 'FORTALEZA' WHEN 2 THEN 'HUARMEY'
         WHEN 3 THEN '402'       WHEN 4 THEN 'VIRU' WHEN 5 THEN 'SANTA'
         END";
@@ -74,9 +76,14 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         AND tra_titra = 'TR'
         AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)";
 
+    // disjus puede traer VARIAS filas por tránsito (p. ej. una con dis_codju=34 y otra con el
+    // código de justificación final): un JOIN directo contaba ese tránsito 2 o 3 veces.
+    // CROSS APPLY + TOP 1 actúa como semi-join: el tránsito cuenta una sola vez si existe
+    // al menos una fila en disjus. Mismas semánticas que el INNER JOIN anterior, sin duplicar.
     private const string DisjusJoin = @"
-        INNER JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
-                         AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
+        CROSS APPLY (SELECT TOP 1 1 AS dis_ok FROM disjus
+                     WHERE dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                       AND dis_numev=tra_numev AND dis_fecha=tra_fecha) dj";
 
     public async Task<DiscrepanciasResumenDto> GetResumenAsync(string periodo, DateTime? desde = null, DateTime? hasta = null)
     {
@@ -240,9 +247,12 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
         // COUNT(*)  → denominador real (todos los tránsitos normales del período)
         // SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua<>tra_dac ...) → solo discrepancias validadas
         // Esto alinea la tasa con el criterio del Power BI de la consultoría.
+        // OUTER APPLY + TOP 1 (no LEFT JOIN): disjus puede tener varias filas por tránsito y
+        // el LEFT JOIN duplicaba el tránsito en COUNT(*) y en las discrepancias.
         const string disjusLeft = @"
-            LEFT JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
-                             AND dis_numev=tra_numev  AND dis_fecha=tra_fecha";
+            OUTER APPLY (SELECT TOP 1 dis_coest FROM disjus
+                         WHERE dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                           AND dis_numev=tra_numev AND dis_fecha=tra_fecha) dj";
 
         // ── 1. Prioridad de mantenimiento: semana anterior vs semana actual por vía ──
         var prioridad = (await conn.QueryAsync<ViaAnalisisDto>($@"
@@ -397,8 +407,9 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
                    ROUND(100.0 * SUM(CASE WHEN dis_coest IS NOT NULL AND tra_manua <> tra_dac THEN 1 ELSE 0 END)
                        / NULLIF(COUNT(*), 0), 2) AS Pct
             FROM transitos t
-            LEFT JOIN disjus ON dis_coest=tra_coest AND dis_nuvia=tra_nuvia
-                             AND dis_numev=tra_numev  AND dis_fecha=tra_fecha
+            OUTER APPLY (SELECT TOP 1 dis_coest FROM disjus
+                         WHERE dis_coest=tra_coest AND dis_nuvia=tra_nuvia
+                           AND dis_numev=tra_numev AND dis_fecha=tra_fecha) dj
             LEFT JOIN viadef vd ON t.tra_coest=vd.via_coest AND t.tra_nuvia=vd.via_nuvia
             WHERE {filtroBase}
             GROUP BY CAST(tra_fecha AS DATE)

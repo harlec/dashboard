@@ -4,6 +4,7 @@ services:
     build: ./sqlserver
     environment:
       SA_PASSWORD: ${DB_SA_PASSWORD}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD}
       ACCEPT_EULA: "Y"
       MSSQL_PID: Express
     # Sin publicar puerto al host: solo el backend lo necesita, vía la red interna
@@ -47,7 +48,7 @@ services:
       NVR_PWD: ${NVR_PWD:-}
       ASPNETCORE_URLS: http://+:5000
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Default: "Server=sqlserver,1433;Database=red;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True"
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=red;User Id=sigma_app;Password=${DB_APP_PASSWORD};TrustServerCertificate=True"
       JWT_SECRET: ${JWT_SECRET}
       AGENT_API_KEY: ${AGENT_API_KEY}
       CAM_EMAIL: ${CAM_EMAIL}
@@ -63,6 +64,9 @@ services:
       GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
       GRAPH_SENDER: ${GRAPH_SENDER}
       CONSOLIDADO_CONN: ${CONSOLIDADO_CONN}
+      # Monitoreo de red: API key de solo lectura del firewall (nombre de la variable = net_device.secret_ref).
+      # Definirla en .env (fuera de git). La huella TLS del firewall va en net_device.cert_sha256.
+      NETMON_FW_LIMA_KEY: ${NETMON_FW_LIMA_KEY:-}
       TZ: America/Lima
     depends_on:
       sqlserver:

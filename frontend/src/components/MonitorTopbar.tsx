@@ -7,7 +7,6 @@ interface Props { signalStatus?: 'idle' | 'ok' | 'error' }
 const LINKS = [
   { to: '/',              label: 'Panel de control' },
   { to: '/vias',          label: 'Vías' },
-  { to: '/noc',            label: 'NOC' },
   { to: '/incidentes',    label: 'Incidentes' },
   { to: '/reporte',       label: 'Reporte SLA' },
   { to: '/reportes',      label: 'Reportes' },

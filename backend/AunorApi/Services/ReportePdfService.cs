@@ -177,6 +177,67 @@ public class ReportePdfService(AppDbContext db, ReporteService reporteService, I
         return Render(doc);
     }
 
+    // ── Tránsitos de una vía (resumen + detalle) ─────────────────
+    public byte[] GenerarTransitosVia(TransitosViaDto d, string subtitulo, bool truncado)
+    {
+        var (doc, section) = Encabezado($"Tránsitos · {d.Estacion} · {d.Via}", subtitulo);
+
+        var kpi = section.AddParagraph(
+            $"Total: {d.Total:N0}   ·   Por hora: {(d.PorHora is { } ph ? ph.ToString("N1") : "—")}   ·   " +
+            $"Último tránsito: {d.UltimoTransito ?? "—"}   ·   Prepago: {d.Prepago:N0}");
+        kpi.Format.Font.Bold = true;
+        kpi.Format.SpaceAfter = "0.25cm";
+
+        // Medios de pago
+        var tm = NuevaTabla(section, ("Medio de pago", "5cm"), ("Tránsitos", "3cm"), ("% del total", "3cm"));
+        tm.Rows[0].Cells[1].Format.Alignment = ParagraphAlignment.Right;
+        tm.Rows[0].Cells[2].Format.Alignment = ParagraphAlignment.Right;
+        int k = 0;
+        foreach (var m in d.PorMedio)
+        {
+            var row = FilaDatos(tm, k++);
+            row.Cells[0].AddParagraph(m.Nombre);
+            row.Cells[1].AddParagraph(m.Total.ToString("N0")).Format.Alignment = ParagraphAlignment.Right;
+            row.Cells[2].AddParagraph($"{(d.Total > 0 ? m.Total * 100.0 / d.Total : 0):0.0}%").Format.Alignment = ParagraphAlignment.Right;
+        }
+
+        var tit = section.AddParagraph(truncado
+            ? $"Detalle de tránsitos (los {d.Ultimos.Count:N0} más recientes de {d.Total:N0}; el Excel permite más)"
+            : $"Detalle de tránsitos ({d.Ultimos.Count:N0})");
+        tit.Format.Font.Bold = true;
+        tit.Format.Font.Size = 10;
+        tit.Format.SpaceBefore = "0.5cm";
+        tit.Format.SpaceAfter = "0.2cm";
+
+        var table = NuevaTabla(section,
+            ("Fecha y hora", "3.8cm"), ("Ticket", "2.4cm"), ("Sentido", "2cm"), ("Placa", "2.6cm"),
+            ("Categoría", "5cm"), ("Medio de pago", "3cm"), ("Prepago", "1.8cm"), ("Tipo", "1.6cm"), ("Cobrador", "3cm"));
+        k = 0;
+        foreach (var t in d.Ultimos)
+        {
+            var row = FilaDatos(table, k++);
+            row.Cells[0].AddParagraph(t.Fecha);
+            row.Cells[1].AddParagraph(t.Ticket);
+            row.Cells[2].AddParagraph(t.Sentido);
+            row.Cells[3].AddParagraph(string.IsNullOrEmpty(t.Placa) ? t.PlacaOcr : t.Placa);
+            row.Cells[4].AddParagraph(t.Categoria);
+            row.Cells[5].AddParagraph(TransitosViaService.NombreMedio(t.Medio));
+            row.Cells[6].AddParagraph(t.Prepago ? "Sí" : "—");
+            row.Cells[7].AddParagraph(t.TipoTransito);
+            row.Cells[8].AddParagraph(t.Cobrador);
+        }
+        if (d.Ultimos.Count == 0)
+        {
+            var row = table.AddRow();
+            row.Cells[0].MergeRight = 8;
+            row.Cells[0].AddParagraph("Sin tránsitos en el período seleccionado");
+            row.Cells[0].Format.Alignment = ParagraphAlignment.Center;
+            row.Cells[0].Format.Font.Color = Gray;
+        }
+
+        return Render(doc);
+    }
+
     // ── Informe de Incidentes ───────────────────────────────────
     public async Task<byte[]> GenerarIncidentesAsync(DateTime desde, DateTime hasta, string? estacion, bool soloAbiertos)
     {

@@ -108,8 +108,32 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
             $"<p>El equipo <b>{equipoNombre}</b> ({ip}) en <b>{estacion}</b> se ha <span style='color:green'>RECUPERADO</span> tras {duracionMin} minutos.</p>");
     }
 
-    private async Task SendAsync(string subject, string htmlBody) =>
-        await SendAsync(subject, htmlBody, null);
+    public async Task SendServicioDownAsync(string servicio, string check, string destino, string? interpretacion = null)
+    {
+        var pie = interpretacion != null ? $"<p style='color:#7a7470;font-size:13px;'>ℹ {interpretacion}</p>" : "";
+        await SendAsync(
+            $"[ALERTA] Servicio {servicio} CAÍDO",
+            $"<p>El servicio <b>{servicio}</b> (chequeo <b>{check}</b>: {destino}) está <span style='color:red'>CAÍDO</span>.</p>{pie}");
+    }
+
+    public async Task SendServicioUpAsync(string servicio, string check, string destino, int duracionMin)
+    {
+        await SendAsync(
+            $"[RECUPERADO] Servicio {servicio}",
+            $"<p>El servicio <b>{servicio}</b> (chequeo <b>{check}</b>: {destino}) se ha <span style='color:green'>RECUPERADO</span> tras {duracionMin} minutos.</p>");
+    }
+
+    // Alertas DOWN/UP: destinatarios de la clave 'email_alertas' (varios, separados por coma o
+    // punto y coma). Si está vacía o es "-" (valor por defecto) se manda al propio smtp_usuario.
+    private async Task SendAsync(string subject, string htmlBody)
+    {
+        using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(cs.ConnectionString).Options);
+        var valor = (await db.Configuraciones.FindAsync("email_alertas"))?.Valor ?? "";
+        var lista = valor.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => x != "-").ToList();
+        await SendAsync(subject, htmlBody, lista);
+    }
 
     private async Task<(string host, int port, string user, string pass)> GetCredencialesAsync()
     {

@@ -67,6 +67,11 @@ export const api = {
     request<DiscrepanciasAnalisis>('/discrepancias/analisis'),
   discrepanciasVias: (periodo: string) =>
     request<ViaConteo[]>(`/discrepancias/vias?periodo=${periodo}`),
+  transitosVias: () => request<TransitoViaCatalogo[]>('/transitos/vias'),
+  transitosVia: (p: { estacion: string; via: number; periodo: string; limite?: number; desde?: string; hasta?: string; soloCobro?: boolean }) =>
+    request<TransitosVia>(`/transitos/via?${new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
+    )}`),
   servicios: () => request<ServicioLive[]>('/servicios'),
   servicioChecks: () => request<ServicioCheckLive[]>('/servicio-checks'),
   discrepanciasViaEvolucion: (p: { estacion: string; via: string; dias?: number }) =>
@@ -105,6 +110,36 @@ export const api = {
     request<ReporteEstimado>(`/reportes/estimar?${new URLSearchParams(
       Object.fromEntries(Object.entries(p).filter(([,v]) => v != null && v !== '').map(([k,v]) => [k, String(v)]))
     )}`),
+
+  // ── Red (saturación de enlaces WAN) ──────────────────────────
+  redEstado:  () => request<RedEnlace[]>('/red/estado'),
+  redSerie:   (linkId: number, rango: RedRango) =>
+    request<RedPunto[]>(`/red/serie?linkId=${linkId}&rango=${rango}`),
+  redAlertas: (dias = 30) => request<RedAlerta[]>(`/red/alertas?dias=${dias}`),
+}
+
+// ── Red ───────────────────────────────────────────────────────
+export type RedRango = '1h' | '24h' | '7d'
+export type RedEstadoEnlace = 'ok' | 'warn' | 'critico' | 'info' | 'sin_datos'
+
+export interface RedEnlace {
+  id: number; sitio: string; dispositivo: string; interfaz: string; zona: string | null; rol: string
+  mbpsContratadoIn: number | null; mbpsContratadoOut: number | null
+  umbralWarnPct: number; umbralCritPct: number; medirAlerta: boolean
+  estado: RedEstadoEnlace
+  ts: string | null
+  inMbps: number | null; outMbps: number | null
+  utilInPct: number | null; utilOutPct: number | null
+  alertaSaturacion: { inicio: string; pico: number | null } | null
+  alertaSinDatos: boolean
+}
+export interface RedPunto {
+  ts: string; inMbps: number; outMbps: number; utilInPct: number | null; utilOutPct: number | null
+}
+export interface RedAlerta {
+  id: number; linkId: number; enlace: string; interfaz: string
+  tipo: 'SATURACION' | 'SIN_DATOS'; severidad: string
+  inicio: string; fin: string | null; pico: number | null
 }
 
 // ── Tipos ─────────────────────────────────────────────────────
@@ -364,4 +399,22 @@ export interface OcrViaEvolucion {
   horas?: number   // > 0: la serie `diaria` viene por hora (fecha = "yyyy-MM-dd HH:00")
   diaria: OcrDiaVia[]
   porHora: OcrCelda[]
+}
+
+// ── Tránsitos por vía ──
+export interface TransitoViaCatalogo { estacion: string; numero: number; nombre: string }
+export interface TransitoMedioPago   { codigo: string; nombre: string; total: number }
+export interface TransitoViaItem {
+  numev: number; fecha: string; ticket: string; sentido: string; placa: string; placaOcr: string
+  categoria: string; medio: string; tipoTransito: string; prepago: boolean; cobrador: string
+}
+export interface TransitosVia {
+  estacion: string; viaNumero: number; via: string; total: number; porHora: number | null
+  ultimoTransito: string | null; prepago: number
+  porMedio: TransitoMedioPago[]
+  porCategoria: { categoria: string; total: number }[]
+  serie: { bucket: string; medio: string; total: number }[]
+  ultimos: TransitoViaItem[]
+  soloCobro: boolean
+  porTipo: { tipo: string; total: number }[]
 }

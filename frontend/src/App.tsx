@@ -10,6 +10,7 @@ import { Incidentes }      from './pages/Incidentes'
 import { ReporteSLA }      from './pages/ReporteSLA'
 import { Reportes }        from './pages/Reportes'
 import { Discrepancias }   from './pages/Discrepancias'
+import { Transitos }       from './pages/Transitos'
 import { AdminLayout }       from './pages/admin/AdminLayout'
 import { AdminDashboard }    from './pages/admin/AdminDashboard'
 import { AdminEstaciones }   from './pages/admin/Estaciones'
@@ -20,25 +21,26 @@ import { AdminMantenimiento } from './pages/admin/Mantenimiento'
 import { AdminServicios }     from './pages/admin/Servicios'
 import { AdminServicioChecks } from './pages/admin/ServicioChecks'
 import { AdminNvrCanales }   from './pages/admin/NvrCanales'
+import { AdminRed }          from './pages/admin/RedAdmin'
 // Oficios: módulo oculto por ahora (en pruebas). No se importa ni se enruta,
 // pero el código sigue intacto en pages/Oficios.tsx — reactivar agregando de
 // nuevo el import y la <Route path="/oficios" .../> de abajo.
 import { AdminUsuarios }     from './pages/admin/Usuarios'
 import { AdminConfiguracion } from './pages/admin/Configuracion'
-import { NocDashboard }       from './pages/NocDashboard'
 import { NocMuro }            from './pages/NocMuro'
+import { Red }                from './pages/Red'
 import { OcrDashboard }       from './pages/OcrDashboard'
 
 function AppLayout() {
   useFontScale()
   const { pathname } = useLocation()
-  const activo = pathname.startsWith('/admin') ? 'Admin' : pathname.startsWith('/noc') ? 'NOC' : 'Vías'
+  const activo = pathname.startsWith('/admin') ? 'Admin' : pathname.startsWith('/red') ? 'Red' : 'Vías'
   return (
     <ScaledPage>
       <WallTopbar activo={activo} signalStatus="ok" />
       <Routes>
         <Route path="/vias"       element={<Vias />} />
-        <Route path="/noc"        element={<NocDashboard />} />
+        <Route path="/red"        element={<Red />} />
         <Route path="/admin"      element={<AdminLayout />}>
           <Route index              element={<AdminDashboard />} />
           <Route path="estaciones"  element={<AdminEstaciones />} />
@@ -49,6 +51,7 @@ function AppLayout() {
           <Route path="servicios"     element={<AdminServicios />} />
           <Route path="servicio-checks" element={<AdminServicioChecks />} />
           <Route path="nvr"         element={<AdminNvrCanales />} />
+          <Route path="red"         element={<AdminRed />} />
           <Route path="usuarios"    element={<AdminUsuarios />} />
           <Route path="config"      element={<AdminConfiguracion />} />
         </Route>
@@ -82,6 +85,7 @@ export default function App() {
         <Route path="/reporte"         element={muro(<ReporteSLA />)} />
         <Route path="/reportes"        element={muro(<Reportes />)} />
         <Route path="/discrepancias"   element={muro(<Discrepancias />)} />
+        <Route path="/transitos"       element={muro(<Transitos />)} />
         <Route path="/ocr"             element={muro(<OcrDashboard />)} />
         <Route path="/*" element={
           auth.user ? <AppLayout /> : <Navigate to="/login" replace />

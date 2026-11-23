@@ -11,6 +11,7 @@ const links = [
   { to: '/admin/servicios',     label: '🗄 Servicios' },
   { to: '/admin/servicio-checks', label: '🔎 Chequeos de servicio' },
   { to: '/admin/nvr',        label: '📹 NVR y canales' },
+  { to: '/admin/red',        label: '🌐 Red (firewalls)' },
   { to: '/admin/usuarios',   label: '👤 Usuarios'     },
   { to: '/admin/config',     label: '⚙ Configuración' },
 ]

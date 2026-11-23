@@ -18,8 +18,15 @@ export function Login() {
       // loginUser actualiza auth.user ANTES de navegar — sin parpadeo
       await loginUser(username, password)
       navigate('/', { replace: true })
-    } catch {
-      setError('Usuario o contraseña incorrectos')
+    } catch (err) {
+      // 423 = cuenta bloqueada, 429 = demasiados intentos: el backend manda el motivo
+      let msg = 'Usuario o contraseña incorrectos'
+      try {
+        const body = JSON.parse((err as Error).message)
+        if (body?.error && body.error !== 'Credenciales incorrectas') msg = body.error
+      } catch { /* respuesta sin JSON: se queda el mensaje genérico */ }
+      if ((err as Error).message?.includes('Too Many Requests')) msg = 'Demasiados intentos. Espere un minuto.'
+      setError(msg)
     } finally {
       setLoading(false)
     }

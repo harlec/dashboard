@@ -10,12 +10,13 @@ import { useAuth } from '../hooks/useAuth'
 const LINKS = [
   { to: '/',              label: 'Panel de control' },
   { to: '/vias',          label: 'Vías' },
-  { to: '/noc',            label: 'NOC' },
   { to: '/incidentes',    label: 'Incidentes' },
   { to: '/reporte',       label: 'Reporte SLA' },
   { to: '/reportes',      label: 'Reportes' },
+  { to: '/transitos',     label: 'Tránsitos' },
   { to: '/discrepancias', label: 'Discrepancias' },
   { to: '/ocr',            label: 'OCR Placas' },
+  { to: '/red',            label: 'Red' },
   { to: '/admin',          label: 'Admin' },
 ]
 

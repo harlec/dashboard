@@ -36,6 +36,19 @@ public class TelegramAlertService(
         return Task.CompletedTask;
     }
 
+    public Task SendServicioDownAsync(string servicio, string check, string destino, string? interpretacion = null)
+    {
+        var pie = interpretacion != null ? $"\nℹ {interpretacion}" : "";
+        Encolar($"🔴 Servicio <b>{servicio}</b> CAÍDO\nChequeo: {check}\nDestino: {destino}{pie}", null);
+        return Task.CompletedTask;
+    }
+
+    public Task SendServicioUpAsync(string servicio, string check, string destino, int duracionMin)
+    {
+        Encolar($"🟢 Servicio <b>{servicio}</b> RECUPERADO\nChequeo: {check}\nCaído durante {duracionMin} min", null);
+        return Task.CompletedTask;
+    }
+
     // Mensaje nuevo de incidente de grupo (vía/peaje) — espera la confirmación
     // real de envío para poder guardar el message_id y editarlo más adelante.
     public Task<TelegramEnvioResultado> SendGrupoAsync(string html) => Encolar(html, null);

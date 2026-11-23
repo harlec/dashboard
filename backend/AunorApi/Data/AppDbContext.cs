@@ -23,6 +23,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ServicioIncidente> ServicioIncidentes { get; set; }
     public DbSet<NvrPeaje>          NvrPeajes          { get; set; }
     public DbSet<NvrCanal>          NvrCanales         { get; set; }
+    public DbSet<AuditLog>          AuditLogs          { get; set; }
+    public DbSet<NetDevice>         NetDevices         { get; set; }
+    public DbSet<NetLink>           NetLinks           { get; set; }
+    public DbSet<NetSample>         NetSamples         { get; set; }
+    public DbSet<NetSampleHora>     NetSamplesHora     { get; set; }
+    public DbSet<NetAlert>          NetAlerts          { get; set; }
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -101,6 +107,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Rol).HasColumnName("rol");
             e.Property(x => x.Activo).HasColumnName("activo");
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
+            e.Property(x => x.IntentosFallidos).HasColumnName("intentos_fallidos");
+            e.Property(x => x.BloqueadoHasta).HasColumnName("bloqueado_hasta");
+        });
+
+        m.Entity<AuditLog>(e => {
+            e.ToTable("audit_log");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Fecha).HasColumnName("fecha");
+            e.Property(x => x.Usuario).HasColumnName("usuario");
+            e.Property(x => x.Ip).HasColumnName("ip");
+            e.Property(x => x.Accion).HasColumnName("accion");
+            e.Property(x => x.Entidad).HasColumnName("entidad");
+            e.Property(x => x.Detalle).HasColumnName("detalle");
         });
 
         m.Entity<Configuracion>(e => {
@@ -234,6 +254,74 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Motivo).HasColumnName("motivo");
             e.Property(x => x.CreadoPor).HasColumnName("creado_por");
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
+        });
+
+        m.Entity<NetDevice>(e => {
+            e.ToTable("net_device");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Nombre).HasColumnName("nombre");
+            e.Property(x => x.Sitio).HasColumnName("sitio");
+            e.Property(x => x.Marca).HasColumnName("marca");
+            e.Property(x => x.IpMgmt).HasColumnName("ip_mgmt");
+            e.Property(x => x.RolHa).HasColumnName("rol_ha");
+            e.Property(x => x.GrupoHa).HasColumnName("grupo_ha");
+            e.Property(x => x.SecretRef).HasColumnName("secret_ref");
+            e.Property(x => x.ApiKeyEnc).HasColumnName("api_key_enc");
+            e.Property(x => x.CertSha256).HasColumnName("cert_sha256");
+            e.Property(x => x.Activo).HasColumnName("activo");
+        });
+
+        m.Entity<NetLink>(e => {
+            e.ToTable("net_link");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.DeviceId).HasColumnName("device_id");
+            e.Property(x => x.Interfaz).HasColumnName("interfaz");
+            e.Property(x => x.Zona).HasColumnName("zona");
+            e.Property(x => x.Rol).HasColumnName("rol");
+            e.Property(x => x.MbpsContratadoIn).HasColumnName("mbps_contratado_in");
+            e.Property(x => x.MbpsContratadoOut).HasColumnName("mbps_contratado_out");
+            e.Property(x => x.UmbralWarnPct).HasColumnName("umbral_warn_pct");
+            e.Property(x => x.UmbralCritPct).HasColumnName("umbral_crit_pct");
+            e.Property(x => x.MedirAlerta).HasColumnName("medir_alerta");
+            e.HasOne(x => x.Device).WithMany().HasForeignKey(x => x.DeviceId);
+        });
+
+        m.Entity<NetSample>(e => {
+            e.ToTable("net_sample");
+            e.HasKey(x => new { x.LinkId, x.TsUtc });
+            e.Property(x => x.LinkId).HasColumnName("link_id");
+            e.Property(x => x.TsUtc).HasColumnName("ts_utc");
+            e.Property(x => x.InBps).HasColumnName("in_bps");
+            e.Property(x => x.OutBps).HasColumnName("out_bps");
+            e.Property(x => x.UtilInPct).HasColumnName("util_in_pct");
+            e.Property(x => x.UtilOutPct).HasColumnName("util_out_pct");
+        });
+
+        m.Entity<NetSampleHora>(e => {
+            e.ToTable("net_sample_hora");
+            e.HasKey(x => new { x.LinkId, x.HoraUtc });
+            e.Property(x => x.LinkId).HasColumnName("link_id");
+            e.Property(x => x.HoraUtc).HasColumnName("hora_utc");
+            e.Property(x => x.InBpsAvg).HasColumnName("in_bps_avg");
+            e.Property(x => x.OutBpsAvg).HasColumnName("out_bps_avg");
+            e.Property(x => x.InBpsMax).HasColumnName("in_bps_max");
+            e.Property(x => x.OutBpsMax).HasColumnName("out_bps_max");
+            e.Property(x => x.UtilMaxPct).HasColumnName("util_max_pct");
+        });
+
+        m.Entity<NetAlert>(e => {
+            e.ToTable("net_alert");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.LinkId).HasColumnName("link_id");
+            e.Property(x => x.Tipo).HasColumnName("tipo");
+            e.Property(x => x.Severidad).HasColumnName("severidad");
+            e.Property(x => x.InicioUtc).HasColumnName("inicio_utc");
+            e.Property(x => x.FinUtc).HasColumnName("fin_utc");
+            e.Property(x => x.ValorMaxPct).HasColumnName("valor_max_pct");
+            e.HasOne(x => x.Link).WithMany().HasForeignKey(x => x.LinkId);
         });
     }
 }

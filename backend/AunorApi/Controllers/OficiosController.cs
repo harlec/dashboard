@@ -15,7 +15,7 @@ namespace AunorApi.Controllers;
 [Authorize(Roles = "admin")]   // evidencia de casos judiciales: solo admin
 public partial class OficiosController(
     TransitosPlacaService transitos, DahuaVideoService dahua, AppDbContext db,
-    ILogger<OficiosController> log) : ControllerBase
+    ILogger<OficiosController> log, AuditService audit) : ControllerBase
 {
     const long MinLibreBytes = 2L * 1024 * 1024 * 1024;   // no descargar con menos de 2 GB libres
 
@@ -35,6 +35,7 @@ public partial class OficiosController(
         if (hasta <= desde) return BadRequest("hasta debe ser posterior a desde");
         if ((hasta - desde).TotalDays > 31) return BadRequest("Rango máximo: 31 días");
 
+        await audit.RegistrarAsync("OFICIO_BUSQUEDA_PLACA", $"placa:{placa}", $"{desde:yyyy-MM-dd HH:mm}..{hasta:yyyy-MM-dd HH:mm} estacion={estacion}");
         try { return Ok(await transitos.BuscarAsync(placa, desde, hasta, estacion)); }
         catch (ArgumentException ex) { return BadRequest(ex.Message); }
     }
@@ -87,6 +88,7 @@ public partial class OficiosController(
 
             log.LogInformation("Oficios: {Usuario} descargó clip {Archivo} ({Peaje} canal {Canal}) sha256={Hash}",
                 usuario, nombre, nvr.Peaje, canal.Canal, hash);
+            await audit.RegistrarAsync("OFICIO_CLIP_GENERADO", $"clip:{nombre}", $"{nvr.Peaje} canal {canal.Canal} sha256={hash}");
             return Ok(new { estado = "Completado", archivo = nombre, url = $"/api/oficios/clips/{nombre}",
                             tipo = canal.Tipo, nombre = canal.Nombre, diasConservacion = OficiosStorage.Dias,
                             sha256 = hash });
@@ -105,7 +107,7 @@ public partial class OficiosController(
 
     // GET api/oficios/clips/{archivo}?borrar=true  (borrar = elimina el archivo del servidor al terminar de descargarlo)
     [HttpGet("clips/{archivo}")]
-    public IActionResult Descargar(string archivo, [FromQuery] bool borrar = false)
+    public async Task<IActionResult> Descargar(string archivo, [FromQuery] bool borrar = false)
     {
         if (!NombreSeguro().IsMatch(archivo)) return BadRequest("Nombre inválido");
         var ruta = Path.Combine(OficiosStorage.Ruta, archivo);
@@ -113,6 +115,7 @@ public partial class OficiosController(
             return NotFound($"El clip ya no existe (se borran automáticamente a los {OficiosStorage.Dias} días)");
 
         log.LogInformation("Oficios: {Usuario} descargó {Archivo} (borrar={Borrar})", User.Identity?.Name, archivo, borrar);
+        await audit.RegistrarAsync("OFICIO_CLIP_DESCARGADO", $"clip:{archivo}", $"borrar={borrar}");
         if (borrar) Response.OnCompleted(() => { BorrarSilencioso(ruta); BorrarSilencioso(ruta + ".sha256"); return Task.CompletedTask; });
         return PhysicalFile(ruta, "video/mp4", archivo);
     }
@@ -132,7 +135,7 @@ public partial class OficiosController(
     // GET api/oficios/zip?archivos=a.mp4,b.mp4&borrar=true — varios clips en un solo ZIP,
     // con manifest.txt (formato `sha256sum`) para verificar integridad de cada uno.
     [HttpGet("zip")]
-    public IActionResult Zip([FromQuery] string archivos, [FromQuery] bool borrar = false)
+    public async Task<IActionResult> Zip([FromQuery] string archivos, [FromQuery] bool borrar = false)
     {
         var nombres = (archivos ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct().Take(200).ToList();
@@ -161,6 +164,7 @@ public partial class OficiosController(
         }
 
         log.LogInformation("Oficios: {Usuario} descargó ZIP de {N} clips (borrar={Borrar})", User.Identity?.Name, existentes.Count, borrar);
+        await audit.RegistrarAsync("OFICIO_ZIP_DESCARGADO", $"{existentes.Count} clips", string.Join(",", existentes));
         Response.OnCompleted(() =>
         {
             BorrarSilencioso(tmp);
@@ -176,7 +180,7 @@ public partial class OficiosController(
 
     // DELETE api/oficios/clips/{archivo}
     [HttpDelete("clips/{archivo}")]
-    public IActionResult Borrar(string archivo)
+    public async Task<IActionResult> Borrar(string archivo)
     {
         if (!NombreSeguro().IsMatch(archivo)) return BadRequest("Nombre inválido");
         var ruta = Path.Combine(OficiosStorage.Ruta, archivo);
@@ -184,6 +188,7 @@ public partial class OficiosController(
         System.IO.File.Delete(ruta);
         BorrarSilencioso(ruta + ".sha256");
         log.LogInformation("Oficios: {Usuario} borró {Archivo}", User.Identity?.Name, archivo);
+        await audit.RegistrarAsync("OFICIO_CLIP_BORRADO", $"clip:{archivo}");
         return NoContent();
     }
 

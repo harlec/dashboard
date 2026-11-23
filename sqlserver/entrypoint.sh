@@ -31,5 +31,10 @@ else
     echo "Base de datos ya inicializada — saltando init.sql"
 fi
 
+# Usuario de mínimo privilegio para el backend (idempotente; también sincroniza su contraseña)
+if [ -n "$DB_APP_PASSWORD" ]; then
+    /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD"         -i /crear_usuario_app.sql -v APP_PASSWORD="$DB_APP_PASSWORD" -C -b         && echo "Usuario sigma_app listo" || echo "AVISO: no se pudo crear sigma_app"
+fi
+
 # Mantener SQL Server en primer plano
 wait $SQL_PID

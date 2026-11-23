@@ -7,7 +7,7 @@ namespace AunorApi.Controllers;
 [ApiController]
 [Route("api/ocr")]
 [Authorize]
-public class OcrPlacasController(OcrPlacasService svc, ReportePdfService pdf) : ControllerBase
+public class OcrPlacasController(OcrPlacasService svc, ReportePdfService pdf, AuditService audit) : ControllerBase
 {
     [HttpGet("resumen")]
     public async Task<IActionResult> Resumen([FromQuery] string periodo = "24h", [FromQuery] bool soloPrepago = false)
@@ -135,6 +135,7 @@ public class OcrPlacasController(OcrPlacasService svc, ReportePdfService pdf) : 
         if (!OcrPlacasService.EsPeriodoValido(periodo))
             return BadRequest("Período inválido");
 
+        await audit.RegistrarAsync("OCR_CSV_EXPORTADO", "placas", $"periodo={periodo} estacion={estacion} placa={placa}");
         var detalle = await svc.GetDetalleAsync(periodo, estacion, placa, tipoError, 1, 100_000, soloPrepago);
         var csv = CsvExport.Build(
             ["Fecha", "Estacion", "Via", "Ticket", "Placa Cajero", "Placa OCR", "Tipo Error"],

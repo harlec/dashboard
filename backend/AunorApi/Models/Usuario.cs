@@ -9,4 +9,6 @@ public class Usuario
     public string Rol { get; set; } = "viewer";  // "admin" | "viewer"
     public bool Activo { get; set; } = true;
     public DateTime CreadoEn { get; set; }
+    public int       IntentosFallidos { get; set; }
+    public DateTime? BloqueadoHasta   { get; set; }
 }

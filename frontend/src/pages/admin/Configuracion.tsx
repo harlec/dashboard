@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Field, Input } from '../../components/admin/FormModal'
 import { useAlertSound } from '../../hooks/useAlertSound'
 
@@ -6,7 +6,7 @@ interface Config { clave: string; valor: string }
 
 const LABELS: Record<string, { label: string; desc: string; type?: string }> = {
   alertas_activas:  { label: 'Alertas activas',   desc: '1 = activado, 0 = desactivado' },
-  email_alertas:    { label: 'Email de alertas',   desc: 'Destinatario de alertas DOWN/UP' },
+  email_alertas:    { label: 'Email de alertas',   desc: 'Destinatarios de alertas DOWN/UP (varios correos separados por coma). Vacío = el correo SMTP de envío' },
   email_reporte_semanal: { label: 'Email reporte semanal', desc: 'Destinatarios del reporte de disponibilidad de equipos críticos (separados por coma) — se envía lunes 8am' },
   email_reporte_discrepancias: { label: 'Email reporte diario de discrepancias', desc: 'Destinatarios del reporte diario de discrepancias por vía (separados por coma), ordenado de mayor a menor % — se envía a la hora configurada abajo' },
   hora_reporte_discrepancias:  { label: 'Hora reporte diario de discrepancias', desc: 'Hora del día en formato HH:mm (ej. 08:00) en que se envía el reporte' },
@@ -41,6 +41,7 @@ const TONOS: { tipo: 'desconexion' | 'reconexion'; label: string; desc: string }
 export function AdminConfiguracion() {
   const [rows,    setRows]    = useState<Config[]>([])
   const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState('apariencia')
   const [saving,  setSaving]  = useState<string | null>(null)
   const [values,  setValues]  = useState<Record<string, string>>({})
   const [saved,   setSaved]   = useState<Record<string, boolean>>({})
@@ -260,280 +261,230 @@ export function AdminConfiguracion() {
 
   if (loading) return <div className="text-center py-12 text-muted">Cargando…</div>
 
+  const card = 'bg-surface rounded-xl p-4 border border-border'
+  const titulo = 'font-bold text-sm text-[#eae7e4] mb-0.5'
+
+  const fila = (clave: string) => {
+    if (!rows.some(r => r.clave === clave)) return null
+    const meta = LABELS[clave] ?? { label: clave, desc: '' }
+    return (
+      <div key={clave} className={card}>
+        <div className={titulo}>{meta.label}</div>
+        <div className="text-xs text-muted mb-2">{meta.desc}</div>
+        <div className="flex gap-2 items-center">
+          <Input
+            type={meta.type ?? 'text'}
+            value={values[clave] ?? ''}
+            onChange={e => setValues(p => ({ ...p, [clave]: e.target.value }))}
+            className="flex-1"
+          />
+          <button onClick={() => save(clave)} disabled={saving === clave}
+            className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap">
+            {saved[clave] ? '✓ Guardado' : saving === clave ? '…' : 'Guardar'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const prueba = (cond: string, title: string, desc: string, btn: string, busyTxt: string,
+                  busy: boolean, onClick: () => void, res: { ok: boolean; message: string } | null) =>
+    rows.some(r => r.clave === cond) && (
+      <div className={card}>
+        <div className={titulo}>{title}</div>
+        <div className="text-xs text-muted mb-2">{desc}</div>
+        <button onClick={onClick} disabled={busy}
+          className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap">
+          {busy ? busyTxt : btn}
+        </button>
+        {res && (
+          <div className={`text-xs mt-2 ${res.ok ? 'text-green-500' : 'text-red-500'}`}>
+            {res.ok ? '✓ ' : '✗ '}{res.message}
+          </div>
+        )}
+      </div>
+    )
+
+  const tabs: { id: string; label: string; icon: string; claves: string[]; contenido?: () => ReactNode }[] = [
+    { id: 'apariencia', label: 'Apariencia', icon: '🎨', claves: [], contenido: () => (<>
+      <div className={card}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className={titulo}>Estilo HUD del Panel de control</div>
+            <div className="text-xs text-muted">
+              Variante de un solo color (verde azulado SIGMA) con cuadrícula y marcos tipo HUD; el rojo queda solo para fallas. Afecta a todos los usuarios.
+            </div>
+          </div>
+          <button onClick={toggleHud} role="switch" aria-checked={hudActivo}
+            className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors ${hudActivo ? 'bg-brand' : 'bg-surface-3'}`}>
+            <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${hudActivo ? 'left-6' : 'left-1'}`} />
+          </button>
+        </div>
+      </div>
+
+      <div className={card}>
+        <div className={titulo}>Tamaño de letra del sistema</div>
+        <div className="text-xs text-muted mb-3">
+          Escala todo el texto de la aplicación — útil para pantallas grandes del NOC. Afecta a todos los usuarios.
+        </div>
+        <div className="flex gap-2">
+          {ESCALAS.map(pct => (
+            <button key={pct} onClick={() => setEscala(pct)}
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${escalaActual === pct ? 'bg-brand text-white' : 'bg-surface-3 text-[#eae7e4] hover:brightness-110'}`}>
+              {pct}%
+            </button>
+          ))}
+        </div>
+        {saved['escala_fuente'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
+      </div>
+
+      <div className={card}>
+        <div className={titulo}>Tipo de letra del sistema</div>
+        <div className="text-xs text-muted mb-3">Tipografía de toda la aplicación. Afecta a todos los usuarios.</div>
+        <div className="flex gap-2 flex-wrap">
+          {FUENTES_OPS.map(f => (
+            <button key={f.value} onClick={() => setFuente(f.value)} style={{ fontFamily: f.family }}
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${fuenteActual === f.value ? 'bg-brand text-white' : 'bg-surface-3 text-[#eae7e4] hover:brightness-110'}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {saved['fuente_sistema'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
+      </div>
+
+      <div className={card}>
+        <div className={titulo}>Imagen de fondo del Panel de control</div>
+        <div className="text-xs text-muted mb-3">
+          Foto detrás del Panel de control (SIGMA): las tarjetas pasan a verse como vidrio sobre la imagen.
+          .jpg / .png / .webp, máx. 10 MB — mejor una foto oscura y de 1920 px o más. Sin imagen se usa el fondo normal.
+        </div>
+        {fondoActual && (
+          <img src={`/api/audio/${fondoActual}`} alt="Fondo actual"
+            className="w-full max-h-40 object-cover rounded-lg border border-border mb-3" />
+        )}
+        {fondoActual && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between text-xs text-muted mb-1">
+              <span>Oscuridad del fondo (velo sobre la imagen)</span>
+              <span className="font-bold text-[#eae7e4]">{oscuridad}%</span>
+            </div>
+            <input type="range" min={0} max={90} step={2} value={oscuridad}
+              onChange={e => setValues(p => ({ ...p, fondo_oscuridad: e.target.value }))}
+              onPointerUp={() => guardarOscuridad(oscuridad)} onKeyUp={() => guardarOscuridad(oscuridad)}
+              className="w-full accent-[#72BF44]" />
+            <div className="flex justify-between text-[0.65rem] text-dim"><span>más claro</span><span>más oscuro</span></div>
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            onChange={e => setFondoFile(e.target.files?.[0] ?? null)}
+            className="text-xs text-muted file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-surface-3 file:text-[#eae7e4] file:font-bold" />
+          <button onClick={subirFondo} disabled={!fondoFile || fondoBusy}
+            className="px-3 py-2 rounded-lg text-sm font-bold bg-brand text-white disabled:opacity-40">
+            {fondoBusy ? 'Subiendo…' : 'Subir imagen'}
+          </button>
+          {fondoActual && (
+            <button onClick={quitarFondo} disabled={fondoBusy}
+              className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 text-[#eae7e4] disabled:opacity-40">
+              Quitar imagen
+            </button>
+          )}
+        </div>
+        {fondoError && <div className="text-xs mt-2 text-red-400">{fondoError}</div>}
+      </div>
+    </>) },
+    { id: 'monitoreo', label: 'Monitoreo', icon: '📡',
+      claves: ['intervalo_min', 'pings_por_ciclo', 'timeout_ping_s', 'agente_puerto', 'agente_servicios_permitidos'] },
+    { id: 'notificaciones', label: 'Notificaciones', icon: '🔔',
+      claves: ['alertas_activas', 'email_alertas', 'smtp_host', 'smtp_puerto', 'smtp_usuario', 'smtp_password', 'telegram_bot_token', 'telegram_chat_id'],
+      contenido: () => prueba('telegram_bot_token', 'Probar Telegram',
+        'Guarda el token y el chat ID primero, luego envía un mensaje de prueba al grupo.',
+        'Enviar mensaje de prueba', 'Enviando…', testing, testTelegram, testResult) },
+    { id: 'reportes', label: 'Reportes', icon: '📧',
+      claves: ['email_reporte_semanal', 'email_reporte_discrepancias', 'hora_reporte_discrepancias', 'email_alerta_discrepancias', 'umbral_alerta_discrepancias'],
+      contenido: () => (<>
+        {prueba('email_reporte_semanal', 'Probar reporte semanal',
+          'Guarda los destinatarios primero, luego envía ahora mismo el reporte de disponibilidad de los últimos 7 días para los equipos marcados como críticos (se envía automático todos los lunes 8am).',
+          'Enviar reporte ahora', 'Enviando…', testingReporte, testReporteSemanal, testReporteResult)}
+        {prueba('email_reporte_discrepancias', 'Probar reporte diario de discrepancias',
+          'Guarda los destinatarios primero, luego envía ahora mismo el reporte de discrepancias de las últimas 24 horas, ordenado por % de mayor a menor (se envía automático a la hora configurada).',
+          'Enviar reporte ahora', 'Enviando…', testingReporteDisc, testReporteDiscrepancias, testReporteDiscResult)}
+        {prueba('email_alerta_discrepancias', 'Probar alerta de umbral de discrepancias',
+          'Guarda destinatarios y umbral primero, luego revisa ahora mismo si alguna vía superó el umbral en la última hora y envía el correo si corresponde (se revisa automático cada hora en punto).',
+          'Revisar y enviar ahora', 'Revisando…', testingAlertaDisc, testAlertaDiscrepancias, testAlertaDiscResult)}
+      </>) },
+    { id: 'sonidos', label: 'Sonidos', icon: '🔊', claves: [], contenido: () => (<>
+      {TONOS.map(({ tipo, label, desc }) => {
+        const archivo = values[`tono_${tipo}_archivo`]
+        const busy    = tonoBusy === tipo
+        return (
+          <div key={tipo} className={card}>
+            <div className={titulo}>{label}</div>
+            <div className="text-xs text-muted mb-2">{desc}</div>
+            <div className="text-xs mb-2">
+              {archivo
+                ? <span className="text-[#eae7e4]">Personalizado: <span className="text-muted">{archivo}</span></span>
+                : <span className="text-muted">Usando tono por defecto</span>}
+            </div>
+            <div className="flex gap-2 items-center flex-wrap">
+              <input type="file" accept=".mp3,audio/mpeg"
+                onChange={e => setTonoFiles(p => ({ ...p, [tipo]: e.target.files?.[0] ?? null }))}
+                className="text-xs text-muted flex-1 min-w-[180px]" />
+              <button onClick={() => subirTono(tipo)} disabled={busy || !tonoFiles[tipo]}
+                className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap">
+                {busy ? '…' : 'Subir'}
+              </button>
+              <button onClick={() => probarTono(tipo)}
+                className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-[#eae7e4] hover:brightness-110 whitespace-nowrap">
+                ▶ Probar
+              </button>
+              {archivo && (
+                <button onClick={() => restaurarTono(tipo)} disabled={busy}
+                  className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-muted hover:text-[#eae7e4] disabled:opacity-50 whitespace-nowrap">
+                  Restaurar por defecto
+                </button>
+              )}
+            </div>
+            {tonoError[tipo] && <div className="text-xs mt-2 text-red-500">✗ {tonoError[tipo]}</div>}
+          </div>
+        )
+      })}
+    </>) },
+    { id: 'integraciones', label: 'Integraciones', icon: '🔌', claves: ['consolidado_conn'] },
+  ]
+
+  // Claves sin pestaña propia (y que no son de apariencia/tonos) caen en "Otros".
+  const conocidas = new Set([...tabs.flatMap(t => t.claves),
+    'escala_fuente', 'fondo_imagen', 'dashboard_estilo', 'fondo_oscuridad', 'fuente_sistema'])
+  const otras = rows.map(r => r.clave).filter(c => !conocidas.has(c) && !c.startsWith('tono_'))
+  if (otras.length) tabs.push({ id: 'otros', label: 'Otros', icon: '⋯', claves: otras })
+
+  const actual = tabs.find(t => t.id === tab) ?? tabs[0]
+
   return (
     <div>
       <h1 className="text-xl font-extrabold text-[#eae7e4] mb-2">Configuración</h1>
-      <p className="text-sm text-muted mb-6">
+      <p className="text-sm text-muted mb-4">
         Los cambios de intervalo/pings se aplican en el próximo ciclo del worker.
         Los cambios de SMTP y Telegram se aplican inmediatamente a la siguiente alerta.
       </p>
 
-      <div className="flex flex-col gap-3 max-w-xl">
-        <div className="bg-surface rounded-xl p-4 border border-border">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Estilo HUD del Panel de control</div>
-              <div className="text-xs text-muted">
-                Variante de un solo color (verde azulado SIGMA) con cuadrícula y marcos tipo HUD; el rojo queda solo para fallas. Afecta a todos los usuarios.
-              </div>
-            </div>
-            <button onClick={toggleHud} role="switch" aria-checked={hudActivo}
-              className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors ${hudActivo ? 'bg-brand' : 'bg-surface-3'}`}>
-              <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${hudActivo ? 'left-6' : 'left-1'}`} />
-            </button>
-          </div>
-        </div>
+      <div className="flex gap-1 border-b border-border mb-5 flex-wrap">
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`px-4 py-2.5 text-sm font-bold -mb-px border-b-2 transition-colors ${
+              actual.id === t.id
+                ? 'border-brand text-brand'
+                : 'border-transparent text-muted hover:text-[#eae7e4]'
+            }`}>
+            <span className="mr-1.5">{t.icon}</span>{t.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="bg-surface rounded-xl p-4 border border-border">
-          <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Imagen de fondo del Panel de control</div>
-          <div className="text-xs text-muted mb-3">
-            Foto detrás del Panel de control (SIGMA): las tarjetas pasan a verse como vidrio sobre la imagen.
-            .jpg / .png / .webp, máx. 10 MB — mejor una foto oscura y de 1920 px o más. Sin imagen se usa el fondo normal.
-          </div>
-          {fondoActual && (
-            <img src={`/api/audio/${fondoActual}`} alt="Fondo actual"
-              className="w-full max-h-40 object-cover rounded-lg border border-border mb-3" />
-          )}
-          {fondoActual && (
-            <div className="mb-3">
-              <div className="flex items-center justify-between text-xs text-muted mb-1">
-                <span>Oscuridad del fondo (velo sobre la imagen)</span>
-                <span className="font-bold text-[#eae7e4]">{oscuridad}%</span>
-              </div>
-              <input type="range" min={0} max={90} step={2} value={oscuridad}
-                onChange={e => setValues(p => ({ ...p, fondo_oscuridad: e.target.value }))}
-                onPointerUp={() => guardarOscuridad(oscuridad)} onKeyUp={() => guardarOscuridad(oscuridad)}
-                className="w-full accent-[#72BF44]" />
-              <div className="flex justify-between text-[0.65rem] text-dim"><span>más claro</span><span>más oscuro</span></div>
-            </div>
-          )}
-          <div className="flex flex-wrap items-center gap-2">
-            <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-              onChange={e => setFondoFile(e.target.files?.[0] ?? null)}
-              className="text-xs text-muted file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-surface-3 file:text-[#eae7e4] file:font-bold" />
-            <button onClick={subirFondo} disabled={!fondoFile || fondoBusy}
-              className="px-3 py-2 rounded-lg text-sm font-bold bg-brand text-white disabled:opacity-40">
-              {fondoBusy ? 'Subiendo…' : 'Subir imagen'}
-            </button>
-            {fondoActual && (
-              <button onClick={quitarFondo} disabled={fondoBusy}
-                className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 text-[#eae7e4] disabled:opacity-40">
-                Quitar imagen
-              </button>
-            )}
-          </div>
-          {fondoError && <div className="text-xs mt-2 text-red-400">{fondoError}</div>}
-        </div>
-
-        <div className="bg-surface rounded-xl p-4 border border-border">
-          <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Tamaño de letra del sistema</div>
-          <div className="text-xs text-muted mb-3">
-            Escala todo el texto de la aplicación — útil para pantallas grandes del NOC. Afecta a todos los usuarios.
-          </div>
-          <div className="flex gap-2">
-            {ESCALAS.map(pct => (
-              <button key={pct} onClick={() => setEscala(pct)}
-                className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
-                  escalaActual === pct
-                    ? 'bg-brand text-white'
-                    : 'bg-surface-3 text-[#eae7e4] hover:brightness-110'
-                }`}>
-                {pct}%
-              </button>
-            ))}
-          </div>
-          {saved['escala_fuente'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
-        </div>
-
-        <div className="bg-surface rounded-xl p-4 border border-border">
-          <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Tipo de letra del sistema</div>
-          <div className="text-xs text-muted mb-3">
-            Tipografía de toda la aplicación. Afecta a todos los usuarios.
-          </div>
-          <div className="flex gap-2">
-            {FUENTES_OPS.map(f => (
-              <button key={f.value} onClick={() => setFuente(f.value)}
-                style={{ fontFamily: f.family }}
-                className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
-                  fuenteActual === f.value
-                    ? 'bg-brand text-white'
-                    : 'bg-surface-3 text-[#eae7e4] hover:brightness-110'
-                }`}>
-                {f.label}
-              </button>
-            ))}
-          </div>
-          {saved['fuente_sistema'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
-        </div>
-
-        {rows.filter(r => !r.clave.startsWith('tono_') && r.clave !== 'escala_fuente' && r.clave !== 'fondo_imagen' && r.clave !== 'dashboard_estilo' && r.clave !== 'fondo_oscuridad' && r.clave !== 'fuente_sistema').map(r => {
-          const meta = LABELS[r.clave] ?? { label: r.clave, desc: '' }
-          return (
-            <div key={r.clave} className="bg-surface rounded-xl p-4 border border-border">
-              <div className="font-bold text-sm text-[#eae7e4] mb-0.5">{meta.label}</div>
-              <div className="text-xs text-muted mb-2">{meta.desc}</div>
-              <div className="flex gap-2 items-center">
-                <Input
-                  type={meta.type ?? 'text'}
-                  value={values[r.clave] ?? ''}
-                  onChange={e => setValues(p => ({ ...p, [r.clave]: e.target.value }))}
-                  className="flex-1"
-                />
-                <button
-                  onClick={() => save(r.clave)}
-                  disabled={saving === r.clave}
-                  className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                    bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
-                >
-                  {saved[r.clave] ? '✓ Guardado' : saving === r.clave ? '…' : 'Guardar'}
-                </button>
-              </div>
-            </div>
-          )
-        })}
-
-        {rows.some(r => r.clave === 'telegram_bot_token') && (
-          <div className="bg-surface rounded-xl p-4 border border-border">
-            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar Telegram</div>
-            <div className="text-xs text-muted mb-2">
-              Guarda el token y el chat ID primero, luego envía un mensaje de prueba al grupo.
-            </div>
-            <button
-              onClick={testTelegram}
-              disabled={testing}
-              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
-            >
-              {testing ? 'Enviando…' : 'Enviar mensaje de prueba'}
-            </button>
-            {testResult && (
-              <div className={`text-xs mt-2 ${testResult.ok ? 'text-green-500' : 'text-red-500'}`}>
-                {testResult.ok ? '✓ ' : '✗ '}{testResult.message}
-              </div>
-            )}
-          </div>
-        )}
-
-        {rows.some(r => r.clave === 'email_reporte_semanal') && (
-          <div className="bg-surface rounded-xl p-4 border border-border">
-            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar reporte semanal</div>
-            <div className="text-xs text-muted mb-2">
-              Guarda los destinatarios primero, luego envía ahora mismo el reporte de disponibilidad
-              de los últimos 7 días para los equipos marcados como críticos (se envía automático todos los lunes 8am).
-            </div>
-            <button
-              onClick={testReporteSemanal}
-              disabled={testingReporte}
-              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
-            >
-              {testingReporte ? 'Enviando…' : 'Enviar reporte ahora'}
-            </button>
-            {testReporteResult && (
-              <div className={`text-xs mt-2 ${testReporteResult.ok ? 'text-green-500' : 'text-red-500'}`}>
-                {testReporteResult.ok ? '✓ ' : '✗ '}{testReporteResult.message}
-              </div>
-            )}
-          </div>
-        )}
-
-        {rows.some(r => r.clave === 'email_reporte_discrepancias') && (
-          <div className="bg-surface rounded-xl p-4 border border-border">
-            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar reporte diario de discrepancias</div>
-            <div className="text-xs text-muted mb-2">
-              Guarda los destinatarios primero, luego envía ahora mismo el reporte de discrepancias
-              de las últimas 24 horas, ordenado por % de mayor a menor (se envía automático a la hora configurada arriba).
-            </div>
-            <button
-              onClick={testReporteDiscrepancias}
-              disabled={testingReporteDisc}
-              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
-            >
-              {testingReporteDisc ? 'Enviando…' : 'Enviar reporte ahora'}
-            </button>
-            {testReporteDiscResult && (
-              <div className={`text-xs mt-2 ${testReporteDiscResult.ok ? 'text-green-500' : 'text-red-500'}`}>
-                {testReporteDiscResult.ok ? '✓ ' : '✗ '}{testReporteDiscResult.message}
-              </div>
-            )}
-          </div>
-        )}
-
-        {rows.some(r => r.clave === 'email_alerta_discrepancias') && (
-          <div className="bg-surface rounded-xl p-4 border border-border">
-            <div className="font-bold text-sm text-[#eae7e4] mb-0.5">Probar alerta de umbral de discrepancias</div>
-            <div className="text-xs text-muted mb-2">
-              Guarda destinatarios y umbral primero, luego revisa ahora mismo si alguna vía superó el umbral
-              en la última hora y envía el correo si corresponde (se revisa automático cada hora en punto).
-            </div>
-            <button
-              onClick={testAlertaDiscrepancias}
-              disabled={testingAlertaDisc}
-              className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
-            >
-              {testingAlertaDisc ? 'Revisando…' : 'Revisar y enviar ahora'}
-            </button>
-            {testAlertaDiscResult && (
-              <div className={`text-xs mt-2 ${testAlertaDiscResult.ok ? 'text-green-500' : 'text-red-500'}`}>
-                {testAlertaDiscResult.ok ? '✓ ' : '✗ '}{testAlertaDiscResult.message}
-              </div>
-            )}
-          </div>
-        )}
-
-        {TONOS.map(({ tipo, label, desc }) => {
-          const archivo = values[`tono_${tipo}_archivo`]
-          const busy    = tonoBusy === tipo
-          return (
-            <div key={tipo} className="bg-surface rounded-xl p-4 border border-border">
-              <div className="font-bold text-sm text-[#eae7e4] mb-0.5">{label}</div>
-              <div className="text-xs text-muted mb-2">{desc}</div>
-              <div className="text-xs mb-2">
-                {archivo
-                  ? <span className="text-[#eae7e4]">Personalizado: <span className="text-muted">{archivo}</span></span>
-                  : <span className="text-muted">Usando tono por defecto</span>}
-              </div>
-              <div className="flex gap-2 items-center flex-wrap">
-                <input
-                  type="file"
-                  accept=".mp3,audio/mpeg"
-                  onChange={e => setTonoFiles(p => ({ ...p, [tipo]: e.target.files?.[0] ?? null }))}
-                  className="text-xs text-muted flex-1 min-w-[180px]"
-                />
-                <button
-                  onClick={() => subirTono(tipo)}
-                  disabled={busy || !tonoFiles[tipo]}
-                  className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                    bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
-                >
-                  {busy ? '…' : 'Subir'}
-                </button>
-                <button
-                  onClick={() => probarTono(tipo)}
-                  className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                    bg-surface-3 text-[#eae7e4] hover:brightness-110 whitespace-nowrap"
-                >
-                  ▶ Probar
-                </button>
-                {archivo && (
-                  <button
-                    onClick={() => restaurarTono(tipo)}
-                    disabled={busy}
-                    className="px-3 py-2 rounded-lg text-sm font-bold transition-all
-                      bg-surface-3 text-muted hover:text-[#eae7e4] disabled:opacity-50 whitespace-nowrap"
-                  >
-                    Restaurar por defecto
-                  </button>
-                )}
-              </div>
-              {tonoError[tipo] && (
-                <div className="text-xs mt-2 text-red-500">✗ {tonoError[tipo]}</div>
-              )}
-            </div>
-          )
-        })}
+      <div className="grid gap-4 items-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(460px, 1fr))' }}>
+        {actual.claves.map(fila)}
+        {actual.contenido?.()}
       </div>
     </div>
   )

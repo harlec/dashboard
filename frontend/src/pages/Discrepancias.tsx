@@ -11,7 +11,7 @@ import { WallTopbar } from '../components/WallTopbar'
 const PERIODOS = [
   { key: '1h',   label: 'Última hora' }, { key: '4h',   label: '4 h' },
   { key: '12h',  label: '12 h' },        { key: '24h',  label: '24 h' },
-  { key: 'ayer', label: 'Ayer' },        { key: 'mes',  label: 'Mes actual' },
+  { key: 'ayer', label: 'Ayer' },        { key: 'mes',  label: 'Mes actual' }, { key: 'mesant', label: 'Mes anterior' },
   { key: 'rango', label: 'Rango' },
 ] as const
 type Periodo = typeof PERIODOS[number]['key']
@@ -317,7 +317,7 @@ export function Discrepancias() {
                 </div>
               ))}
               <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.48 0.015 265)' }}>
-                {periodo === 'mes' || (periodo === 'rango' && desde !== hasta) ? 'por día' : periodo === 'rango' ? 'por hora' : 'cada 30 min'}
+                {periodo === 'mes' || periodo === 'mesant' || (periodo === 'rango' && desde !== hasta) ? 'por día' : periodo === 'rango' ? 'por hora' : 'cada 30 min'}
               </div>
             </div>
           </div>

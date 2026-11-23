@@ -10,16 +10,28 @@ namespace AunorApi.Controllers;
 [ApiController]
 [Route("api/config")]
 [Authorize]
-public class ConfiguracionController(AppDbContext db, TelegramAlertService telegramAlert, IWebHostEnvironment env) : ControllerBase
+public class ConfiguracionController(AppDbContext db, TelegramAlertService telegramAlert, IWebHostEnvironment env, AunorApi.Services.AuditService audit) : ControllerBase
 {
     private static readonly string[] TiposTonoValidos = ["desconexion", "reconexion"];
     private const long MaxBytesTono = 15 * 1024 * 1024; // 15 MB
 
     private string AudioDir => Path.Combine(env.ContentRootPath, "audio");
 
+    // Claves con credenciales: solo las ve un admin (el panel de Configuración las edita).
+    // Un viewer necesita el resto (tonos, umbrales, etc.) pero nunca contraseñas, tokens ni cadenas de conexión.
+    static bool EsSecreta(string clave) =>
+        clave.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+        clave.Contains("token",    StringComparison.OrdinalIgnoreCase) ||
+        clave.Contains("secret",   StringComparison.OrdinalIgnoreCase) ||
+        clave.Contains("_conn",    StringComparison.OrdinalIgnoreCase);
+
     [HttpGet]
-    public async Task<IActionResult> List() =>
-        Ok(await db.Configuraciones.OrderBy(c => c.Clave).ToListAsync());
+    public async Task<IActionResult> List()
+    {
+        var todas = await db.Configuraciones.AsNoTracking().OrderBy(c => c.Clave).ToListAsync();
+        if (User.IsInRole("admin")) return Ok(todas);
+        return Ok(todas.Select(c => new { c.Clave, Valor = EsSecreta(c.Clave) ? "" : c.Valor }));
+    }
 
     [HttpPut("{clave}")]
     [Authorize(Roles = "admin")]
@@ -35,6 +47,8 @@ public class ConfiguracionController(AppDbContext db, TelegramAlertService teleg
             cfg.Valor = req.Valor;
         }
         await db.SaveChangesAsync();
+        // Solo la clave: el valor puede ser un token o credencial
+        await audit.RegistrarAsync("CONFIG_MODIFICADA", $"config:{clave}");
         return Ok(new { clave, valor = req.Valor });
     }
 
