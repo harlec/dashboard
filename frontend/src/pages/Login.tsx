@@ -42,19 +42,19 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{
       backgroundColor: '#07100f',
       backgroundImage: [
-        'radial-gradient(900px 560px at 50% 38%, oklch(0.30 0.06 192 / 0.40), transparent 70%)',
+        'radial-gradient(900px 560px at 50% 38%, color-mix(in oklab, oklch(0.30 0.06 192 / 0.40) var(--tint-k), #fff), transparent 70%)',
         'linear-gradient(oklch(0.80 0.10 192 / 0.05) 1px, transparent 1px)',
         'linear-gradient(90deg, oklch(0.80 0.10 192 / 0.05) 1px, transparent 1px)',
       ].join(', '),
       backgroundSize: 'auto, 44px 44px, 44px 44px',
     }}>
       <style>{`
-        .sigma-input { background: oklch(0.20 0.025 192 / 0.7); border: 1px solid oklch(0.45 0.05 192 / 0.55); transition: border-color .15s, box-shadow .15s; }
+        .sigma-input { background: color-mix(in oklab, oklch(0.20 0.025 192 / 0.7) var(--tint-k), #fff); border: 1px solid oklch(0.45 0.05 192 / 0.55); transition: border-color .15s, box-shadow .15s; }
         .sigma-input:hover { border-color: oklch(0.62 0.08 192 / 0.8); }
-        .sigma-input:focus { border-color: oklch(0.84 0.11 195); box-shadow: 0 0 0 3px oklch(0.84 0.11 195 / 0.18), 0 0 18px oklch(0.84 0.11 195 / 0.25); }
+        .sigma-input:focus { border-color: color-mix(in oklab, oklch(0.84 0.11 195) var(--acc-k), #000); box-shadow: 0 0 0 3px oklch(0.84 0.11 195 / 0.18), 0 0 18px oklch(0.84 0.11 195 / 0.25); }
         .sigma-btn { background: linear-gradient(180deg, oklch(0.80 0.11 195), oklch(0.66 0.11 195)); color: oklch(0.16 0.03 195);
-          box-shadow: 0 0 22px oklch(0.80 0.11 195 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.35); transition: filter .15s, transform .1s, box-shadow .15s; }
-        .sigma-btn:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 0 30px oklch(0.80 0.11 195 / 0.55), inset 0 1px 0 oklch(1 0 0 / 0.35); }
+          box-shadow: 0 0 22px oklch(0.80 0.11 195 / 0.35), inset 0 1px 0 rgb(var(--ov) / 0.35); transition: filter .15s, transform .1s, box-shadow .15s; }
+        .sigma-btn:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 0 30px oklch(0.80 0.11 195 / 0.55), inset 0 1px 0 rgb(var(--ov) / 0.35); }
         .sigma-btn:active:not(:disabled) { transform: translateY(1px); }
       `}</style>
 
@@ -66,33 +66,33 @@ export function Login() {
         </div>
 
         <form onSubmit={submit} className="relative rounded-xl p-6 flex flex-col gap-4" style={{
-          background: 'linear-gradient(170deg, oklch(0.25 0.03 190 / 0.62), oklch(0.17 0.024 190 / 0.55))',
+          background: 'linear-gradient(170deg, color-mix(in oklab, oklch(0.25 0.03 190 / 0.62) var(--tint-k), #fff), color-mix(in oklab, oklch(0.17 0.024 190 / 0.55) var(--tint-k), #fff))',
           backdropFilter: 'blur(14px)',
-          boxShadow: 'inset 0 0 0 1px oklch(0.70 0.08 195 / 0.30), inset 0 1px 0 oklch(1 0 0 / 0.08), 0 24px 60px oklch(0.04 0.02 190 / 0.6)',
+          boxShadow: 'inset 0 0 0 1px oklch(0.70 0.08 195 / 0.30), inset 0 1px 0 rgb(var(--ov) / 0.08), 0 24px 60px oklch(0.04 0.02 190 / 0.6)',
         }}>
           {esquina({ top: 0, left: 0, borderTop: brd, borderLeft: brd, borderTopLeftRadius: 12 })}
           {esquina({ bottom: 0, right: 0, borderBottom: brd, borderRight: brd, borderBottomRightRadius: 12 })}
 
           <div>
-            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'oklch(0.74 0.06 192)' }}>Usuario</label>
+            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'color-mix(in oklab, oklch(0.74 0.06 192) var(--acc-k), #000)' }}>Usuario</label>
             <input
               type="text"
               autoComplete="username"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="sigma-input w-full rounded-lg px-3 py-2.5 text-[#eae7e4] text-sm outline-none"
+              className="sigma-input w-full rounded-lg px-3 py-2.5 text-[color:var(--tx)] text-sm outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'oklch(0.74 0.06 192)' }}>Contraseña</label>
+            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'color-mix(in oklab, oklch(0.74 0.06 192) var(--acc-k), #000)' }}>Contraseña</label>
             <input
               type="password"
               autoComplete="current-password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="sigma-input w-full rounded-lg px-3 py-2.5 text-[#eae7e4] text-sm outline-none"
+              className="sigma-input w-full rounded-lg px-3 py-2.5 text-[color:var(--tx)] text-sm outline-none"
               required
             />
           </div>

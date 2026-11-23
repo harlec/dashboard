@@ -77,12 +77,12 @@ export function EquipoModal({ equipo, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-surface-2 rounded-2xl w-full max-w-[560px] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-[#232733]"
+        className="bg-surface-2 rounded-2xl w-full max-w-[560px] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-[color:var(--line)]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#232733]">
-          <div className="font-bold text-[1rem] text-[#eae7e4]">{equipo.nombre}</div>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[color:var(--line)]">
+          <div className="font-bold text-[1rem] text-[color:var(--tx)]">{equipo.nombre}</div>
           <button
             onClick={onClose}
             className="text-muted hover:bg-[#2D1212] hover:text-danger px-2 py-1 rounded-md transition-colors"
@@ -101,7 +101,7 @@ export function EquipoModal({ equipo, onClose }: Props) {
               )}
               {TIPOS_PC.includes(equipo.tipoNombre) && (
                 <button onClick={() => descargarVnc(equipo)}
-                  className="px-3 py-2 bg-surface-3 text-[#eae7e4] text-sm font-bold rounded-lg hover:brightness-110 transition-all border border-border">
+                  className="px-3 py-2 bg-surface-3 text-[color:var(--tx)] text-sm font-bold rounded-lg hover:brightness-110 transition-all border border-border">
                   🖥 Abrir VNC
                 </button>
               )}
@@ -126,7 +126,7 @@ export function EquipoModal({ equipo, onClose }: Props) {
             ].map(({ label, value, cls }) => (
               <div key={label} className="bg-surface-3 rounded-lg px-3 py-2.5">
                 <div className="text-[0.66rem] text-muted font-bold uppercase">{label}</div>
-                <div className={`text-[1rem] font-extrabold mt-0.5 text-[#eae7e4] ${cls ?? ''}`}>{value}</div>
+                <div className={`text-[1rem] font-extrabold mt-0.5 text-[color:var(--tx)] ${cls ?? ''}`}>{value}</div>
               </div>
             ))}
           </div>
@@ -145,18 +145,18 @@ export function EquipoModal({ equipo, onClose }: Props) {
                     <div className="flex flex-col gap-1.5">
                       <div className="flex gap-1.5 items-center">
                         <select value={editTipo} onChange={e => setEditTipo(e.target.value as IncidenteTipo)}
-                          className="bg-surface-2 border border-border rounded-md px-2 py-1 text-[0.78rem] text-[#eae7e4] outline-none focus:border-brand">
+                          className="bg-surface-2 border border-border rounded-md px-2 py-1 text-[0.78rem] text-[color:var(--tx)] outline-none focus:border-brand">
                           {(Object.keys(TIPO_LABELS) as IncidenteTipo[]).map(t => (
                             <option key={t} value={t}>{TIPO_LABELS[t]}</option>
                           ))}
                         </select>
                         <input value={editMotivo} onChange={e => setEditMotivo(e.target.value)}
                           placeholder="Motivo (opcional)"
-                          className="flex-1 bg-surface-2 border border-border rounded-md px-2 py-1 text-[0.78rem] text-[#eae7e4] outline-none focus:border-brand" />
+                          className="flex-1 bg-surface-2 border border-border rounded-md px-2 py-1 text-[0.78rem] text-[color:var(--tx)] outline-none focus:border-brand" />
                       </div>
                       <div className="flex gap-1.5 justify-end">
                         <button onClick={() => setEditId(null)}
-                          className="px-2.5 py-1 rounded-md bg-surface-2 text-muted text-[0.76rem] hover:text-[#eae7e4]">Cancelar</button>
+                          className="px-2.5 py-1 rounded-md bg-surface-2 text-muted text-[0.76rem] hover:text-[color:var(--tx)]">Cancelar</button>
                         <button onClick={guardarEdicion} disabled={saving}
                           className="px-2.5 py-1 rounded-md bg-brand text-white text-[0.76rem] font-bold disabled:opacity-50">
                           {saving ? 'Guardando…' : 'Guardar'}
@@ -172,7 +172,7 @@ export function EquipoModal({ equipo, onClose }: Props) {
                       </div>
                       {user?.rol === 'admin' && (
                         <button onClick={() => empezarEdicion(inc)}
-                          className="flex-shrink-0 px-2.5 py-1 rounded-md bg-surface-2 text-muted text-[0.76rem] hover:text-[#eae7e4] transition-colors">
+                          className="flex-shrink-0 px-2.5 py-1 rounded-md bg-surface-2 text-muted text-[0.76rem] hover:text-[color:var(--tx)] transition-colors">
                           Editar
                         </button>
                       )}
@@ -192,16 +192,16 @@ export function EquipoModal({ equipo, onClose }: Props) {
               <thead>
                 <tr>
                   {['Timestamp', 'Estado', 'Latencia', 'Detalle'].map(h => (
-                    <th key={h} className="text-left px-2 py-1.5 border-b-2 border-[#232733] text-[0.7rem] text-muted">{h}</th>
+                    <th key={h} className="text-left px-2 py-1.5 border-b-2 border-[color:var(--line)] text-[0.7rem] text-muted">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {detail.historial.map((row, i) => (
                   <tr key={i} className="border-b border-[#2a2826]">
-                    <td className="px-2 py-1.5 text-[#d4cec9]">{formatTs(row.timestamp)}</td>
+                    <td className="px-2 py-1.5 text-[color:var(--tx-2)]">{formatTs(row.timestamp)}</td>
                     <td className={`px-2 py-1.5 font-bold ${row.estado === 'UP' ? 'text-brand' : 'text-danger'}`}>{row.estado}</td>
-                    <td className="px-2 py-1.5 text-[#d4cec9]">{row.latenciaMs != null ? `${Math.round(row.latenciaMs)}ms` : '—'}</td>
+                    <td className="px-2 py-1.5 text-[color:var(--tx-2)]">{row.latenciaMs != null ? `${Math.round(row.latenciaMs)}ms` : '—'}</td>
                     <td className="px-2 py-1.5 text-muted text-[0.76rem] max-w-[160px] truncate" title={row.interpretacion ?? ''}>
                       {row.detalleEstado ?? '—'}
                     </td>

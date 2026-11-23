@@ -82,7 +82,7 @@ export function AdminRed() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-extrabold text-[#eae7e4]">Red · Equipos</h1>
+            <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Red · Equipos</h1>
             <p className="text-xs text-muted mt-0.5">
               Firewalls cuyos enlaces se miden (Palo Alto hoy; Fortinet próximamente). La API key se guarda cifrada y no se vuelve a mostrar.
               Para un par HA, registre ambas unidades con el mismo grupo HA.
@@ -108,7 +108,7 @@ export function AdminRed() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-extrabold text-[#eae7e4]">Red · Enlaces</h1>
+            <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Red · Enlaces</h1>
             <p className="text-xs text-muted mt-0.5">
               Interfaces medidas y ancho de banda contratado (Mbps). El % de uso se calcula contra ese valor.
             </p>
@@ -162,7 +162,7 @@ export function AdminRed() {
             <Input value={eq.certSha256 ?? ''} onChange={e => setEq({ ...eq, certSha256: e.target.value })}
               placeholder="AA:BB:CC:… (64 hex) — sin ella no se conecta" />
           </Field>
-          <label className="flex items-center gap-2 text-sm text-[#eae7e4]">
+          <label className="flex items-center gap-2 text-sm text-[color:var(--tx)]">
             <input type="checkbox" checked={eq.activo ?? true} onChange={e => setEq({ ...eq, activo: e.target.checked })} /> Activo (se sondea)
           </label>
           {error && <div className="text-danger text-sm">{error}</div>}
@@ -192,7 +192,7 @@ export function AdminRed() {
             <Field label="Umbral aviso (%)"><Input type="number" min={1} max={100} value={en.umbralWarnPct ?? 70} onChange={e => setEn({ ...en, umbralWarnPct: Number(e.target.value) })} /></Field>
             <Field label="Umbral crítico (%)"><Input type="number" min={1} max={100} value={en.umbralCritPct ?? 85} onChange={e => setEn({ ...en, umbralCritPct: Number(e.target.value) })} /></Field>
           </div>
-          <label className="flex items-center gap-2 text-sm text-[#eae7e4]">
+          <label className="flex items-center gap-2 text-sm text-[color:var(--tx)]">
             <input type="checkbox" checked={en.medirAlerta ?? true} onChange={e => setEn({ ...en, medirAlerta: e.target.checked })} /> Generar alertas (desmarcar = solo informativo)
           </label>
           {error && <div className="text-danger text-sm">{error}</div>}

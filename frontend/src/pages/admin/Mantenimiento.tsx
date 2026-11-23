@@ -72,7 +72,7 @@ export function AdminMantenimiento() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-extrabold text-[#eae7e4]">Modo Mantenimiento</h1>
+        <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Modo Mantenimiento</h1>
       </div>
       <p className="text-sm text-muted mb-4 max-w-2xl">
         Mientras un peaje, vía o equipo esté en mantenimiento, los incidentes que se abran ahí se etiquetan

@@ -103,7 +103,7 @@ export function AdminNvrCanales() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-extrabold text-[#eae7e4]">NVR y canales de cámara</h1>
+        <h1 className="text-xl font-extrabold text-[color:var(--tx)]">NVR y canales de cámara</h1>
         <button onClick={() => { setNvr(emptyNvr()); setError(''); setNvrModal(true) }}
           className="px-4 py-2 bg-brand text-white text-sm font-bold rounded-lg hover:brightness-110">
           + Nuevo NVR
@@ -119,7 +119,7 @@ export function AdminNvrCanales() {
         <div key={n.id} className="bg-surface rounded-xl border border-border mb-4 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <div>
-              <div className="font-extrabold text-[#eae7e4]">{n.peaje}</div>
+              <div className="font-extrabold text-[color:var(--tx)]">{n.peaje}</div>
               <div className="text-xs text-muted">
                 {n.ip}:{n.puertoHttp} · usuario {n.usuario} · contraseña en <code>{n.passwordRef}</code> · retención {n.retencionDias} días
               </div>
@@ -138,7 +138,7 @@ export function AdminNvrCanales() {
             </thead>
             <tbody>
               {[...n.canales].sort((a, b) => a.canal - b.canal).map(c => (
-                <tr key={c.id} className="border-t border-border text-[#eae7e4]">
+                <tr key={c.id} className="border-t border-border text-[color:var(--tx)]">
                   <td className="px-4 py-2 font-bold">{c.canal}</td>
                   <td>{c.tipo}</td>
                   <td>{c.viaNumero ?? '—'}</td>

@@ -5,7 +5,7 @@ import { Panel } from './Panel'
 import { SEMAFORO, TEXTO } from '../lib/theme'
 
 const COLOR: Record<RedEstadoEnlace, string> = {
-  ok: SEMAFORO.ok, warn: SEMAFORO.warn, critico: SEMAFORO.critico, info: SEMAFORO.info, sin_datos: 'oklch(0.55 0.015 265)',
+  ok: SEMAFORO.ok, warn: SEMAFORO.warn, critico: SEMAFORO.critico, info: SEMAFORO.info, sin_datos: 'var(--tx-dim)',
 }
 const ETIQUETA: Record<RedEstadoEnlace, string> = {
   ok: 'Normal', warn: 'Atención', critico: 'Saturado', info: 'Informativo', sin_datos: 'Sin datos',
@@ -32,7 +32,7 @@ function Medidor({ etiqueta, pct, mbps, contratado, color }: {
         <span style={{ fontSize: 13, color: TEXTO.secundario }}>{etiqueta}</span>
         <span style={{ fontSize: 26, fontWeight: 700, color: TEXTO.primario }}>{fmtPct(pct)}</span>
       </div>
-      <div style={{ height: 6, borderRadius: 3, background: 'oklch(1 0 0 / 0.07)', margin: '4px 0' }}>
+      <div style={{ height: 6, borderRadius: 3, background: 'rgb(var(--ov) / 0.07)', margin: '4px 0' }}>
         <div style={{ height: '100%', borderRadius: 3, background: color, width: `${Math.min(pct ?? 0, 100)}%` }} />
       </div>
       <div style={{ fontSize: 13, color: TEXTO.secundario }}>
@@ -95,13 +95,13 @@ export function EnlaceCard({ enlace, rango }: { enlace: RedEnlace; rango: RedRan
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={serie} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
-              <CartesianGrid stroke="oklch(1 0 0 / 0.06)" vertical={false} />
+              <CartesianGrid stroke="rgb(var(--ov) / 0.06)" vertical={false} />
               <XAxis dataKey="ts" tickFormatter={t => fmtHora(t, rango)} stroke={TEXTO.terciario} fontSize={11} minTickGap={40} />
               <YAxis stroke={TEXTO.terciario} fontSize={11} unit=" M" />
               <Tooltip
                 labelFormatter={t => new Date(t as string).toLocaleString('es-PE')}
                 formatter={(v, n) => [`${Number(v).toFixed(1)} Mbps`, n]}
-                contentStyle={{ background: 'oklch(0.185 0.016 262)', border: 'none', borderRadius: 8, fontSize: 12 }} />
+                contentStyle={{ background: 'rgb(var(--s0))', border: 'none', borderRadius: 8, fontSize: 12 }} />
               {enlace.mbpsContratadoIn != null && enlace.medirAlerta && (
                 <ReferenceLine y={enlace.mbpsContratadoIn * enlace.umbralCritPct / 100}
                   stroke={SEMAFORO.critico} strokeDasharray="4 4" />

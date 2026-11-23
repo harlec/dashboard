@@ -19,17 +19,17 @@ export function ScaledStage({ children }: { children: ReactNode }) {
     // Anclado ARRIBA y con scroll vertical: si la ventana no está maximizada
     // (alto < 1080·escala) el topbar/menú sigue visible y el resto se desplaza,
     // en vez de centrarse y recortar arriba y abajo.
-    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: '#0a0d13', overflowX: 'hidden' }}>
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'var(--bg)', overflowX: 'hidden' }}>
      <div style={{ width: 1920 * escala, height: 1080 * escala, flex: '0 0 auto', margin: '0 auto', overflow: 'hidden' }}>
       <div style={{
         width: 1920, height: 1080, flex: '0 0 auto', transform: `scale(${escala})`, transformOrigin: 'top left',
         boxSizing: 'border-box', padding: '22px 30px 24px', display: 'flex', flexDirection: 'column', gap: 14,
-        fontFamily: 'var(--app-font)', color: 'oklch(0.96 0.004 265)', overflow: 'hidden',
-        backgroundColor: '#0a0d13',
+        fontFamily: 'var(--app-font)', color: 'var(--tx)', overflow: 'hidden',
+        backgroundColor: 'var(--bg)',
         backgroundImage: [
-          'radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%)',
-          'radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%)',
-          'linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%)',
+          'radial-gradient(1100px 620px at 12% -12%, var(--pg-glow-1), transparent 65%)',
+          'radial-gradient(900px 560px at 92% 8%, var(--pg-glow-2), transparent 62%)',
+          'linear-gradient(180deg, var(--pg-top) 0%, var(--pg-bot) 100%)',
         ].join(', '),
       }}>
         {children}
@@ -65,17 +65,17 @@ export function ScaledPage({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: '#0a0d13', overflowX: 'hidden' }}>
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'var(--bg)', overflowX: 'hidden' }}>
       <div style={{ width: 1920 * escala, height: alto * escala, flex: '0 0 auto', margin: '0 auto', overflow: 'hidden' }}>
         <div ref={ref} style={{
           width: 1920, minHeight: 1080, transform: `scale(${escala})`, transformOrigin: 'top left',
           boxSizing: 'border-box', padding: '22px 30px 24px', display: 'flex', flexDirection: 'column', gap: 14,
-          fontFamily: 'var(--app-font)', color: 'oklch(0.96 0.004 265)',
-          backgroundColor: '#0a0d13',
+          fontFamily: 'var(--app-font)', color: 'var(--tx)',
+          backgroundColor: 'var(--bg)',
           backgroundImage: [
-            'radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%)',
-            'radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%)',
-            'linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%)',
+            'radial-gradient(1100px 620px at 12% -12%, var(--pg-glow-1), transparent 65%)',
+            'radial-gradient(900px 560px at 92% 8%, var(--pg-glow-2), transparent 62%)',
+            'linear-gradient(180deg, var(--pg-top) 0%, var(--pg-bot) 100%)',
           ].join(', '),
         }}>
           {children}

@@ -1,3 +1,5 @@
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,7 +13,9 @@
 
 @layer base {
   body {
-    @apply bg-[#0a0d13] text-[#eae7e4] font-sans min-h-screen;
+    @apply font-sans min-h-screen;
+    background-color: var(--bg);
+    color: var(--tx);
     /* Mantiene los dígitos alineados en tablas/KPIs sin depender de una fuente monospace */
     font-variant-numeric: tabular-nums;
   }
@@ -26,9 +30,9 @@
 @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.86); } }
 
 .page-bg {
-  background-color: #0a0d13;
+  background-color: var(--bg);
   background-image:
-    radial-gradient(1100px 620px at 12% -12%, oklch(0.30 0.055 250 / 0.55), transparent 65%),
-    radial-gradient(900px 560px at 92% 8%, oklch(0.28 0.05 190 / 0.34), transparent 62%),
-    linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.112 0.014 262) 100%);
+    radial-gradient(1100px 620px at 12% -12%, var(--pg-glow-1), transparent 65%),
+    radial-gradient(900px 560px at 92% 8%, var(--pg-glow-2), transparent 62%),
+    linear-gradient(180deg, var(--pg-top) 0%, var(--pg-bot) 100%);
 }

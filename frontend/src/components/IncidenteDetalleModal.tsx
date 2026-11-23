@@ -47,12 +47,12 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-surface-2 rounded-2xl w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-[#232733]"
+        className="bg-surface-2 rounded-2xl w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-[color:var(--line)]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#232733]">
-          <div className="font-bold text-[1rem] text-[#eae7e4]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[color:var(--line)]">
+          <div className="font-bold text-[1rem] text-[color:var(--tx)]">
             {inc ? `${inc.equipoNombre} — ${inc.estacion} (Vía ${inc.via})` : 'Detalle del incidente'}
           </div>
           <button
@@ -70,7 +70,7 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
               {/* Causa destacada */}
               <div className="bg-surface-3 border border-border rounded-lg px-4 py-3 mb-4">
                 <div className="text-[0.66rem] text-muted font-bold uppercase mb-1">Causa probable</div>
-                <div className="text-[0.9rem] text-[#eae7e4] font-semibold">
+                <div className="text-[0.9rem] text-[color:var(--tx)] font-semibold">
                   {detalle.causa ?? 'No se pudo determinar automáticamente'}
                 </div>
               </div>
@@ -85,7 +85,7 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
                 ].map(({ label, value, cls }) => (
                   <div key={label} className="bg-surface-3 rounded-lg px-3 py-2.5">
                     <div className="text-[0.66rem] text-muted font-bold uppercase">{label}</div>
-                    <div className={`text-[0.95rem] font-extrabold mt-0.5 text-[#eae7e4] ${cls ?? ''}`}>{value}</div>
+                    <div className={`text-[0.95rem] font-extrabold mt-0.5 text-[color:var(--tx)] ${cls ?? ''}`}>{value}</div>
                   </div>
                 ))}
               </div>
@@ -119,7 +119,7 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
                 <div className="flex flex-col gap-1.5 mb-4">
                   {detalle.relacionados.map(r => (
                     <div key={r.id} className="bg-surface-3 rounded-lg px-3 py-2 text-[0.8rem]">
-                      <span className="text-[#d4cec9] font-semibold">{r.equipoNombre}</span>
+                      <span className="text-[color:var(--tx-2)] font-semibold">{r.equipoNombre}</span>
                       <span className="text-muted ml-2">{fmt(r.inicio)}{r.fin ? ` — ${fmt(r.fin)}` : ' (activo)'}</span>
                       {r.causa && <div className="text-muted text-[0.76rem] truncate">{r.causa}</div>}
                     </div>
@@ -135,16 +135,16 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
                 <thead>
                   <tr>
                     {['Hora', 'Estado', 'Latencia', 'Detalle'].map(h => (
-                      <th key={h} className="text-left px-2 py-1.5 border-b-2 border-[#232733] text-[0.7rem] text-muted">{h}</th>
+                      <th key={h} className="text-left px-2 py-1.5 border-b-2 border-[color:var(--line)] text-[0.7rem] text-muted">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {detalle.pingWindow.map((row, i) => (
                     <tr key={i} className="border-b border-[#2a2826]">
-                      <td className="px-2 py-1.5 text-[#d4cec9]">{fmtHora(row.timestamp)}</td>
+                      <td className="px-2 py-1.5 text-[color:var(--tx-2)]">{fmtHora(row.timestamp)}</td>
                       <td className={`px-2 py-1.5 font-bold ${row.estado === 'UP' ? 'text-brand' : 'text-danger'}`}>{row.estado}</td>
-                      <td className="px-2 py-1.5 text-[#d4cec9]">{row.latenciaMs != null ? `${Math.round(row.latenciaMs)}ms` : '—'}</td>
+                      <td className="px-2 py-1.5 text-[color:var(--tx-2)]">{row.latenciaMs != null ? `${Math.round(row.latenciaMs)}ms` : '—'}</td>
                       <td className="px-2 py-1.5 text-muted text-[0.76rem] max-w-[220px] truncate" title={row.interpretacion ?? ''}>
                         {row.interpretacion ?? row.detalleEstado ?? '—'}
                       </td>

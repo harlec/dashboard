@@ -16,12 +16,12 @@ export function FormModal({ title, open, onClose, onSubmit, loading, children, s
   return (
     <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4"
       onClick={onClose}>
-      <div className="bg-surface-2 rounded-2xl w-full max-w-lg shadow-2xl border border-[#232733]"
+      <div className="bg-surface-2 rounded-2xl w-full max-w-lg shadow-2xl border border-[color:var(--line)]"
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#232733]">
-          <h2 className="font-bold text-[1rem] text-[#eae7e4]">{title}</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--line)]">
+          <h2 className="font-bold text-[1rem] text-[color:var(--tx)]">{title}</h2>
           <button onClick={onClose}
             className="text-muted hover:text-danger px-2 py-1 rounded-md transition-colors">✕</button>
         </div>
@@ -32,7 +32,7 @@ export function FormModal({ title, open, onClose, onSubmit, loading, children, s
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#232733]">
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[color:var(--line)]">
           <button onClick={onClose}
             className="px-4 py-2 rounded-lg bg-surface-3 text-muted text-sm font-bold hover:bg-surface-2 transition-colors">
             Cancelar
@@ -66,7 +66,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 export function Input(props: InputProps) {
   return (
     <input {...props}
-      className={`w-full bg-surface-3 border border-border rounded-lg px-3 py-2 text-[#eae7e4] text-sm
+      className={`w-full bg-surface-3 border border-border rounded-lg px-3 py-2 text-[color:var(--tx)] text-sm
         outline-none focus:border-brand transition-colors ${props.className ?? ''}`} />
   )
 }
@@ -78,7 +78,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ children, ...props }: SelectProps) {
   return (
     <select {...props}
-      className={`w-full bg-surface-3 border border-border rounded-lg px-3 py-2 text-[#eae7e4] text-sm
+      className={`w-full bg-surface-3 border border-border rounded-lg px-3 py-2 text-[color:var(--tx)] text-sm
         outline-none focus:border-brand transition-colors ${props.className ?? ''}`}>
       {children}
     </select>

@@ -51,7 +51,7 @@ export function StationMatrix({ estaciones, onEquipoClick, estacionesEnMtto }: P
                         </span>
                       </div>
                     )}
-                    <span className="text-[1rem] font-bold text-[#eae7e4]">{est.nombre}</span>
+                    <span className="text-[1rem] font-bold text-[color:var(--tx)]">{est.nombre}</span>
                     <StationGauge pct={pct} up={est.up} down={est.down} enlace={est.enlace} />
                   </div>
                 </th>

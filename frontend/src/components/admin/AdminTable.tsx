@@ -38,7 +38,7 @@ export function AdminTable<T>({ columns, data, keyField, onEdit, onDelete, loadi
           {data.map(row => (
             <tr key={String(row[keyField])} className="border-b border-[#2a2826] hover:bg-surface-2 transition-colors">
               {columns.map(col => (
-                <td key={col.key} className="px-4 py-2.5 text-[#d4cec9]">
+                <td key={col.key} className="px-4 py-2.5 text-[color:var(--tx-2)]">
                   {col.render ? col.render(row) : String((row as any)[col.key] ?? '—')}
                 </td>
               ))}

@@ -50,7 +50,7 @@ export function AdminVias() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-extrabold text-[#eae7e4]">Vías</h1>
+        <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Vías</h1>
         <div className="flex gap-2">
           <Select value={filtroEst} onChange={e => setFiltroEst(Number(e.target.value))} className="w-44">
             <option value={0}>Todas las estaciones</option>

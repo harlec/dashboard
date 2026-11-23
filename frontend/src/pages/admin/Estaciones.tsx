@@ -45,7 +45,7 @@ export function AdminEstaciones() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-extrabold text-[#eae7e4]">Estaciones</h1>
+        <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Estaciones</h1>
         <button onClick={openNew}
           className="px-4 py-2 bg-brand text-white text-sm font-bold rounded-lg hover:brightness-110 transition-all">
           + Nueva estación

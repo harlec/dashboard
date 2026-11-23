@@ -11,30 +11,30 @@ import { severidadDac as severidadDacBase } from '../lib/dac'
 const ALEATICA = { verde: '#72BF44', musgo: '#0DB14B', naranja: '#F99B1C' } as const
 
 interface ChipStyle { bg: string; fg: string; sh: string }
-const UP_EXCEPCION: ChipStyle = { bg: 'oklch(0.32 0.03 145 / 0.80)', fg: 'oklch(0.80 0.05 145)', sh: 'inset 0 1px 0 oklch(1 0 0 / 0.05)' }
+const UP_EXCEPCION: ChipStyle = { bg: 'color-mix(in oklab, oklch(0.32 0.03 145 / 0.80) var(--tint-k), #fff)', fg: 'oklch(0.80 0.05 145)', sh: 'inset 0 1px 0 rgb(var(--ov) / 0.05)' }
 const UP_COLOREADO: ChipStyle = {
   bg: `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})`, fg: '#0B2E12',
-  sh: `0 0 14px ${ALEATICA.verde}59, inset 0 1px 0 oklch(1 0 0 / 0.30)`,
+  sh: `0 0 14px ${ALEATICA.verde}59, inset 0 1px 0 rgb(var(--ov) / 0.30)`,
 }
 const CHIP_ESTATICO: Record<'degraded' | 'down' | 'na' | 'blank', ChipStyle> = {
   degraded: {
     bg: `linear-gradient(180deg, #FCC067, ${ALEATICA.naranja})`, fg: '#3A2205',
-    sh: `0 0 18px ${ALEATICA.naranja}6B, inset 0 1px 0 oklch(1 0 0 / 0.35)`,
+    sh: `0 0 18px ${ALEATICA.naranja}6B, inset 0 1px 0 rgb(var(--ov) / 0.35)`,
   },
   down: {
     bg: 'linear-gradient(180deg, oklch(0.66 0.17 15), oklch(0.53 0.16 15))', fg: 'oklch(0.99 0.02 15)',
-    sh: '0 0 20px oklch(0.66 0.18 15 / 0.55), inset 0 1px 0 oklch(1 0 0 / 0.28)',
+    sh: '0 0 20px oklch(0.66 0.18 15 / 0.55), inset 0 1px 0 rgb(var(--ov) / 0.28)',
   },
-  na: { bg: 'transparent', fg: 'oklch(0.42 0.012 265)', sh: 'inset 0 0 0 1px oklch(0.36 0.012 265)' },
+  na: { bg: 'transparent', fg: 'oklch(0.42 0.012 265)', sh: 'inset 0 0 0 1px rgb(var(--s3))' },
   blank: { bg: 'transparent', fg: 'transparent', sh: 'none' },
 }
 const TRANSICION_CAYENDO: ChipStyle = {
   bg: `linear-gradient(180deg, #FCC067, ${ALEATICA.naranja})`, fg: '#3A2205',
-  sh: `0 0 22px ${ALEATICA.naranja}B0, inset 0 1px 0 oklch(1 0 0 / 0.40)`,
+  sh: `0 0 22px ${ALEATICA.naranja}B0, inset 0 1px 0 rgb(var(--ov) / 0.40)`,
 }
 const TRANSICION_SUBIENDO: ChipStyle = {
   bg: `linear-gradient(180deg, #A6F08A, ${ALEATICA.verde})`, fg: '#0B2E12',
-  sh: `0 0 22px ${ALEATICA.verde}B0, inset 0 1px 0 oklch(1 0 0 / 0.45)`,
+  sh: `0 0 22px ${ALEATICA.verde}B0, inset 0 1px 0 rgb(var(--ov) / 0.45)`,
 }
 
 type Estado = 'up' | 'degraded' | 'down' | 'na' | 'blank'
@@ -197,8 +197,8 @@ export function MatrizEquipos({ estaciones, onEquipoClick, rowH = 32 }: Props) {
   return (
     <div style={{
       boxSizing: 'border-box', borderRadius: 24, padding: '16px 22px 22px',
-      background: 'linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%)',
-      boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32)',
+      background: 'linear-gradient(180deg, rgb(var(--s1) / 0.92) 0%, rgb(var(--s0) / 0.92) 100%)',
+      boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.07), 0 14px 40px rgb(var(--shadow) / 0.32)',
     }}>
       <style>{`
         @keyframes blinkDown { 0%,100% { opacity:1; } 50% { opacity:.55; } }
@@ -210,26 +210,26 @@ export function MatrizEquipos({ estaciones, onEquipoClick, rowH = 32 }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.01em' }}>Equipos en campo</div>
-          <div style={{ fontSize: 16, fontWeight: 500, color: 'oklch(0.55 0.015 265)' }}>
+          <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx-dim)' }}>
             {soloFallas ? 'el color aparece solo donde hay que mirar' : 'todos los estados a color'}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, fontSize: 15, fontWeight: 500, color: 'oklch(0.62 0.015 265)' }}>
-          {leyenda(soloFallas ? 'oklch(0.32 0.03 145 / 0.85)' : `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})`, 'operativo')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, fontSize: 15, fontWeight: 500, color: 'var(--tx-muted)' }}>
+          {leyenda(soloFallas ? 'color-mix(in oklab, oklch(0.32 0.03 145 / 0.85) var(--tint-k), #fff)' : `linear-gradient(180deg, ${ALEATICA.verde}, ${ALEATICA.musgo})`, 'operativo')}
           {leyenda(`linear-gradient(180deg, #FCC067, ${ALEATICA.naranja})`, 'degradado')}
           {leyenda('linear-gradient(180deg, oklch(0.66 0.17 15), oklch(0.54 0.16 15))', 'caído')}
           {leyenda('', 'no instalado', true)}
-          <div onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', paddingLeft: 18, borderLeft: '1px solid oklch(0.30 0.012 265)' }}>
+          <div onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', paddingLeft: 18, borderLeft: '1px solid rgb(var(--s2))' }}>
             <span>Resaltar solo fallas</span>
             <div style={{
               width: 38, height: 21, borderRadius: 999, flex: '0 0 auto', position: 'relative',
-              background: soloFallas ? `${ALEATICA.verde}55` : 'oklch(1 0 0 / 0.10)',
+              background: soloFallas ? `${ALEATICA.verde}55` : 'rgb(var(--ov) / 0.10)',
               boxShadow: soloFallas ? `inset 0 0 0 1px ${ALEATICA.verde}80` : 'inset 0 0 0 1px oklch(0.40 0.012 265)',
               transition: 'background 0.15s ease',
             }}>
               <div style={{
                 position: 'absolute', top: 2, left: soloFallas ? 19 : 2, width: 17, height: 17, borderRadius: '50%',
-                background: soloFallas ? ALEATICA.verde : 'oklch(0.55 0.015 265)', transition: 'left 0.15s ease',
+                background: soloFallas ? ALEATICA.verde : 'var(--tx-dim)', transition: 'left 0.15s ease',
               }} />
             </div>
           </div>
@@ -244,10 +244,10 @@ export function MatrizEquipos({ estaciones, onEquipoClick, rowH = 32 }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{
                 fontSize: 16, fontWeight: 600, fontVariantNumeric: 'tabular-nums', padding: '3px 10px', borderRadius: 999,
-                color: est.completo ? 'oklch(0.82 0.09 175)' : 'oklch(0.84 0.13 15)',
+                color: est.completo ? 'color-mix(in oklab, oklch(0.82 0.09 175) var(--acc-k), #000)' : 'color-mix(in oklab, oklch(0.84 0.13 15) var(--acc-k), #000)',
                 background: est.completo ? 'oklch(0.50 0.09 175 / 0.18)' : 'oklch(0.55 0.14 15 / 0.20)',
               }}>{est.ratio}</span>
-              <span style={{ fontSize: 16, fontWeight: 500, color: 'oklch(0.50 0.015 265)' }}>{est.latencia != null ? `${est.latencia} ms` : '—'}</span>
+              <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx-dim)' }}>{est.latencia != null ? `${est.latencia} ms` : '—'}</span>
             </div>
           </div>
         ))}
@@ -257,7 +257,7 @@ export function MatrizEquipos({ estaciones, onEquipoClick, rowH = 32 }: Props) {
             <div key={label} style={{
               height: rowH, display: 'flex', alignItems: 'center', fontSize: 16,
               fontWeight: label === 'DAC' ? 700 : 500,
-              color: label === 'DAC' ? ALEATICA.naranja : 'oklch(0.64 0.015 265)',
+              color: label === 'DAC' ? ALEATICA.naranja : 'var(--tx-muted)',
             }}>{label}</div>
           ))}
         </div>

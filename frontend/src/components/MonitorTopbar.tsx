@@ -1,3 +1,4 @@
+import { ThemeToggle } from './ThemeToggle'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -45,7 +46,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
   }, [open])
 
   const dotColor = {
-    idle:  'bg-[#8d94a3]',
+    idle:  'bg-[color:var(--tx-muted)]',
     ok:    'bg-ok animate-ping-pulse',
     error: 'bg-danger',
   }[signalStatus]
@@ -53,7 +54,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
 
   return (
     <nav className="flex items-center justify-between px-4 sm:px-6 h-[60px] sticky top-0 z-50 gap-4"
-      style={{ background: 'linear-gradient(180deg, oklch(0.165 0.018 262) 0%, oklch(0.14 0.016 262) 100%)', boxShadow: 'inset 0 -1px 0 oklch(1 0 0 / 0.06)' }}>
+      style={{ background: 'linear-gradient(180deg, var(--pg-top) 0%, var(--pg-bot) 100%)', boxShadow: 'inset 0 -1px 0 rgb(var(--ov) / 0.06)' }}>
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative flex-shrink-0 md:hidden" ref={menuRef}>
           <button
@@ -61,7 +62,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
             aria-label="Menú de navegación"
             aria-expanded={open}
             className="w-10 h-10 rounded-[13px] flex flex-col items-center justify-center gap-[5px]
-              bg-white/[0.06] hover:bg-white/[0.10] transition-colors"
+              bg-ink/[0.06] hover:bg-ink/[0.10] transition-colors"
           >
             {[0, 1, 2].map(i => (
               <span key={i} className="w-[17px] h-[2px] rounded-full" style={{ background: 'oklch(0.84 0.06 200)' }} />
@@ -75,30 +76,30 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
                 <Link key={to} to={to} onClick={() => setOpen(false)}
                   className={`block px-3 py-2 rounded-lg text-[0.85rem] transition-colors ${
                     pathname === to
-                      ? 'bg-white/10 text-ink font-semibold'
-                      : 'text-white/60 hover:bg-white/10 hover:text-ink'}`}>
+                      ? 'bg-ink/10 text-ink font-semibold'
+                      : 'text-ink/60 hover:bg-ink/10 hover:text-ink'}`}>
                   {label}
                 </Link>
               ))}
               <div className="border-t border-border my-1.5" />
               <button onClick={logout}
-                className="w-full text-left px-3 py-2 rounded-lg text-[0.85rem] text-white/50
-                  hover:bg-white/10 hover:text-ink transition-colors">
+                className="w-full text-left px-3 py-2 rounded-lg text-[0.85rem] text-ink/50
+                  hover:bg-ink/10 hover:text-ink transition-colors">
                 Salir
               </button>
             </div>
           )}
         </div>
 
-        <div className="flex-shrink-0 text-[1.4rem] font-bold tracking-[0.2em]" style={{ color: 'oklch(0.84 0.11 195)' }}>SIGMA</div>
+        <div className="flex-shrink-0 text-[1.4rem] font-bold tracking-[0.2em]" style={{ color: 'color-mix(in oklab, oklch(0.84 0.11 195) var(--acc-k), #000)' }}>SIGMA</div>
 
         <div className="hidden md:flex gap-1 min-w-0 overflow-x-auto [scrollbar-width:none]">
           {LINKS.map(({ to, label }) => (
             <Link key={to} to={to}
               className={`px-3 xl:px-3.5 py-1.5 rounded-[11px] text-[0.84rem] xl:text-[0.95rem] font-medium transition-all whitespace-nowrap ${
-                pathname === to ? 'text-ink' : 'text-white/60 hover:bg-white/10 hover:text-ink'}`}
+                pathname === to ? 'text-ink' : 'text-ink/60 hover:bg-ink/10 hover:text-ink'}`}
               style={pathname === to
-                ? { background: 'oklch(0.34 0.045 210 / .75)', boxShadow: 'inset 0 0 0 1px oklch(0.70 0.09 200 / .35)' }
+                ? { background: 'color-mix(in oklab, oklch(0.34 0.045 210 / .75) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px oklch(0.70 0.09 200 / .35)' }
                 : undefined}>
               {label}
             </Link>
@@ -107,21 +108,23 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
       </div>
 
       <div className="flex items-center gap-2.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 text-[0.75rem] text-white/70
-          bg-white/[0.06] px-2.5 py-1 rounded-full border border-white/10">
+        <div className="flex items-center gap-1.5 text-[0.75rem] text-ink/70
+          bg-ink/[0.06] px-2.5 py-1 rounded-full border border-ink/10">
           <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
           <span className="hidden sm:inline">{dotLabel}</span>
         </div>
 
-        <span className="hidden md:inline text-[0.78rem] text-white/50">
+        <span className="hidden md:inline text-[0.78rem] text-ink/50">
           {user?.nombre ?? user?.username}
         </span>
 
-        <span className="hidden lg:inline text-[1.5rem] font-light tabular-nums text-white/90">
+        <span className="hidden lg:inline text-[1.5rem] font-light tabular-nums text-ink/90">
           {now.toLocaleTimeString('es-PE', { hour12: false })}
         </span>
 
-        <button onClick={logout} className="text-[0.78rem] text-white/40 hover:text-ink transition-colors">
+        <ThemeToggle />
+
+        <button onClick={logout} className="text-[0.78rem] text-ink/40 hover:text-ink transition-colors">
           Salir
         </button>
       </div>

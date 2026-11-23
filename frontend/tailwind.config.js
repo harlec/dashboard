@@ -6,12 +6,13 @@ export default {
       colors: {
         // Paleta corporativa ALEATICA — misma que usa el muro NOC (NocMuro.tsx),
         // migrada acá para que todo el sistema comparta una sola identidad visual.
+        // Colores neutros: variables en src/styles/theme.css (tema oscuro/claro).
         brand:        '#72BF44',
         'brand-light': '#72BF44',
-        surface: '#12141b',
-        'surface-2': '#191c26',
-        'surface-3': '#1f2330',
-        border:  '#262c3a',
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        'surface-2': 'rgb(var(--c-surface-2) / <alpha-value>)',
+        'surface-3': 'rgb(var(--c-surface-3) / <alpha-value>)',
+        border:  'rgb(var(--c-border) / <alpha-value>)',
         // Semáforo — sistema-visual.md del rediseño "monitoreo funcional". Único
         // set de estado para toda la app (no reasignar por pantalla).
         ok:      'oklch(0.78 0.13 160)',
@@ -19,9 +20,9 @@ export default {
         danger:  'oklch(0.70 0.17 22)',
         info:    'oklch(0.78 0.11 205)',
         // Texto — primario/secundario/terciario del mismo sistema.
-        ink:   'oklch(0.96 0.004 265)',
-        muted: 'oklch(0.62 0.015 265)',
-        dim:   'oklch(0.50 0.015 265)',
+        ink:   'rgb(var(--c-ink) / <alpha-value>)',
+        muted: 'rgb(var(--c-muted) / <alpha-value>)',
+        dim:   'rgb(var(--c-dim) / <alpha-value>)',
       },
       fontFamily: {
         // --app-font la fija useFontScale.ts en runtime según Admin → Configuración

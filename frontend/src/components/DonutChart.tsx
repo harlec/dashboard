@@ -41,7 +41,7 @@ export function DonutChart({ ups, downs, incActivos, total }: Props) {
       {/* texto central */}
       <text x="65" y="61" textAnchor="middle" fill="#72BF44" fontSize="20" fontWeight="800"
         fontFamily="var(--app-font)">{uptimePct}%</text>
-      <text x="65" y="77" textAnchor="middle" fill="#8d94a3" fontSize="10"
+      <text x="65" y="77" textAnchor="middle" fill="var(--tx-muted)" fontSize="10"
         fontFamily="var(--app-font)">UPTIME</text>
     </svg>
   )

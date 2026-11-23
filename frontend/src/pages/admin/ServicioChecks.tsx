@@ -83,7 +83,7 @@ export function AdminServicioChecks() {
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-extrabold text-[#eae7e4]">Chequeos de servicio</h1>
+          <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Chequeos de servicio</h1>
           <p className="text-xs text-muted mt-0.5">
             Los criterios de cada servicio: ping a una IP, puerto TCP, o código de respuesta HTTP de una URL.
           </p>
@@ -100,7 +100,7 @@ export function AdminServicioChecks() {
 
       {servicios.length === 0 && !loading && (
         <div className="text-xs text-muted mb-3">
-          Primero crea un servicio en la pantalla <span className="text-[#d4cec9]">Servicios</span>.
+          Primero crea un servicio en la pantalla <span className="text-[color:var(--tx-2)]">Servicios</span>.
         </div>
       )}
 

@@ -9,7 +9,7 @@ export function AdminDashboard() {
   }, [])
 
   const cards = kpis ? [
-    { label: 'Total equipos',  value: kpis.total,       color: 'text-[#eae7e4]' },
+    { label: 'Total equipos',  value: kpis.total,       color: 'text-[color:var(--tx)]' },
     { label: 'Operativos',     value: kpis.ups,         color: 'text-brand'     },
     { label: 'Caídos',         value: kpis.downs,       color: 'text-danger'    },
     { label: 'Inc. activos',   value: kpis.incActivos,  color: 'text-warn'      },
@@ -18,7 +18,7 @@ export function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-xl font-extrabold text-[#eae7e4] mb-6">Resumen del sistema</h1>
+      <h1 className="text-xl font-extrabold text-[color:var(--tx)] mb-6">Resumen del sistema</h1>
 
       <div className="grid grid-cols-5 gap-3 mb-8">
         {cards.map(c => (
@@ -31,7 +31,7 @@ export function AdminDashboard() {
 
       <div className="grid grid-cols-2 gap-4 text-sm text-muted">
         <div className="bg-surface rounded-xl p-4 border border-border">
-          <div className="font-bold text-[#eae7e4] mb-2">Accesos rápidos</div>
+          <div className="font-bold text-[color:var(--tx)] mb-2">Accesos rápidos</div>
           <ul className="flex flex-col gap-1.5">
             {[
               { href: '/admin/estaciones', label: 'Gestionar estaciones' },
@@ -48,7 +48,7 @@ export function AdminDashboard() {
         </div>
 
         <div className="bg-surface rounded-xl p-4 border border-border">
-          <div className="font-bold text-[#eae7e4] mb-2">Info</div>
+          <div className="font-bold text-[color:var(--tx)] mb-2">Info</div>
           <p className="text-xs leading-relaxed">
             Desde este panel puedes gestionar la estructura del sistema: estaciones, vías, equipos y usuarios.
             Los cambios se reflejan en el panel de control en tiempo real.

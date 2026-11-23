@@ -38,7 +38,7 @@ export function AdminLayout() {
                 `px-3 py-2 rounded-lg text-sm transition-colors ${
                   isActive
                     ? 'bg-brand/20 text-brand font-bold'
-                    : 'text-muted hover:bg-surface-3 hover:text-[#eae7e4]'
+                    : 'text-muted hover:bg-surface-3 hover:text-[color:var(--tx)]'
                 }`}>
               {label}
             </NavLink>

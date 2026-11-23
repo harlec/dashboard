@@ -131,7 +131,7 @@ export function Oficios() {
 
   return (
     <div className="p-5 max-w-[1400px] mx-auto">
-      <h1 className="text-xl font-extrabold text-[#eae7e4] mb-4">Oficios — tránsitos y video por placa</h1>
+      <h1 className="text-xl font-extrabold text-[color:var(--tx)] mb-4">Oficios — tránsitos y video por placa</h1>
 
       <div className="bg-surface rounded-xl border border-border p-4 mb-5">
         <div className="flex flex-wrap items-end gap-3">
@@ -162,8 +162,8 @@ export function Oficios() {
             <Input type="number" min={0} max={1800} value={antes} onChange={e => setAntes(Number(e.target.value))} /></div>
           <div className="w-32"><label className={lbl}>Seg. después</label>
             <Input type="number" min={0} max={1800} value={despues} onChange={e => setDespues(Number(e.target.value))} /></div>
-          <div className="text-sm text-[#eae7e4] pb-2">Duración por evento: <b>{duracionMin} min</b></div>
-          <label className="flex items-center gap-2 text-sm text-[#eae7e4] pb-2 cursor-pointer">
+          <div className="text-sm text-[color:var(--tx)] pb-2">Duración por evento: <b>{duracionMin} min</b></div>
+          <label className="flex items-center gap-2 text-sm text-[color:var(--tx)] pb-2 cursor-pointer">
             <input type="checkbox" checked={borrar} onChange={e => setBorrar(e.target.checked)} />
             Borrar el MP4 del servidor al descargarlo
           </label>
@@ -176,8 +176,8 @@ export function Oficios() {
       {rows && rows.length > 0 && (
         <>
           <div className="bg-surface rounded-xl border border-border p-4 mb-4 flex flex-wrap items-center gap-4">
-            <div className="text-sm text-[#eae7e4]"><b>{rows.length}</b> tránsito(s) · <b>{sel.size}</b> seleccionado(s)</div>
-            <div className="flex items-center gap-3 text-sm text-[#eae7e4]">
+            <div className="text-sm text-[color:var(--tx)]"><b>{rows.length}</b> tránsito(s) · <b>{sel.size}</b> seleccionado(s)</div>
+            <div className="flex items-center gap-3 text-sm text-[color:var(--tx)]">
               Cámaras:
               {TIPOS.map(t => (
                 <label key={t} className="flex items-center gap-1 cursor-pointer">
@@ -187,7 +187,7 @@ export function Oficios() {
             </div>
             {progreso ? (
               <>
-                <span className="text-sm text-[#eae7e4]">Exportando {progreso.hecho}/{progreso.total}…</span>
+                <span className="text-sm text-[color:var(--tx)]">Exportando {progreso.hecho}/{progreso.total}…</span>
                 <button className={btn} onClick={() => { cancelar.current = true }}>Cancelar</button>
               </>
             ) : (
@@ -231,7 +231,7 @@ export function Oficios() {
       {okClips.length > 0 && (
         <div className="bg-surface rounded-xl border border-border p-4">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div className="font-extrabold text-[#eae7e4]">Videos exportados ({okClips.length})</div>
+            <div className="font-extrabold text-[color:var(--tx)]">Videos exportados ({okClips.length})</div>
             <a href={zipUrl} className="px-4 py-2 bg-brand text-white text-sm font-bold rounded-lg hover:brightness-110">
               Descargar todo en ZIP
             </a>
@@ -240,7 +240,7 @@ export function Oficios() {
             Se conservan {dias} días en el servidor y luego se borran solos{borrar ? '; al descargar también se borran' : ''}.
             El ZIP incluye <code>manifest.txt</code> para verificar los hashes con <code>sha256sum -c</code>.
           </div>}
-          <ul className="text-sm text-[#eae7e4] space-y-1">
+          <ul className="text-sm text-[color:var(--tx)] space-y-1">
             {okClips.map(([k, c]) => {
               const t = rows?.[Number(k.split('-')[0])]
               return (
@@ -274,7 +274,7 @@ function Fila({ t, i, btn, checked, onCheck, abierto, camaras, clips, borrar, on
 
   return (
     <>
-      <tr className="border-t border-border text-[#eae7e4]">
+      <tr className="border-t border-border text-[color:var(--tx)]">
         <td className="px-3 py-2"><input type="checkbox" checked={checked} onChange={e => onCheck(e.target.checked)} /></td>
         <td className="font-bold">{t.fecha}</td>
         <td>{t.estacion}</td><td>{t.viaNombre} <span className="text-muted">({t.via})</span></td><td>{t.sentido || '—'}</td>
@@ -293,7 +293,7 @@ function Fila({ t, i, btn, checked, onCheck, abierto, camaras, clips, borrar, on
                 {camaras.camaras.map(c => {
                   const st = clips[`${i}-${c.canal}`]
                   return (
-                    <div key={c.id} className="flex flex-wrap items-center gap-3 text-sm text-[#eae7e4]">
+                    <div key={c.id} className="flex flex-wrap items-center gap-3 text-sm text-[color:var(--tx)]">
                       <span className="w-40">Canal {c.canal} · {c.tipo}</span>
                       <span className="w-56 text-muted">{c.nombre}</span>
                       <button className={btn} disabled={st === 'cargando'} onClick={() => onExportar(c)}>

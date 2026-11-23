@@ -24,7 +24,7 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
 
   return (
     <div style={compact ? {
-      background: 'linear-gradient(180deg,#0c141d,#080e15)',
+      background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))',
       border: '1px solid rgba(239,75,84,.18)',
       borderRadius: 12,
       overflow: 'hidden',
@@ -80,10 +80,10 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,75,84,.07)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'rgba(255,255,255,.22)', width: 18, flexShrink: 0 }}>{idx + 1}</span>
+              <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'rgb(var(--ov) / .22)', width: 18, flexShrink: 0 }}>{idx + 1}</span>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4b54', flexShrink: 0, boxShadow: '0 0 8px #ef4b54' }} className="animate-blink-down" />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#e6edf3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eq.nombre}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eq.nombre}</div>
                 <div style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#5f7186', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{estacion} · {eq.tipoNombre}</div>
               </div>
               <span style={{ fontFamily: 'var(--app-font)', fontSize: 13, fontWeight: 700, flexShrink: 0, color: (eq.incMin ?? 0) > 60 ? '#ef4b54' : '#e0991f' }}>
@@ -114,13 +114,13 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-danger animate-blink-down flex-shrink-0" />
-                    <span className="font-bold text-[#eae7e4]">{eq.nombre}</span>
+                    <span className="font-bold text-[color:var(--tx)]">{eq.nombre}</span>
                   </div>
                   <div className="text-[0.7rem] text-muted ml-3.5">{eq.tipoNombre}</div>
                 </td>
-                <td className="px-4 py-3 text-[#d4cec9]">{estacion}</td>
+                <td className="px-4 py-3 text-[color:var(--tx-2)]">{estacion}</td>
                 <td className="px-4 py-3 text-muted">{via}</td>
-                <td className="px-4 py-3 text-[0.78rem] text-[#d4cec9]">{eq.ip}</td>
+                <td className="px-4 py-3 text-[0.78rem] text-[color:var(--tx-2)]">{eq.ip}</td>
                 <td className="px-4 py-3">
                   <span className={`font-bold ${(eq.incMin ?? 0) > 60 ? 'text-danger' : 'text-warn'}`}>
                     {dur(eq.incMin)}

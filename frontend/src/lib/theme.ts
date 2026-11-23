@@ -12,7 +12,7 @@ export const ESTACION_COLOR: Record<string, string> = {
 }
 
 export function estacionColor(nombre: string): string {
-  return ESTACION_COLOR[nombre.toUpperCase()] ?? 'oklch(0.62 0.015 265)'
+  return ESTACION_COLOR[nombre.toUpperCase()] ?? 'var(--tx-muted)'
 }
 
 // Semáforo — mismos 5 estados en todas las pantallas de monitoreo.
@@ -30,7 +30,7 @@ export const PANEL = { acento: '#3fd6c8', naranja: '#ffb84d', rojo: '#ff6b6b' } 
 
 // Texto — primario / secundario / terciario.
 export const TEXTO = {
-  primario:   'oklch(0.96 0.004 265)',
-  secundario: 'oklch(0.62 0.015 265)',
-  terciario:  'oklch(0.50 0.015 265)',
+  primario:   'var(--tx)',
+  secundario: 'var(--tx-muted)',
+  terciario:  'var(--tx-dim)',
 } as const

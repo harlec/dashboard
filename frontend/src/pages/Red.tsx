@@ -68,7 +68,7 @@ export function Red() {
             </thead>
             <tbody>
               {alertas.map(a => (
-                <tr key={a.id} style={{ borderTop: '1px solid oklch(1 0 0 / 0.06)' }}>
+                <tr key={a.id} style={{ borderTop: '1px solid rgb(var(--ov) / 0.06)' }}>
                   <td style={{ padding: '6px 8px' }}>{a.enlace} <span style={{ color: TEXTO.terciario }}>({a.interfaz})</span></td>
                   <td>{a.tipo === 'SATURACION' ? 'Saturación' : 'Sin datos'}</td>
                   <td>{new Date(a.inicio).toLocaleString('es-PE')}</td>

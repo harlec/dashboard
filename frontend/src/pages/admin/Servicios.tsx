@@ -45,11 +45,11 @@ export function AdminServicios() {
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-extrabold text-[#eae7e4]">Servicios</h1>
+          <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Servicios</h1>
           <p className="text-xs text-muted mt-0.5">
             Cosas que no cuelgan de una vía: servidores en sala (Lima/Chimbote), controlador de dominio,
             facturación, CCO, prepago, páginas web, etc. Cada servicio tiene uno o más chequeos en{' '}
-            <span className="text-[#d4cec9]">Chequeos de servicio</span>.
+            <span className="text-[color:var(--tx-2)]">Chequeos de servicio</span>.
           </p>
         </div>
         <button onClick={openNew}

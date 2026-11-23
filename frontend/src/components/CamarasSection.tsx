@@ -9,7 +9,7 @@ export function CamarasSection({ camaras }: Props) {
   return (
     <div className="bg-surface rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-        <div className="text-[1rem] font-extrabold text-[#eae7e4] flex items-center gap-2">
+        <div className="text-[1rem] font-extrabold text-[color:var(--tx)] flex items-center gap-2">
           📷 Cámaras Dahua
         </div>
         <div className="flex gap-2">
@@ -26,7 +26,7 @@ export function CamarasSection({ camaras }: Props) {
             style={{ width: `${camaras.length ? Math.round(up / camaras.length * 100) : 0}%` }}
           />
         </div>
-        <span className="text-[0.8rem] font-bold text-[#eae7e4] min-w-[38px] text-right">
+        <span className="text-[0.8rem] font-bold text-[color:var(--tx)] min-w-[38px] text-right">
           {camaras.length ? Math.round(up / camaras.length * 100) : 0}%
         </span>
       </div>

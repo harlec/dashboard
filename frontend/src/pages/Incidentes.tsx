@@ -14,7 +14,7 @@ const RANGOS = [
   { key: 1,  label: 'Hoy' }, { key: 7,  label: '7 días' }, { key: 30, label: '30 días' },
 ] as const
 const COLORS = ESTACION_COLOR
-const gris = 'oklch(0.62 0.015 265)'
+const gris = 'var(--tx-muted)'
 
 function dur(min?: number | null) {
   if (min == null) return 'activo'
@@ -117,7 +117,7 @@ export function Incidentes() {
     const max = vias[0]?.total ?? 1
     return vias.map((v, i) => ({
       rank: `#${i + 1}`, via: v.via, est: v.estacion, n: v.total,
-      rankFg: i < 3 ? 'oklch(0.72 0.16 22)' : 'oklch(0.44 0.015 265)',
+      rankFg: i < 3 ? 'oklch(0.72 0.16 22)' : 'var(--tx-dim)',
       color: COLORS[v.estacion] ?? gris,
       ancho: `${Math.round(v.total / max * 100)}%`,
     }))
@@ -130,7 +130,7 @@ export function Incidentes() {
     const totalSinRafaga = dat.reduce((s, h) => s + h.total, 0)
     return {
       horas: dat.map(h => ({
-        txt: String(h.hora).padStart(2, '0'), fg: h.hora % 2 ? 'transparent' : 'oklch(0.48 0.015 265)',
+        txt: String(h.hora).padStart(2, '0'), fg: h.hora % 2 ? 'transparent' : 'var(--tx-dim)',
         alto: `${Math.round(h.total / max * 100)}%`,
         color: h.total === max
           ? 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.56 0.16 22))'
@@ -148,7 +148,7 @@ export function Incidentes() {
     const max = dat[0]?.total ?? 1
     return dat.map((c, i) => ({
       txt: c.causa, n: c.total.toLocaleString('es-PE'),
-      fg: i === 0 ? 'oklch(0.86 0.13 22)' : 'oklch(0.72 0.015 265)',
+      fg: i === 0 ? 'oklch(0.86 0.13 22)' : 'var(--tx-muted)',
       barra: i === 0
         ? 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))'
         : 'linear-gradient(90deg, oklch(0.50 0.02 265), oklch(0.62 0.02 265))',
@@ -171,13 +171,13 @@ export function Incidentes() {
       <div style={{ height: 40, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.015em' }}>Incidentes de red</div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.56 0.015 265)' }}>caídas de equipo detectadas por el monitoreo · agrupadas por ráfaga</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-dim)' }}>caídas de equipo detectadas por el monitoreo · agrupadas por ráfaga</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'oklch(0.24 0.018 262 / 0.80)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'rgb(var(--s1) / 0.80)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.05)' }}>
           {RANGOS.map(r => (
             <div key={r.key} onClick={() => setDias(r.key)} style={{
               padding: '7px 16px', borderRadius: 10, fontSize: 15, fontWeight: dias === r.key ? 600 : 500, cursor: 'pointer',
-              color: dias === r.key ? 'oklch(0.22 0.04 62)' : 'oklch(0.64 0.015 265)',
+              color: dias === r.key ? 'oklch(0.22 0.04 62)' : 'var(--tx-muted)',
               background: dias === r.key ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
             }}>{r.label}</div>
           ))}
@@ -186,33 +186,33 @@ export function Incidentes() {
 
       {/* ── KPI ────────────────────────────────────────────── */}
       <div style={{ height: 98, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '0.85fr 0.85fr 0.85fr 2.2fr', gap: 13 }}>
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.36 0.10 20 / 0.55) 0%, oklch(0.22 0.03 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.80 0.10 22)' }}>En el período</div>
-          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.86 0.13 22)' }}>{(resumen?.total ?? 0).toLocaleString('es-PE')}</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.36 0.10 20 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.80 0.10 22) var(--acc-k), #000)' }}>En el período</div>
+          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.86 0.13 22) var(--acc-k), #000)' }}>{(resumen?.total ?? 0).toLocaleString('es-PE')}</div>
           <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.62 0.035 22)' }}>equipos caídos en {RANGOS.find(r => r.key === dias)?.label.toLowerCase()}</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.80 0.14 62)', animation: 'breathe 1.8s ease-in-out infinite' }} />
-            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.84 0.09 62)' }}>Activos ahora</div>
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.84 0.09 62) var(--acc-k), #000)' }}>Activos ahora</div>
           </div>
-          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.90 0.12 62)' }}>{resumen?.activos ?? 0}</div>
+          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.90 0.12 62) var(--acc-k), #000)' }}>{resumen?.activos ?? 0}</div>
           <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.64 0.035 62)' }}>sin cerrar en este momento</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.30 0.045 200 / 0.55) 0%, oklch(0.22 0.025 250 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.76 0.06 200)' }}>MTTR</div>
-          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.92 0.06 200)' }}>{resumen?.mttrMin != null ? dur(resumen.mttrMin) : '—'}</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.30 0.045 200 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.76 0.06 200) var(--acc-k), #000)' }}>MTTR</div>
+          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.92 0.06 200) var(--acc-k), #000)' }}>{resumen?.mttrMin != null ? dur(resumen.mttrMin) : '—'}</div>
           <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.60 0.03 200)' }}>promedio de recuperación</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.32 0.05 25 / 0.45) 0%, oklch(0.21 0.022 265 / 0.60) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.32 0.05 25 / 0.45) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.60) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.82 0.11 25)' }}>Ráfaga dominante</div>
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.82 0.11 25) var(--acc-k), #000)' }}>Ráfaga dominante</div>
             <div style={{ padding: '3px 10px', borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'oklch(0.22 0.05 25)', background: 'oklch(0.78 0.14 25)' }}>{rafagaVista.share} del período</div>
           </div>
-          <div style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.01em', color: 'oklch(0.94 0.01 265)' }}>{rafagaVista.titulo}</div>
+          <div style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.01em', color: 'var(--tx)' }}>{rafagaVista.titulo}</div>
           <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.64 0.02 265)' }}>{rafagaVista.detalle}</div>
         </div>
       </div>
@@ -223,7 +223,7 @@ export function Incidentes() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Por estación</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>{estacionNota}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>{estacionNota}</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 8 }}>
             {porEstacion.map(e => (
@@ -231,11 +231,11 @@ export function Incidentes() {
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 16, fontWeight: 600, color: e.color }}>{e.nombre}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'oklch(0.50 0.015 265)' }}>{e.share}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx-dim)' }}>{e.share}</span>
                     <span style={{ fontSize: 18, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{e.n}</span>
                   </div>
                 </div>
-                <div style={{ height: 9, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                <div style={{ height: 9, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                   <div style={{ width: e.ancho, height: '100%', borderRadius: 999, background: e.color }} />
                 </div>
               </div>
@@ -246,16 +246,16 @@ export function Incidentes() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Tendencia diaria</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>escala logarítmica · la ráfaga aplasta cualquier eje lineal</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>escala logarítmica · la ráfaga aplasta cualquier eje lineal</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', paddingTop: 10 }}>
             <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', gap: 10 }}>
               <div style={{ width: 42, flex: '0 0 auto', position: 'relative' }}>
                 {tendenciaData.ejeY.map(t => (
-                  <div key={t.txt} style={{ position: 'absolute', right: 0, top: t.top, transform: 'translateY(-50%)', fontSize: 13, fontWeight: 500, lineHeight: '16px', fontVariantNumeric: 'tabular-nums', color: 'oklch(0.48 0.015 265)' }}>{t.txt}</div>
+                  <div key={t.txt} style={{ position: 'absolute', right: 0, top: t.top, transform: 'translateY(-50%)', fontSize: 13, fontWeight: 500, lineHeight: '16px', fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{t.txt}</div>
                 ))}
               </div>
-              <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: 'flex-end', gap: 10, borderBottom: '1px solid oklch(1 0 0 / 0.10)' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: 'flex-end', gap: 10, borderBottom: '1px solid rgb(var(--ov) / 0.10)' }}>
                 {tendenciaData.tendencia.map((d, i) => (
                   <div key={i} style={{ flex: '1 1 0', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 5 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: d.fg }}>{d.n}</div>
@@ -266,7 +266,7 @@ export function Incidentes() {
             </div>
             <div style={{ height: 22, flex: '0 0 auto', display: 'flex', gap: 10, padding: '6px 0 0 52px' }}>
               {tendenciaData.tendencia.map((d, i) => (
-                <div key={i} style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden', textAlign: 'center', fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.50 0.015 265)' }}>{d.dia}</div>
+                <div key={i} style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden', textAlign: 'center', fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{d.dia}</div>
               ))}
             </div>
           </div>
@@ -275,7 +275,7 @@ export function Incidentes() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Vías más afectadas</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>top 10</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>top 10</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 6 }}>
             {topVias.map(v => (
@@ -283,10 +283,10 @@ export function Incidentes() {
                 <div style={{ width: 26, flex: '0 0 auto', fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: v.rankFg }}>{v.rank}</div>
                 <div style={{ width: 44, flex: '0 0 auto', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{v.via}</div>
                 <div style={{ width: 74, flex: '0 0 auto', fontSize: 13, fontWeight: 600, color: v.color }}>{v.est}</div>
-                <div style={{ flex: '1 1 auto', minWidth: 0, height: 8, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                <div style={{ flex: '1 1 auto', minWidth: 0, height: 8, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                   <div style={{ width: v.ancho, height: '100%', borderRadius: 999, background: v.color }} />
                 </div>
-                <div style={{ width: 34, flex: '0 0 auto', textAlign: 'right', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.88 0.01 265)' }}>{v.n}</div>
+                <div style={{ width: 34, flex: '0 0 auto', textAlign: 'right', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>{v.n}</div>
               </div>
             ))}
           </div>
@@ -298,10 +298,10 @@ export function Incidentes() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Por hora del día</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>{horas.nota}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>{horas.nota}</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', paddingTop: 8 }}>
-            <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', alignItems: 'flex-end', gap: 4, borderBottom: '1px solid oklch(1 0 0 / 0.10)' }}>
+            <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', alignItems: 'flex-end', gap: 4, borderBottom: '1px solid rgb(var(--ov) / 0.10)' }}>
               {horas.horas.map((h, i) => (
                 <div key={i} style={{ flex: '1 1 0', minWidth: 0, height: h.alto, borderRadius: '4px 4px 0 0', background: h.color }} />
               ))}
@@ -317,7 +317,7 @@ export function Incidentes() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Causas</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>mensaje del agente</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>mensaje del agente</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 6 }}>
             {causas.length === 0
@@ -328,7 +328,7 @@ export function Incidentes() {
                     <span style={{ fontSize: 15, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: c.fg }} title={c.txt}>{c.txt}</span>
                     <span style={{ flex: '0 0 auto', fontSize: 16, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: c.fg }}>{c.n}</span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                  <div style={{ height: 8, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                     <div style={{ width: c.ancho, height: '100%', borderRadius: 999, background: c.barra }} />
                   </div>
                 </div>
@@ -342,35 +342,35 @@ export function Incidentes() {
         <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 13 }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Historial</div>
-            <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.52 0.015 265)' }}>últimos primero</div>
+            <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>últimos primero</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <select value={estacion} onChange={e => setEstacion(e.target.value)} style={{
               padding: '8px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer',
-              color: 'oklch(0.80 0.012 265)', background: 'oklch(0.28 0.02 262 / 0.80)', border: 'none',
-              boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.07)',
+              color: 'var(--tx-2)', background: 'rgb(var(--s2) / 0.80)', border: 'none',
+              boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)',
             }}>
               <option value="">Todas las estaciones</option>
               {(resumen?.porEstacion ?? []).map(e => <option key={e.estacion} value={e.estacion}>{e.estacion}</option>)}
             </select>
             <div onClick={() => setSolo(v => !v)} style={{
               padding: '8px 15px', borderRadius: 11, fontSize: 15, fontWeight: solo ? 600 : 500, cursor: 'pointer',
-              color: solo ? 'oklch(0.20 0.05 62)' : 'oklch(0.66 0.015 265)',
-              background: solo ? 'linear-gradient(180deg, oklch(0.86 0.13 68), oklch(0.78 0.13 62))' : 'oklch(0.26 0.02 262 / 0.80)',
-              boxShadow: solo ? 'none' : 'inset 0 0 0 1px oklch(1 0 0 / 0.06)',
+              color: solo ? 'oklch(0.20 0.05 62)' : 'var(--tx-muted)',
+              background: solo ? 'linear-gradient(180deg, oklch(0.86 0.13 68), oklch(0.78 0.13 62))' : 'rgb(var(--s2) / 0.80)',
+              boxShadow: solo ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
             }}>Solo activos</div>
             {isAdmin && (
               <div onClick={() => selected.size > 0 && setTagModal(true)} style={{
                 padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: selected.size > 0 ? 'pointer' : 'default',
-                color: selected.size > 0 ? 'oklch(0.18 0.04 200)' : 'oklch(0.48 0.015 265)',
-                background: selected.size > 0 ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'oklch(0.24 0.016 262 / 0.80)',
-                boxShadow: selected.size > 0 ? 'none' : 'inset 0 0 0 1px oklch(1 0 0 / 0.05)',
+                color: selected.size > 0 ? 'oklch(0.18 0.04 200)' : 'var(--tx-dim)',
+                background: selected.size > 0 ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'rgb(var(--s1) / 0.80)',
+                boxShadow: selected.size > 0 ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.05)',
               }}>{selected.size > 0 ? `Etiquetar seleccionados (${selected.size})` : 'Etiquetar seleccionados'}</div>
             )}
           </div>
         </div>
 
-        <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: '34px 1.25fr 0.9fr 60px 1.15fr 1.15fr 88px 92px 2fr', gap: 12, padding: '11px 0 8px', fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'oklch(0.50 0.015 265)', borderBottom: '1px solid oklch(1 0 0 / 0.07)' }}>
+        <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: '34px 1.25fr 0.9fr 60px 1.15fr 1.15fr 88px 92px 2fr', gap: 12, padding: '11px 0 8px', fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--tx-dim)', borderBottom: '1px solid rgb(var(--ov) / 0.07)' }}>
           <div /><div>Equipo</div><div>Estación</div><div>Vía</div><div>Inicio</div><div>Fin</div><div>Duración</div><div>Tipo</div><div>Causa</div>
         </div>
 
@@ -392,16 +392,16 @@ export function Incidentes() {
                   }}>{marcado ? '✓' : ''}</div>
                   <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{inc.equipoNombre}</div>
                   <div style={{ fontWeight: 600, color: COLORS[inc.estacion] ?? gris }}>{inc.estacion}</div>
-                  <div style={{ color: 'oklch(0.70 0.015 265)' }}>{inc.via}</div>
-                  <div style={{ color: 'oklch(0.60 0.015 265)' }}>{fmt(inc.inicio)}</div>
-                  <div style={{ color: 'oklch(0.60 0.015 265)' }}>{fmt(inc.fin)}</div>
-                  <div style={{ fontWeight: 600, color: activo ? 'oklch(0.86 0.13 62)' : 'oklch(0.80 0.012 265)' }}>{dur(inc.duracionMin)}</div>
+                  <div style={{ color: 'var(--tx-muted)' }}>{inc.via}</div>
+                  <div style={{ color: 'var(--tx-muted)' }}>{fmt(inc.inicio)}</div>
+                  <div style={{ color: 'var(--tx-muted)' }}>{fmt(inc.fin)}</div>
+                  <div style={{ fontWeight: 600, color: activo ? 'color-mix(in oklab, oklch(0.86 0.13 62) var(--acc-k), #000)' : 'var(--tx-2)' }}>{dur(inc.duracionMin)}</div>
                   <div><span style={{
                     padding: '3px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    color: real ? 'oklch(0.86 0.13 22)' : 'oklch(0.72 0.015 265)',
-                    background: real ? 'oklch(0.45 0.13 22 / 0.28)' : 'oklch(0.35 0.01 265 / 0.45)',
+                    color: real ? 'color-mix(in oklab, oklch(0.86 0.13 22) var(--acc-k), #000)' : 'var(--tx-muted)',
+                    background: real ? 'oklch(0.45 0.13 22 / 0.28)' : 'rgb(var(--s3) / 0.45)',
                   }}>{TIPO_LABELS[inc.tipo]}</span></div>
-                  <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, color: 'oklch(0.58 0.015 265)' }} title={inc.causa ?? ''}>{inc.causa ?? '—'}</div>
+                  <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, color: 'var(--tx-muted)' }} title={inc.causa ?? ''}>{inc.causa ?? '—'}</div>
                 </div>
               )
             })}

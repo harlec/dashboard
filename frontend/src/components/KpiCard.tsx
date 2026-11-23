@@ -4,7 +4,7 @@ interface Props {
   label: string
   value: ReactNode
   sub?: ReactNode
-  /** Color de arranque del degradado — ya con su alpha, ej. 'oklch(0.38 0.09 62 / .50)' */
+  /** Color de arranque del degradado — ya con su alpha, ej. 'color-mix(in oklab, oklch(0.38 0.09 62 / .50) var(--tint-k), #fff)' */
   tint: string
   /** Color sólido para la etiqueta y la cifra */
   accent: string
@@ -18,8 +18,8 @@ export function KpiCard({ label, value, sub, tint, accent, children, className }
   return (
     <div className={`rounded-[20px] p-4 flex flex-col justify-between gap-2 min-w-0 ${className ?? ''}`}
       style={{
-        background: `linear-gradient(160deg, ${tint} 0%, oklch(0.22 0.03 265 / .55) 100%)`,
-        boxShadow: 'inset 0 1px 0 oklch(1 0 0 / .09), 0 12px 34px oklch(0 0 0 / .30)',
+        background: `linear-gradient(160deg, ${tint} 0%, rgb(var(--s1) / .55) 100%)`,
+        boxShadow: 'inset 0 1px 0 rgb(var(--ov) / .09), 0 12px 34px rgb(var(--shadow) / .30)',
       }}>
       <div className="text-[0.78rem] font-semibold uppercase tracking-wide" style={{ color: accent }}>
         {label}
@@ -29,7 +29,7 @@ export function KpiCard({ label, value, sub, tint, accent, children, className }
           style={{ letterSpacing: '-0.035em', color: accent }}>
           {value}
         </div>
-        {sub && <div className="text-[0.8rem] text-white/50">{sub}</div>}
+        {sub && <div className="text-[0.8rem] text-ink/50">{sub}</div>}
       </div>
       {children}
     </div>

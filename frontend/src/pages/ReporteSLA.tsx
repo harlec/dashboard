@@ -9,7 +9,7 @@ import { Panel } from '../components/Panel'
 
 const COLORS = ESTACION_COLOR
 const META = 99.5
-const gris = 'oklch(0.62 0.015 265)'
+const gris = 'var(--tx-muted)'
 
 function barraPct(p: number) { return Math.max(0, Math.min(100, (p - 90) / 10 * 100)) }
 function fgPct(p: number) { return p >= META ? 'oklch(0.86 0.11 160)' : p >= 97 ? 'oklch(0.88 0.12 62)' : 'oklch(0.84 0.14 22)' }
@@ -102,10 +102,10 @@ export function ReporteSLA() {
     const max = motivos[0]?.minutos ?? 1
     return motivos.slice(0, 4).map(m => ({
       nombre: m.causa, horas: dur(m.minutos),
-      fg: m === motivos[0] ? 'oklch(0.86 0.13 22)' : 'oklch(0.70 0.015 265)',
+      fg: m === motivos[0] ? 'oklch(0.86 0.13 22)' : 'var(--tx-muted)',
       barra: m === motivos[0]
         ? 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))'
-        : 'linear-gradient(90deg, oklch(0.42 0.015 265), oklch(0.56 0.015 265))',
+        : 'linear-gradient(90deg, oklch(0.42 0.015 265), var(--tx-dim))',
       share: `${m.pct}%`, ancho: `${Math.round(m.minutos / max * 100)}%`,
     }))
   }, [motivos])
@@ -138,20 +138,20 @@ export function ReporteSLA() {
       <div style={{ height: 40, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.015em' }}>Reporte SLA</div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.56 0.015 265)' }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-dim)' }}>
             disponibilidad por equipo · {new Date(desde).toLocaleDateString('es-PE')} – {new Date(hasta).toLocaleDateString('es-PE')}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer', color: 'oklch(0.82 0.012 265)', background: 'oklch(0.28 0.02 262 / 0.80)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.07)' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'oklch(0.54 0.015 265)' }}>Desde</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer', color: 'var(--tx-2)', background: 'rgb(var(--s2) / 0.80)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--tx-dim)' }}>Desde</span>
             <input type="date" value={desde} onChange={e => setDesde(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'inherit', fontFamily: 'inherit', fontSize: 15 }} />
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer', color: 'oklch(0.82 0.012 265)', background: 'oklch(0.28 0.02 262 / 0.80)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.07)' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'oklch(0.54 0.015 265)' }}>Hasta</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer', color: 'var(--tx-2)', background: 'rgb(var(--s2) / 0.80)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--tx-dim)' }}>Hasta</span>
             <input type="date" value={hasta} onChange={e => setHasta(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'inherit', fontFamily: 'inherit', fontSize: 15 }} />
           </label>
-          <select value={estacionId} onChange={e => setEstacionId(e.target.value ? Number(e.target.value) : '')} style={{ padding: '9px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer', color: 'oklch(0.82 0.012 265)', background: 'oklch(0.28 0.02 262 / 0.80)', border: 'none', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.07)' }}>
+          <select value={estacionId} onChange={e => setEstacionId(e.target.value ? Number(e.target.value) : '')} style={{ padding: '9px 15px', borderRadius: 11, fontSize: 15, fontWeight: 500, cursor: 'pointer', color: 'var(--tx-2)', background: 'rgb(var(--s2) / 0.80)', border: 'none', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
             <option value="">Todos los peajes</option>
             {porEstacion.map(e => <option key={e.estacionId} value={e.estacionId}>{e.estacion}</option>)}
           </select>
@@ -161,25 +161,25 @@ export function ReporteSLA() {
 
       {/* ── KPI ────────────────────────────────────────────── */}
       <div style={{ height: 106, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '1.45fr repeat(5, 1fr)', gap: 13 }}>
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.84 0.09 62)' }}>Uptime global</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.84 0.09 62) var(--acc-k), #000)' }}>Uptime global</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.90 0.11 62)' }}>{global.pct}</div>
+            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.90 0.11 62) var(--acc-k), #000)' }}>{global.pct}</div>
             <div style={{ fontSize: 17, fontWeight: 400, color: 'oklch(0.68 0.05 62)' }}>{global.brecha}</div>
           </div>
-          <div style={{ height: 6, borderRadius: 999, background: 'oklch(1 0 0 / 0.08)', overflow: 'hidden' }}>
+          <div style={{ height: 6, borderRadius: 999, background: 'rgb(var(--ov) / 0.08)', overflow: 'hidden' }}>
             <div style={{ width: global.barra, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, oklch(0.74 0.13 85), oklch(0.84 0.13 62))' }} />
           </div>
         </div>
 
         {estaciones.map(e => (
-          <div key={e.nombre} style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.07), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
+          <div key={e.nombre} style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(180deg, rgb(var(--s1) / 0.92) 0%, rgb(var(--s0) / 0.92) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.07), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
             <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.02em', color: e.color }}>{e.nombre}</div>
             <div style={{ fontSize: 30, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: e.pctFg }}>{e.pct}</div>
-            <div style={{ height: 5, borderRadius: 999, background: 'oklch(1 0 0 / 0.07)', overflow: 'hidden' }}>
+            <div style={{ height: 5, borderRadius: 999, background: 'rgb(var(--ov) / 0.07)', overflow: 'hidden' }}>
               <div style={{ width: e.barra, height: '100%', borderRadius: 999, background: e.barraColor }} />
             </div>
-            <div style={{ fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.54 0.015 265)' }}>{e.nota}</div>
+            <div style={{ fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{e.nota}</div>
           </div>
         ))}
       </div>
@@ -190,7 +190,7 @@ export function ReporteSLA() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Equipos fuera de SLA</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>{incumpleNota}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>{incumpleNota}</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 6 }}>
             {incumplen.length === 0
@@ -199,11 +199,11 @@ export function ReporteSLA() {
                 <div key={i.equipo} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 132, flex: '0 0 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 15, fontWeight: 600 }}>{i.equipo}</div>
                   <div style={{ width: 78, flex: '0 0 auto', fontSize: 13, fontWeight: 600, color: i.color }}>{i.est}</div>
-                  <div style={{ flex: '1 1 auto', minWidth: 0, height: 9, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                  <div style={{ flex: '1 1 auto', minWidth: 0, height: 9, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                     <div style={{ width: i.ancho, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))' }} />
                   </div>
-                  <div style={{ width: 66, flex: '0 0 auto', textAlign: 'right', fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.58 0.015 265)' }}>{i.caido}</div>
-                  <div style={{ width: 62, flex: '0 0 auto', textAlign: 'right', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.84 0.13 22)' }}>{i.pct}</div>
+                  <div style={{ width: 66, flex: '0 0 auto', textAlign: 'right', fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-muted)' }}>{i.caido}</div>
+                  <div style={{ width: 62, flex: '0 0 auto', textAlign: 'right', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.84 0.13 22) var(--acc-k), #000)' }}>{i.pct}</div>
                 </div>
               ))}
           </div>
@@ -212,19 +212,19 @@ export function ReporteSLA() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Por tipo de equipo</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>uptime medio</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>uptime medio</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 6 }}>
             {tipos.map(t => (
               <div key={t.nombre} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.84 0.01 265)' }}>{t.nombre}</span>
+                  <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-2)' }}>{t.nombre}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'oklch(0.50 0.015 265)' }}>{t.n}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx-dim)' }}>{t.n}</span>
                     <span style={{ fontSize: 16, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: t.fg }}>{t.pct}</span>
                   </div>
                 </div>
-                <div style={{ height: 7, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                <div style={{ height: 7, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                   <div style={{ width: t.ancho, height: '100%', borderRadius: 999, background: t.barra }} />
                 </div>
               </div>
@@ -235,7 +235,7 @@ export function ReporteSLA() {
         <Panel style={{ padding: '15px 22px' }}>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>A qué se fue el tiempo caído</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>{motivoNota}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>{motivoNota}</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 6 }}>
             {motivosVista.map(m => (
@@ -243,16 +243,16 @@ export function ReporteSLA() {
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 15, fontWeight: 500, color: m.fg }} title={m.nombre}>{m.nombre}</span>
                   <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'oklch(0.50 0.015 265)' }}>{m.share}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx-dim)' }}>{m.share}</span>
                     <span style={{ fontSize: 16, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: m.fg }}>{m.horas}</span>
                   </div>
                 </div>
-                <div style={{ height: 7, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                <div style={{ height: 7, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                   <div style={{ width: m.ancho, height: '100%', borderRadius: 999, background: m.barra }} />
                 </div>
               </div>
             ))}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'oklch(0.80 0.06 200)', background: 'oklch(0.32 0.04 210 / 0.45)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.06)' }}>{motivoInsight}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'color-mix(in oklab, oklch(0.80 0.06 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.32 0.04 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>{motivoInsight}</div>
           </div>
         </Panel>
       </div>
@@ -262,22 +262,22 @@ export function ReporteSLA() {
         <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 13 }}>
             <div style={{ fontSize: 19, fontWeight: 600 }}>Detalle por equipo</div>
-            <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.52 0.015 265)' }}>{rows.length} equipos · {orden.toLowerCase()}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{rows.length} equipos · {orden.toLowerCase()}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {ORDENES.map(o => (
               <div key={o} onClick={() => setOrden(o)} style={{
                 padding: '7px 15px', borderRadius: 11, fontSize: 15, fontWeight: orden === o ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                color: orden === o ? 'oklch(0.95 0.01 265)' : 'oklch(0.62 0.015 265)',
-                background: orden === o ? 'oklch(0.32 0.04 210 / 0.70)' : 'transparent',
+                color: orden === o ? 'var(--tx)' : 'var(--tx-muted)',
+                background: orden === o ? 'color-mix(in oklab, oklch(0.32 0.04 210 / 0.70) var(--tint-k), #fff)' : 'transparent',
                 boxShadow: orden === o ? 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.32)' : 'none',
               }}>{o}</div>
             ))}
-            <a href={csvUrl} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', color: 'oklch(0.90 0.10 160)', background: 'oklch(0.38 0.08 165 / 0.40)', boxShadow: 'inset 0 0 0 1px oklch(0.65 0.10 165 / 0.30)' }}>Descargar CSV</a>
+            <a href={csvUrl} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', color: 'color-mix(in oklab, oklch(0.90 0.10 160) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.38 0.08 165 / 0.40) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px oklch(0.65 0.10 165 / 0.30)' }}>Descargar CSV</a>
           </div>
         </div>
 
-        <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr 1fr 60px 1.35fr 80px 88px 1.6fr', gap: 12, padding: '11px 0 8px', fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'oklch(0.50 0.015 265)', borderBottom: '1px solid oklch(1 0 0 / 0.07)' }}>
+        <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr 1fr 60px 1.35fr 80px 88px 1.6fr', gap: 12, padding: '11px 0 8px', fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--tx-dim)', borderBottom: '1px solid rgb(var(--ov) / 0.07)' }}>
           <div>Peaje</div><div>Equipo</div><div>Tipo</div><div>Vía</div><div>Uptime</div><div>Caído</div><div>Eventos</div><div>Motivo principal</div>
         </div>
 
@@ -288,17 +288,17 @@ export function ReporteSLA() {
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '0.85fr 1.15fr 1fr 60px 1.35fr 80px 88px 1.6fr', gap: 12, alignItems: 'center', fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>
                 <div style={{ fontWeight: 600, color: f.estFg }}>{f.est}</div>
                 <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{f.equipo}</div>
-                <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'oklch(0.64 0.015 265)' }}>{f.tipo}</div>
-                <div style={{ color: 'oklch(0.70 0.015 265)' }}>{f.via}</div>
+                <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--tx-muted)' }}>{f.tipo}</div>
+                <div style={{ color: 'var(--tx-muted)' }}>{f.via}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ flex: '1 1 auto', minWidth: 0, height: 7, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                  <div style={{ flex: '1 1 auto', minWidth: 0, height: 7, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                     <div style={{ width: f.ancho, height: '100%', borderRadius: 999, background: f.barra }} />
                   </div>
                   <span style={{ flex: '0 0 auto', width: 62, textAlign: 'right', fontWeight: 600, color: f.pctFg }}>{f.pct}</span>
                 </div>
                 <div style={{ textAlign: 'right', fontWeight: 500, color: f.caidoFg }}>{f.caido}</div>
-                <div style={{ textAlign: 'right', color: 'oklch(0.60 0.015 265)' }}>{f.eventos}</div>
-                <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, color: 'oklch(0.58 0.015 265)' }} title={f.motivo}>{f.motivo}</div>
+                <div style={{ textAlign: 'right', color: 'var(--tx-muted)' }}>{f.eventos}</div>
+                <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, color: 'var(--tx-muted)' }} title={f.motivo}>{f.motivo}</div>
               </div>
             ))}
         </div>

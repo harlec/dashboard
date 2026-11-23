@@ -11,7 +11,7 @@ interface Props {
 export function ProgressBar({ pct, color, height = 6, glow = true }: Props) {
   const clamped = Math.max(0, Math.min(100, pct))
   return (
-    <div className="rounded-full overflow-hidden" style={{ height, background: 'oklch(1 0 0 / .08)' }}>
+    <div className="rounded-full overflow-hidden" style={{ height, background: 'rgb(var(--ov) / .08)' }}>
       <div className="h-full rounded-full transition-[width]" style={{
         width: `${clamped}%`,
         background: color,

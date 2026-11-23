@@ -119,7 +119,7 @@ export function AdminEquipos() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-extrabold text-[#eae7e4]">Equipos</h1>
+        <h1 className="text-xl font-extrabold text-[color:var(--tx)]">Equipos</h1>
         <div className="flex gap-2">
           <Input placeholder="Buscar por nombre o IP..." value={search}
             onChange={e => setSearch(e.target.value)} className="w-52" />

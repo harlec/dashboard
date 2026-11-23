@@ -18,7 +18,7 @@ type Periodo = typeof PERIODOS[number]['key']
 const ESTACIONES = ['FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA'] as const
 const COLORS = ESTACION_COLOR
 
-const gris = 'oklch(0.62 0.015 265)'
+const gris = 'var(--tx-muted)'
 
 function abbrev(cat: string): string {
   if (!cat) return '?'
@@ -34,8 +34,8 @@ function Panel({ children, style }: { children: ReactNode; style?: CSSProperties
     <div style={{
       boxSizing: 'border-box', borderRadius: 22, padding: '16px 22px', display: 'flex',
       flexDirection: 'column', minWidth: 0,
-      background: 'linear-gradient(180deg, oklch(0.225 0.018 262 / 0.92) 0%, oklch(0.185 0.016 262 / 0.92) 100%)',
-      boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.07), 0 14px 40px oklch(0 0 0 / 0.32)',
+      background: 'linear-gradient(180deg, rgb(var(--s1) / 0.92) 0%, rgb(var(--s0) / 0.92) 100%)',
+      boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.07), 0 14px 40px rgb(var(--shadow) / 0.32)',
       ...style,
     }}>
       {children}
@@ -189,7 +189,7 @@ export function Discrepancias() {
     const peak = datos.reduce((a, b) => a.tasaError > b.tasaError ? a : b)
     const valle = datos.reduce((a, b) => a.tasaError < b.tasaError ? a : b)
     const barras = datos.map((h, i) => ({
-      txt: String(h.hora).padStart(2, '0'), fg: i % 2 ? 'transparent' : 'oklch(0.48 0.015 265)',
+      txt: String(h.hora).padStart(2, '0'), fg: i % 2 ? 'transparent' : 'var(--tx-dim)',
       alto: `${Math.round(Number(h.tasaError) / max * 100)}%`,
       color: h.tasaError === max
         ? 'linear-gradient(180deg, oklch(0.70 0.17 22), oklch(0.58 0.16 20))'
@@ -209,15 +209,15 @@ export function Discrepancias() {
       <div style={{ height: 40, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.015em' }}>Discrepancias DAC</div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.56 0.015 265)' }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-dim)' }}>
             tabulado del cobrador vs. clasificación automática · {cargando ? 'cargando…' : `actualizado ${lastUpdate.toLocaleTimeString('es-PE', { hour12: false })}`} · refresco 60 s
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'oklch(0.24 0.018 262 / 0.80)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'rgb(var(--s1) / 0.80)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.05)' }}>
           {PERIODOS.map(({ key, label }) => (
             <div key={key} onClick={() => setPeriodo(key)} style={{
               padding: '7px 15px', borderRadius: 10, fontSize: 15, fontWeight: periodo === key ? 600 : 500, cursor: 'pointer',
-              color: periodo === key ? 'oklch(0.22 0.04 62)' : 'oklch(0.64 0.015 265)',
+              color: periodo === key ? 'oklch(0.22 0.04 62)' : 'var(--tx-muted)',
               background: periodo === key ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
             }}>{label}</div>
           ))}
@@ -225,7 +225,7 @@ export function Discrepancias() {
             <input key={k} type="date" title={k === 'desde' ? 'Fecha de inicio' : 'Fecha de fin'}
               value={k === 'desde' ? desde : hasta} max={hoy}
               onChange={e => (k === 'desde' ? setDesde : setHasta)(e.target.value)}
-              style={{ colorScheme: 'dark', padding: '5px 8px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 500, color: 'oklch(0.90 0.01 265)', background: 'oklch(0.30 0.02 262)' }} />
+              style={{ colorScheme: 'var(--color-scheme)', padding: '5px 8px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 500, color: 'var(--tx)', background: 'rgb(var(--s2))' }} />
           ))}
         </div>
       </div>
@@ -233,30 +233,30 @@ export function Discrepancias() {
       {/* ── KPI ────────────────────────────────────────────── */}
       <div style={{ height: 112, flex: '0 0 auto', display: 'grid', opacity: cargando ? 0.35 : 1, transition: 'opacity .2s', pointerEvents: cargando ? 'none' : undefined, gridTemplateColumns: '1.05fr 0.78fr 0.78fr 2.1fr', gap: 14 }}>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.38 0.09 62 / 0.50) 0%, oklch(0.22 0.03 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.84 0.09 62)' }}>Efectividad</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.84 0.09 62) var(--acc-k), #000)' }}>Efectividad</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.90 0.11 62)' }}>
+            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.90 0.11 62) var(--acc-k), #000)' }}>
               {cargando ? '···' : ef.toFixed(1)}<span style={{ fontSize: 24 }}>%</span>
             </div>
             <div style={{ fontSize: 17, fontWeight: 400, color: 'oklch(0.68 0.05 62)' }}>meta 99.5% · faltan {brecha} pp</div>
           </div>
-          <div style={{ height: 6, borderRadius: 999, background: 'oklch(1 0 0 / 0.08)', overflow: 'hidden' }}>
+          <div style={{ height: 6, borderRadius: 999, background: 'rgb(var(--ov) / 0.08)', overflow: 'hidden' }}>
             <div style={{ width: `${barraEf}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, oklch(0.74 0.13 85), oklch(0.84 0.13 62))', boxShadow: '0 0 12px oklch(0.82 0.13 62 / 0.50)' }} />
           </div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.30 0.04 265 / 0.60) 0%, oklch(0.21 0.022 265 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, rgb(var(--s2) / 0.60) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.72 0.03 265)' }}>Discrepancias</div>
-          <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.95 0.01 265)' }}>
+          <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>
             {cargando ? '···' : (resumen?.total ?? 0).toLocaleString('en-US')}
           </div>
           <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.58 0.02 265)' }}>{periodo === 'rango' ? `${desde} → ${hasta}` : PERIODOS.find(p => p.key === periodo)?.label}</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, oklch(0.30 0.045 200 / 0.55) 0%, oklch(0.22 0.025 250 / 0.55) 100%)', boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 0.09), 0 12px 34px oklch(0 0 0 / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.76 0.06 200)' }}>Tránsitos</div>
-          <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.92 0.06 200)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.30 0.045 200 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.76 0.06 200) var(--acc-k), #000)' }}>Tránsitos</div>
+          <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.92 0.06 200) var(--acc-k), #000)' }}>
             {cargando ? '···' : (resumen?.totalTransacciones ?? 0).toLocaleString('en-US')}
           </div>
           <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.60 0.03 200)' }}>base del cálculo</div>
@@ -265,19 +265,19 @@ export function Discrepancias() {
         <Panel style={{ padding: '12px 20px', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.62 0.02 265)' }}>Por estación</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>% efectividad · discrepancias del período</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>% efectividad · discrepancias del período</div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
             {(resumen?.porEstacion ?? []).map(e => (
               <div key={e.estacion} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.01em', color: COLORS[e.estacion] ?? gris }}>{e.estacion}</span>
-                  <span style={{ fontSize: 19, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.92 0.01 265)' }}>{e.efectividad.toFixed(0)}%</span>
+                  <span style={{ fontSize: 19, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>{e.efectividad.toFixed(0)}%</span>
                 </div>
-                <div style={{ height: 5, borderRadius: 999, background: 'oklch(1 0 0 / 0.07)', overflow: 'hidden' }}>
+                <div style={{ height: 5, borderRadius: 999, background: 'rgb(var(--ov) / 0.07)', overflow: 'hidden' }}>
                   <div style={{ width: `${Math.max(0, Math.min(100, (e.efectividad - 85) / 15 * 100))}%`, height: '100%', borderRadius: 999, background: COLORS[e.estacion] ?? gris }} />
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.54 0.015 265)' }}>{e.total} disc.</div>
+                <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{e.total} disc.</div>
               </div>
             ))}
           </div>
@@ -290,18 +290,18 @@ export function Discrepancias() {
         <Panel>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: '0 0 auto' }}>
             <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em' }}>Top confusiones</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>tabulada → detectada</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>tabulada → detectada</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 12 }}>
             {confusiones.length === 0
               ? <div style={{ color: gris, fontSize: 13, textAlign: 'center' }}>Sin datos</div>
               : confusiones.map((c, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 104, flex: '0 0 auto', textAlign: 'right', fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.70 0.015 265)' }}>{c.par}</div>
-                  <div style={{ flex: '1 1 auto', minWidth: 0, height: 13, borderRadius: 5, background: 'oklch(1 0 0 / 0.05)' }}>
+                  <div style={{ width: 104, flex: '0 0 auto', textAlign: 'right', fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-muted)' }}>{c.par}</div>
+                  <div style={{ flex: '1 1 auto', minWidth: 0, height: 13, borderRadius: 5, background: 'rgb(var(--ov) / 0.05)' }}>
                     <div style={{ width: c.ancho, height: '100%', borderRadius: 5, background: c.color }} />
                   </div>
-                  <div style={{ width: 34, flex: '0 0 auto', fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.62 0.015 265)' }}>{c.n}</div>
+                  <div style={{ width: 34, flex: '0 0 auto', fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-muted)' }}>{c.n}</div>
                 </div>
               ))}
           </div>
@@ -312,18 +312,18 @@ export function Discrepancias() {
             <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em' }}>Tendencia por estación</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {ESTACIONES.map(e => (
-                <div key={e} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, color: 'oklch(0.64 0.015 265)' }}>
+                <div key={e} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, color: 'var(--tx-muted)' }}>
                   <div style={{ width: 11, height: 11, borderRadius: 4, background: COLORS[e] }} />{e}
                 </div>
               ))}
-              <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.48 0.015 265)' }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>
                 {periodo === 'mes' || periodo === 'mesant' || (periodo === 'rango' && desde !== hasta) ? 'por día' : periodo === 'rango' ? 'por hora' : 'cada 30 min'}
               </div>
             </div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', gap: 10, paddingTop: 14 }}>
             <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', alignItems: 'flex-end', gap: 3, borderBottom: '1px solid oklch(1 0 0 / 0.10)' }}>
+              <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', alignItems: 'flex-end', gap: 3, borderBottom: '1px solid rgb(var(--ov) / 0.10)' }}>
                 {tendencia.length === 0
                   ? <div style={{ color: gris, fontSize: 13, margin: 'auto' }}>Sin datos</div>
                   : tendencia.map((col, i) => (
@@ -346,14 +346,14 @@ export function Discrepancias() {
         <Panel>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: '0 0 auto' }}>
             <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em' }}>Vías críticas</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>% sobre tránsitos propios</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>% sobre tránsitos propios</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: 10 }}>
             {vias.length === 0
               ? <div style={{ color: gris, fontSize: 13, textAlign: 'center' }}>Sin datos</div>
               : vias.map(v => (
                 <div key={v.rank} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 18, flex: '0 0 auto', fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.44 0.015 265)' }}>{v.rank}</div>
+                  <div style={{ width: 18, flex: '0 0 auto', fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{v.rank}</div>
                   <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
@@ -361,11 +361,11 @@ export function Discrepancias() {
                         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.01em', color: v.color }}>{v.est}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
-                        <span style={{ fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'oklch(0.50 0.015 265)' }}>{v.ratio}</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>{v.ratio}</span>
                         <span style={{ fontSize: 17, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: v.pctFg }}>{v.pct}</span>
                       </div>
                     </div>
-                    <div style={{ height: 7, borderRadius: 999, background: 'oklch(1 0 0 / 0.06)', overflow: 'hidden' }}>
+                    <div style={{ height: 7, borderRadius: 999, background: 'rgb(var(--ov) / 0.06)', overflow: 'hidden' }}>
                       <div style={{ width: v.ancho, height: '100%', borderRadius: 999, background: v.color }} />
                     </div>
                   </div>
@@ -382,26 +382,26 @@ export function Discrepancias() {
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: '0 0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 13 }}>
               <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em' }}>{panel.titulo}</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>{panel.sub}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>{panel.sub}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ display: 'flex', gap: 4, padding: 3, borderRadius: 10, background: 'oklch(0.24 0.018 262 / 0.70)' }}>
+              <div style={{ display: 'flex', gap: 4, padding: 3, borderRadius: 10, background: 'rgb(var(--s1) / 0.70)' }}>
                 {(['mantenimiento', 'detalle'] as const).map(p => (
                   <div key={p} onClick={() => setPanelInferior(p)} style={{
                     padding: '5px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    color: panelInferior === p ? 'oklch(0.95 0.01 265)' : 'oklch(0.60 0.015 265)',
-                    background: panelInferior === p ? 'oklch(0.34 0.045 210 / 0.75)' : 'transparent',
+                    color: panelInferior === p ? 'var(--tx)' : 'var(--tx-muted)',
+                    background: panelInferior === p ? 'color-mix(in oklab, oklch(0.34 0.045 210 / 0.75) var(--tint-k), #fff)' : 'transparent',
                     boxShadow: panelInferior === p ? 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' : 'none',
                   }}>{p === 'mantenimiento' ? 'Prioridad' : 'Detalle'}</div>
                 ))}
               </div>
-              <div style={{ padding: '6px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'oklch(0.80 0.08 200)', background: 'oklch(0.35 0.05 210 / 0.45)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.07)' }}>
+              <div style={{ padding: '6px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'color-mix(in oklab, oklch(0.80 0.08 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.35 0.05 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
                 Exportar PDF
               </div>
             </div>
           </div>
 
-          <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: panel.cols, gap: 12, padding: '12px 0 8px', fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'oklch(0.50 0.015 265)', borderBottom: '1px solid oklch(1 0 0 / 0.07)' }}>
+          <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: panel.cols, gap: 12, padding: '12px 0 8px', fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--tx-dim)', borderBottom: '1px solid rgb(var(--ov) / 0.07)' }}>
             {panel.encabezados.map(h => (
               <div key={h} style={{ minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden' }}>{h}</div>
             ))}
@@ -423,16 +423,16 @@ export function Discrepancias() {
         <Panel>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flex: '0 0 auto' }}>
             <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em' }}>Tasa de error por hora</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.52 0.015 265)' }}>últimos 7 días</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>últimos 7 días</div>
           </div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', gap: 10, paddingTop: 12 }}>
-            <div style={{ width: 26, flex: '0 0 auto', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 60, margin: '-8px 0', fontSize: 13, fontWeight: 500, lineHeight: '16px', fontVariantNumeric: 'tabular-nums', color: 'oklch(0.48 0.015 265)' }}>
+            <div style={{ width: 26, flex: '0 0 auto', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 60, margin: '-8px 0', fontSize: 13, fontWeight: 500, lineHeight: '16px', fontVariantNumeric: 'tabular-nums', color: 'var(--tx-dim)' }}>
               {[1, 0.75, 0.5, 0.25, 0].map(f => (
                 <span key={f}>{((horas.maxLabel ?? 0) * f).toFixed(1)}%</span>
               ))}
             </div>
             <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', alignItems: 'flex-end', gap: 3, borderBottom: '1px solid oklch(1 0 0 / 0.10)' }}>
+              <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', alignItems: 'flex-end', gap: 3, borderBottom: '1px solid rgb(var(--ov) / 0.10)' }}>
                 {horas.barras.length === 0
                   ? <div style={{ color: gris, fontSize: 13, margin: 'auto' }}>Sin datos</div>
                   : horas.barras.map((h, i) => (
@@ -445,7 +445,7 @@ export function Discrepancias() {
                 ))}
               </div>
               {horas.nota && (
-                <div style={{ height: 34, flex: '0 0 auto', marginTop: 8, display: 'flex', alignItems: 'center', gap: 9, padding: '0 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, color: 'oklch(0.80 0.06 200)', background: 'oklch(0.32 0.04 210 / 0.45)', boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.06)' }}>
+                <div style={{ height: 34, flex: '0 0 auto', marginTop: 8, display: 'flex', alignItems: 'center', gap: 9, padding: '0 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, color: 'color-mix(in oklab, oklch(0.80 0.06 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.32 0.04 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.72 0.17 25)' }} />{horas.nota}
                 </div>
               )}

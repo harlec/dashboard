@@ -262,7 +262,7 @@ export function AdminConfiguracion() {
   if (loading) return <div className="text-center py-12 text-muted">Cargando…</div>
 
   const card = 'bg-surface rounded-xl p-4 border border-border'
-  const titulo = 'font-bold text-sm text-[#eae7e4] mb-0.5'
+  const titulo = 'font-bold text-sm text-[color:var(--tx)] mb-0.5'
 
   const fila = (clave: string) => {
     if (!rows.some(r => r.clave === clave)) return null
@@ -330,7 +330,7 @@ export function AdminConfiguracion() {
         <div className="flex gap-2">
           {ESCALAS.map(pct => (
             <button key={pct} onClick={() => setEscala(pct)}
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${escalaActual === pct ? 'bg-brand text-white' : 'bg-surface-3 text-[#eae7e4] hover:brightness-110'}`}>
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${escalaActual === pct ? 'bg-brand text-white' : 'bg-surface-3 text-[color:var(--tx)] hover:brightness-110'}`}>
               {pct}%
             </button>
           ))}
@@ -344,7 +344,7 @@ export function AdminConfiguracion() {
         <div className="flex gap-2 flex-wrap">
           {FUENTES_OPS.map(f => (
             <button key={f.value} onClick={() => setFuente(f.value)} style={{ fontFamily: f.family }}
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${fuenteActual === f.value ? 'bg-brand text-white' : 'bg-surface-3 text-[#eae7e4] hover:brightness-110'}`}>
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${fuenteActual === f.value ? 'bg-brand text-white' : 'bg-surface-3 text-[color:var(--tx)] hover:brightness-110'}`}>
               {f.label}
             </button>
           ))}
@@ -366,7 +366,7 @@ export function AdminConfiguracion() {
           <div className="mb-3">
             <div className="flex items-center justify-between text-xs text-muted mb-1">
               <span>Oscuridad del fondo (velo sobre la imagen)</span>
-              <span className="font-bold text-[#eae7e4]">{oscuridad}%</span>
+              <span className="font-bold text-[color:var(--tx)]">{oscuridad}%</span>
             </div>
             <input type="range" min={0} max={90} step={2} value={oscuridad}
               onChange={e => setValues(p => ({ ...p, fondo_oscuridad: e.target.value }))}
@@ -378,14 +378,14 @@ export function AdminConfiguracion() {
         <div className="flex flex-wrap items-center gap-2">
           <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
             onChange={e => setFondoFile(e.target.files?.[0] ?? null)}
-            className="text-xs text-muted file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-surface-3 file:text-[#eae7e4] file:font-bold" />
+            className="text-xs text-muted file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-surface-3 file:text-[color:var(--tx)] file:font-bold" />
           <button onClick={subirFondo} disabled={!fondoFile || fondoBusy}
             className="px-3 py-2 rounded-lg text-sm font-bold bg-brand text-white disabled:opacity-40">
             {fondoBusy ? 'Subiendo…' : 'Subir imagen'}
           </button>
           {fondoActual && (
             <button onClick={quitarFondo} disabled={fondoBusy}
-              className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 text-[#eae7e4] disabled:opacity-40">
+              className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 text-[color:var(--tx)] disabled:opacity-40">
               Quitar imagen
             </button>
           )}
@@ -423,7 +423,7 @@ export function AdminConfiguracion() {
             <div className="text-xs text-muted mb-2">{desc}</div>
             <div className="text-xs mb-2">
               {archivo
-                ? <span className="text-[#eae7e4]">Personalizado: <span className="text-muted">{archivo}</span></span>
+                ? <span className="text-[color:var(--tx)]">Personalizado: <span className="text-muted">{archivo}</span></span>
                 : <span className="text-muted">Usando tono por defecto</span>}
             </div>
             <div className="flex gap-2 items-center flex-wrap">
@@ -435,12 +435,12 @@ export function AdminConfiguracion() {
                 {busy ? '…' : 'Subir'}
               </button>
               <button onClick={() => probarTono(tipo)}
-                className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-[#eae7e4] hover:brightness-110 whitespace-nowrap">
+                className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-[color:var(--tx)] hover:brightness-110 whitespace-nowrap">
                 ▶ Probar
               </button>
               {archivo && (
                 <button onClick={() => restaurarTono(tipo)} disabled={busy}
-                  className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-muted hover:text-[#eae7e4] disabled:opacity-50 whitespace-nowrap">
+                  className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-muted hover:text-[color:var(--tx)] disabled:opacity-50 whitespace-nowrap">
                   Restaurar por defecto
                 </button>
               )}
@@ -463,7 +463,7 @@ export function AdminConfiguracion() {
 
   return (
     <div>
-      <h1 className="text-xl font-extrabold text-[#eae7e4] mb-2">Configuración</h1>
+      <h1 className="text-xl font-extrabold text-[color:var(--tx)] mb-2">Configuración</h1>
       <p className="text-sm text-muted mb-4">
         Los cambios de intervalo/pings se aplican en el próximo ciclo del worker.
         Los cambios de SMTP y Telegram se aplican inmediatamente a la siguiente alerta.
@@ -475,7 +475,7 @@ export function AdminConfiguracion() {
             className={`px-4 py-2.5 text-sm font-bold -mb-px border-b-2 transition-colors ${
               actual.id === t.id
                 ? 'border-brand text-brand'
-                : 'border-transparent text-muted hover:text-[#eae7e4]'
+                : 'border-transparent text-muted hover:text-[color:var(--tx)]'
             }`}>
             <span className="mr-1.5">{t.icon}</span>{t.label}
           </button>
