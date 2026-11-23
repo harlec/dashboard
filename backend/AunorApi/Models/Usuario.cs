@@ -6,7 +6,7 @@ public class Usuario
     public string Username { get; set; } = "";
     public string Password { get; set; } = "";  // bcrypt hash
     public string? Nombre { get; set; }
-    public string Rol { get; set; } = "viewer";  // "admin" | "viewer"
+    public string Rol { get; set; } = "viewer";  // "admin" | "ti" (registra en la Bitácora) | "viewer"
     public bool Activo { get; set; } = true;
     public DateTime CreadoEn { get; set; }
     public int       IntentosFallidos { get; set; }

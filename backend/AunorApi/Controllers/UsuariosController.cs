@@ -24,7 +24,7 @@ public class UsuariosController(AppDbContext db, AuditService audit, SesionValid
     {
         if (string.IsNullOrWhiteSpace(req.Username))
             return BadRequest(new { error = "El usuario es obligatorio" });
-        if (req.Rol is not ("admin" or "viewer"))
+        if (req.Rol is not ("admin" or "ti" or "viewer"))
             return BadRequest(new { error = "Rol inválido" });
         if (PasswordPolicy.Validar(req.Password, req.Username) is { } motivo)
             return BadRequest(new { error = motivo });
@@ -49,7 +49,7 @@ public class UsuariosController(AppDbContext db, AuditService audit, SesionValid
     {
         var u = await db.Usuarios.FindAsync(id);
         if (u is null) return NotFound();
-        if (req.Rol is not ("admin" or "viewer"))
+        if (req.Rol is not ("admin" or "ti" or "viewer"))
             return BadRequest(new { error = "Rol inválido" });
         var cambio = $"rol {u.Rol}->{req.Rol}, activo {u.Activo}->{req.Activo}";
         u.Nombre = req.Nombre; u.Rol = req.Rol; u.Activo = req.Activo;

@@ -9,6 +9,7 @@ const LINKS = [
   { to: '/',              label: 'Panel de control' },
   { to: '/vias',          label: 'Vías' },
   { to: '/incidentes',    label: 'Incidentes' },
+  { to: '/bitacora',      label: 'Bitácora', soloTi: true },
   { to: '/reporte',       label: 'Reporte SLA' },
   { to: '/reportes',      label: 'Reportes' },
   { to: '/discrepancias', label: 'Discrepancias' },
@@ -31,6 +32,7 @@ function useClock() {
 // usuario + reloj. Reemplaza al NavBar anterior en App.tsx.
 export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
   const { user, logout } = useAuth()
+  const linksVisibles = LINKS.filter(l => !('soloTi' in l) || user?.rol === 'admin' || user?.rol === 'ti')
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -72,7 +74,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
           {open && (
             <div className="absolute left-0 top-[calc(100%+8px)] w-56 bg-surface-2 border border-border
               rounded-xl p-1.5 shadow-2xl z-50">
-              {LINKS.map(({ to, label }) => (
+              {linksVisibles.map(({ to, label }) => (
                 <Link key={to} to={to} onClick={() => setOpen(false)}
                   className={`block px-3 py-2 rounded-lg text-[0.85rem] transition-colors ${
                     pathname === to
@@ -94,7 +96,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
         <div className="flex-shrink-0 text-[1.4rem] font-bold tracking-[0.2em]" style={{ color: 'light-dark(oklch(0.488 0.121 195), oklch(0.84 0.11 195))' }}>SIGMA</div>
 
         <div className="hidden md:flex gap-1 min-w-0 overflow-x-auto [scrollbar-width:none]">
-          {LINKS.map(({ to, label }) => (
+          {linksVisibles.map(({ to, label }) => (
             <Link key={to} to={to}
               className={`px-3 xl:px-3.5 py-1.5 rounded-[11px] text-[0.84rem] xl:text-[0.95rem] font-medium transition-all whitespace-nowrap ${
                 pathname === to ? 'text-ink' : 'text-ink/60 hover:bg-ink/10 hover:text-ink'}`}

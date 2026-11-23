@@ -73,7 +73,7 @@ CREATE TABLE usuarios (
     bloqueado_hasta DATETIME2 NULL,
     CONSTRAINT PK_usuarios PRIMARY KEY (id),
     CONSTRAINT UQ_usuarios_username UNIQUE (username),
-    CONSTRAINT CK_usuarios_rol CHECK (rol IN ('admin','viewer'))
+    CONSTRAINT CK_usuarios_rol CHECK (rol IN ('admin','ti','viewer'))
 );
 GO
 

@@ -77,7 +77,7 @@ export function AdminUsuarios() {
             { key: 'nombre',   label: 'Nombre' },
             { key: 'rol',      label: 'Rol', render: r =>
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${r.rol === 'admin' ? 'bg-brand/20 text-brand' : 'bg-surface-3 text-muted'}`}>
-                {r.rol}
+                {r.rol === 'ti' ? 'TI' : r.rol}
               </span>
             },
             { key: 'activo', label: 'Activo', render: r => r.activo ? '✅' : '❌' },
@@ -112,6 +112,7 @@ export function AdminUsuarios() {
           <Field label="Rol">
             <Select value={editing.rol ?? 'viewer'} onChange={e => setEditing(p => ({ ...p, rol: e.target.value }))}>
               <option value="viewer">Viewer</option>
+              <option value="ti">Equipo de TI</option>
               <option value="admin">Admin</option>
             </Select>
           </Field>
@@ -127,6 +128,7 @@ export function AdminUsuarios() {
         <Field label="Rol">
           <Select value={editing.rol ?? 'viewer'} onChange={e => setEditing(p => ({ ...p, rol: e.target.value }))}>
             <option value="viewer">Viewer</option>
+              <option value="ti">Equipo de TI</option>
             <option value="admin">Admin</option>
           </Select>
         </Field>

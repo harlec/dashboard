@@ -1,0 +1,68 @@
+/* Bitácora — componentes de la pantalla. Colores 100% de tokens (theme.css) o light-dark(claro, oscuro). */
+.bit-card {
+  background: linear-gradient(170deg, var(--panel-a), var(--panel-b));
+  box-shadow: inset 0 0 0 1px var(--line), 0 14px 34px rgb(var(--shadow) / 0.16);
+  border-radius: 20px; padding: 18px 20px;
+}
+.bit-eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--tx-muted); }
+.bit-title   { font-size: 1.15rem; font-weight: 500; color: var(--tx); }
+.bit-big     { font-size: 2.6rem; line-height: 1; font-weight: 300; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.bit-note    { font-size: .85rem; color: var(--tx-muted); }
+.bit-error   { font-size: .82rem; font-weight: 500; margin-top: 6px; color: light-dark(oklch(0.52 0.17 22), oklch(0.78 0.15 22)); }
+.bit-detect  { font-size: .85rem; margin-top: 8px; font-weight: 500; color: light-dark(oklch(0.45 0.11 195), oklch(0.84 0.10 195)); }
+
+.bit-field {
+  width: 100%; border-radius: 12px; padding: 12px 14px; font-size: 1.05rem; color: var(--tx); outline: none; font-family: inherit;
+}
+.bit-select, .bit-input {
+  border-radius: 10px; padding: 8px 10px; font-size: .9rem; color: var(--tx); outline: none; font-family: inherit; min-width: 0;
+  background: rgb(var(--ov) / 0.05); border: 1px solid var(--line);
+}
+.bit-select:focus, .bit-input:focus { border-color: light-dark(oklch(0.55 0.12 195), oklch(0.80 0.11 195)); }
+.bit-label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx-muted); margin-bottom: 6px; }
+
+/* Píldoras (categoría, duración, fecha) */
+.bit-chip {
+  padding: 6px 13px; border-radius: 999px; font-size: .88rem; font-weight: 500; cursor: pointer; font-family: inherit;
+  background: rgb(var(--ov) / 0.06); color: var(--tx-2); border: 0;
+  box-shadow: inset 0 0 0 1px rgb(var(--ov) / 0.10); transition: background .12s, box-shadow .12s;
+}
+.bit-chip:hover { background: rgb(var(--ov) / 0.11); }
+.bit-chip[aria-pressed="true"] {
+  background: light-dark(oklch(0.93 0.045 195), oklch(0.32 0.06 195 / 0.65));
+  color: light-dark(oklch(0.38 0.11 195), oklch(0.90 0.09 195));
+  box-shadow: inset 0 0 0 1px light-dark(oklch(0.58 0.11 195), oklch(0.65 0.10 195 / 0.8));
+}
+
+/* Sedes: cuadritos como los números de vía de la pantalla Vías (verde = seleccionada) */
+.bit-sede {
+  min-width: 56px; height: 52px; padding: 0 10px; border-radius: 12px; cursor: pointer; font-family: inherit;
+  font-size: 1rem; font-weight: 600; letter-spacing: .04em; border: 0;
+  background: rgb(var(--ov) / 0.05); color: var(--tx-muted);
+  box-shadow: inset 0 0 0 1px rgb(var(--ov) / 0.10); transition: background .12s, color .12s;
+}
+.bit-sede:hover { background: rgb(var(--ov) / 0.10); }
+.bit-sede[aria-pressed="true"] {
+  background: light-dark(oklch(0.92 0.07 160), oklch(0.34 0.08 160 / 0.7));
+  color: light-dark(oklch(0.38 0.14 160), oklch(0.90 0.13 160));
+  box-shadow: inset 0 0 0 1.5px light-dark(oklch(0.52 0.15 160), oklch(0.72 0.14 160));
+}
+
+.bit-btn-sec {
+  padding: 7px 14px; border-radius: 10px; font-size: .85rem; font-weight: 600; cursor: pointer; font-family: inherit; border: 0;
+  background: rgb(var(--ov) / 0.07); color: var(--tx-2); box-shadow: inset 0 0 0 1px rgb(var(--ov) / 0.10);
+}
+.bit-btn-sec:hover { background: rgb(var(--ov) / 0.12); }
+.bit-btn-danger { color: light-dark(oklch(0.52 0.17 22), oklch(0.78 0.15 22)); }
+
+.bit-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 4px; border-top: 1px solid var(--line); }
+.bit-row:first-child { border-top: 0; }
+.bit-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; flex: 0 0 auto; }
+.bit-tag { font-size: .72rem; font-weight: 600; letter-spacing: .05em; padding: 2px 8px; border-radius: 6px; background: rgb(var(--ov) / 0.07); color: var(--tx-2); }
+
+.bit-toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; padding: 10px 20px; border-radius: 999px;
+  font-weight: 600; font-size: .95rem;
+  background: light-dark(oklch(0.40 0.12 160), oklch(0.80 0.13 160)); color: light-dark(oklch(0.98 0.02 160), oklch(0.18 0.04 160));
+  box-shadow: 0 10px 30px rgb(var(--shadow) / 0.35);
+}

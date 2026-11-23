@@ -1,4 +1,6 @@
 @import './styles/theme.css';
+@import './styles/sigma.css';
+@import './styles/bitacora.css';
 
 @tailwind base;
 @tailwind components;

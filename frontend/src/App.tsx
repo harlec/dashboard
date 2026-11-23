@@ -30,6 +30,7 @@ import { AdminConfiguracion } from './pages/admin/Configuracion'
 import { NocMuro }            from './pages/NocMuro'
 import { Red }                from './pages/Red'
 import { OcrDashboard }       from './pages/OcrDashboard'
+import { Bitacora }           from './pages/Bitacora'
 
 function AppLayout() {
   useFontScale()
@@ -72,6 +73,9 @@ export default function App() {
   // Dashboard/SIGMA en "/" es 1920×1360, escalado a mano) con su propio topbar,
   // sin el AppLayout/MonitorTopbar de siempre.
   const muro = (el: JSX.Element) => auth.user ? el : <Navigate to="/login" replace />
+  // Bitácora: solo equipo de TI (rol "ti") y administradores. Pantalla responsive (no usa el lienzo escalado 1920).
+  const soloTi = (el: JSX.Element) => !auth.user ? <Navigate to="/login" replace />
+    : (auth.user.rol === 'admin' || auth.user.rol === 'ti') ? el : <Navigate to="/" replace />
 
   return (
     <AuthContext.Provider value={auth}>
@@ -87,6 +91,7 @@ export default function App() {
         <Route path="/discrepancias"   element={muro(<Discrepancias />)} />
         <Route path="/transitos"       element={muro(<Transitos />)} />
         <Route path="/ocr"             element={muro(<OcrDashboard />)} />
+        <Route path="/bitacora"        element={soloTi(<Bitacora />)} />
         <Route path="/*" element={
           auth.user ? <AppLayout /> : <Navigate to="/login" replace />
         } />

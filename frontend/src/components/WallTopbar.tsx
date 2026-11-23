@@ -12,6 +12,7 @@ const LINKS = [
   { to: '/',              label: 'Panel de control' },
   { to: '/vias',          label: 'Vías' },
   { to: '/incidentes',    label: 'Incidentes' },
+  { to: '/bitacora',      label: 'Bitácora', soloTi: true },
   { to: '/reporte',       label: 'Reporte SLA' },
   { to: '/reportes',      label: 'Reportes' },
   { to: '/transitos',     label: 'Tránsitos' },
@@ -34,6 +35,7 @@ interface Props { activo: string; signalStatus?: 'idle' | 'ok' | 'error' }
 
 export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
   const { user, logout } = useAuth()
+  const linksVisibles = LINKS.filter(l => !('soloTi' in l) || user?.rol === 'admin' || user?.rol === 'ti')
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const now = useClock()
@@ -70,7 +72,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
               background: 'rgb(var(--s0) / 0.98)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.07), 0 14px 40px rgb(var(--shadow) / 0.45)',
               display: 'flex', flexDirection: 'column', gap: 2,
             }}>
-              {LINKS.map(l => (
+              {linksVisibles.map(l => (
                 <Link key={l.to} to={l.to} onClick={() => setOpen(false)} style={{
                   display: 'block', padding: '9px 14px', borderRadius: 8, textDecoration: 'none', fontSize: 15, fontWeight: 500,
                   color: l.label === activo ? 'var(--tx)' : 'light-dark(oklch(0.370 0.012 265), oklch(0.78 0.006 265))',
@@ -90,7 +92,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10 }}>
-          {LINKS.map(l => (
+          {linksVisibles.map(l => (
             <Link key={l.to} to={l.to} style={{
               padding: '8px 15px', borderRadius: 11, fontSize: 16, fontWeight: l.label === activo ? 600 : 500,
               letterSpacing: '0.01em', textDecoration: 'none', whiteSpace: 'nowrap',

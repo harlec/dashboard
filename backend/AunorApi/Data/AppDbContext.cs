@@ -24,6 +24,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<NvrPeaje>          NvrPeajes          { get; set; }
     public DbSet<NvrCanal>          NvrCanales         { get; set; }
     public DbSet<AuditLog>          AuditLogs          { get; set; }
+    public DbSet<BitSede>           BitSedes           { get; set; }
+    public DbSet<BitCategoria>      BitCategorias      { get; set; }
+    public DbSet<BitProveedor>      BitProveedores     { get; set; }
+    public DbSet<BitPersonal>       BitPersonas        { get; set; }
+    public DbSet<BitPalabraClave>   BitPalabrasClave   { get; set; }
+    public DbSet<BitRegistro>       BitRegistros       { get; set; }
+    public DbSet<BitRegistroSede>   BitRegistroSedes   { get; set; }
+    public DbSet<BitComentario>     BitComentarios     { get; set; }
     public DbSet<NetDevice>         NetDevices         { get; set; }
     public DbSet<NetLink>           NetLinks           { get; set; }
     public DbSet<NetSample>         NetSamples         { get; set; }
@@ -110,6 +118,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.IntentosFallidos).HasColumnName("intentos_fallidos");
             e.Property(x => x.BloqueadoHasta).HasColumnName("bloqueado_hasta");
         });
+
+        // ── Bitácora (tablas Bit*, columnas PascalCase = nombre de la propiedad) ──
+        m.Entity<BitSede>(e => { e.ToTable("BitSede"); e.Property(x => x.Codigo).HasMaxLength(10); e.Property(x => x.Nombre).HasMaxLength(100); e.Property(x => x.Tipo).HasMaxLength(20); });
+        m.Entity<BitCategoria>(e => { e.ToTable("BitCategoria"); e.Property(x => x.Nombre).HasMaxLength(100); e.Property(x => x.Segmento).HasMaxLength(30); });
+        m.Entity<BitProveedor>(e => { e.ToTable("BitProveedor"); e.Property(x => x.Nombre).HasMaxLength(100); });
+        m.Entity<BitPersonal>(e => { e.ToTable("BitPersonal"); e.Property(x => x.Nombre).HasMaxLength(100); e.Property(x => x.SedeBase).HasMaxLength(50); });
+        m.Entity<BitPalabraClave>(e => { e.ToTable("BitPalabraClave"); e.Property(x => x.Palabra).HasMaxLength(60); });
+        m.Entity<BitRegistro>(e => {
+            e.ToTable("BitRegistro");
+            e.Property(x => x.Descripcion).HasMaxLength(500);
+            e.Property(x => x.Solicitante).HasMaxLength(100);
+            e.Property(x => x.EquipoRef).HasMaxLength(100);
+            e.HasOne(x => x.Categoria).WithMany().HasForeignKey(x => x.CategoriaId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(x => x.Responsable).WithMany().HasForeignKey(x => x.ResponsableId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(x => x.Proveedor).WithMany().HasForeignKey(x => x.ProveedorId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(x => x.FechaActividad).IsDescending().HasDatabaseName("IX_BitRegistro_Fecha");
+            e.HasIndex(x => x.CategoriaId).HasDatabaseName("IX_BitRegistro_Categoria");
+        });
+        m.Entity<BitRegistroSede>(e => {
+            e.ToTable("BitRegistroSede");
+            e.HasKey(x => new { x.RegistroId, x.SedeId });
+            e.HasOne(x => x.Registro).WithMany(r => r.Sedes).HasForeignKey(x => x.RegistroId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Sede).WithMany().HasForeignKey(x => x.SedeId).OnDelete(DeleteBehavior.NoAction);
+            e.HasIndex(x => x.SedeId).HasDatabaseName("IX_BitRegistroSede_Sede");
+        });
+        m.Entity<BitComentario>(e => { e.ToTable("BitComentario"); e.Property(x => x.Texto).HasMaxLength(1000); });
 
         m.Entity<AuditLog>(e => {
             e.ToTable("audit_log");

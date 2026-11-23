@@ -212,6 +212,19 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// ── Bitácora: catálogos iniciales (idempotente, scope propio para no contaminar el contexto
+// de arriba si falla). Si falta correr sqlserver/migration_bitacora.sql las tablas Bit* no
+// existen: se avisa en el log y el resto de la app arranca igual.
+using (var scopeBit = app.Services.CreateScope())
+{
+    try { BitacoraSeed.AplicarAsync(scopeBit.ServiceProvider.GetRequiredService<AppDbContext>()).GetAwaiter().GetResult(); }
+    catch (Exception ex)
+    {
+        scopeBit.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Bitacora")
+            .LogWarning(ex, "No se pudieron sembrar los catálogos de la Bitácora: ¿se ejecutó migration_bitacora.sql?");
+    }
+}
+
 // ── Swagger UI: apagado en producción (expone el mapa completo de la API sin auth).
 // Para activarlo temporalmente: ENABLE_SWAGGER=true
 if (app.Environment.IsDevelopment() || Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true")
