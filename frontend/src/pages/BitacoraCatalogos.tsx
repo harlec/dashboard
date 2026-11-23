@@ -125,8 +125,8 @@ export function BitacoraCatalogos({ onCambio }: { onCambio: () => void }) {
         <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              {cat.campos.map(c => <th key={c.key} className="bit-label text-left px-2 py-2">{c.label}</th>)}
-              <th className="bit-label text-left px-2 py-2">Estado</th><th />
+              {cat.campos.map(c => <th key={c.key} className="bit-th">{c.label}</th>)}
+              <th className="bit-th">Estado</th><th />
             </tr>
           </thead>
           <tbody>

@@ -19,6 +19,7 @@
   background: rgb(var(--ov) / 0.05); border: 1px solid var(--line);
 }
 .bit-select:focus, .bit-input:focus { border-color: light-dark(oklch(0.55 0.12 195), oklch(0.80 0.11 195)); }
+.bit-th { text-align: left; padding: 8px; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx-muted); white-space: nowrap; }
 .bit-label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx-muted); margin-bottom: 6px; }
 
 /* Píldoras (categoría, duración, fecha) */
