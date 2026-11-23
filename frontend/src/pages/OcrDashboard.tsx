@@ -9,14 +9,14 @@ const ESTACIONES = ['', 'FORTALEZA', 'HUARMEY', '402', 'VIRU', 'SANTA']
 const TIPOS_ERROR = ['', 'NO DETECTADA', 'SUSTITUCIÓN', 'CARÁCTER EXTRA', 'CARÁCTER PERDIDO']
 
 function colorTasa(pct: number) {
-  if (pct >= 95) return '#3fb978'
-  if (pct >= 85) return '#e0991f'
-  return '#ef4b54'
+  if (pct >= 95) return 'light-dark(#3fb978, oklch(0.564 0.159 156))'
+  if (pct >= 85) return 'light-dark(#e0991f, oklch(0.546 0.163 74))'
+  return 'light-dark(#ef4b54, oklch(0.595 0.170 22))'
 }
 function colorError(tipo: string) {
-  if (tipo === 'NO DETECTADA')    return '#ef4b54'
-  if (tipo === 'SUSTITUCIÓN')     return '#e0991f'
-  if (tipo === 'CARÁCTER EXTRA')  return '#a78bfa'
+  if (tipo === 'NO DETECTADA')    return 'light-dark(#ef4b54, oklch(0.595 0.170 22))'
+  if (tipo === 'SUSTITUCIÓN')     return 'light-dark(#e0991f, oklch(0.546 0.163 74))'
+  if (tipo === 'CARÁCTER EXTRA')  return 'light-dark(#a78bfa, oklch(0.560 0.170 294))'
   if (tipo === 'CARÁCTER PERDIDO') return '#60a5fa'
   return 'var(--tx-muted)'
 }
@@ -68,7 +68,7 @@ function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
                   <span style={{ color: ESTACION_COLOR[row.estacion] ?? 'var(--tx-muted)', fontSize: 9, marginRight: 4 }}>●</span>
                   <span style={{ color: 'var(--tx-2)' }}>{row.via}</span>
                 </td>
-                <td style={{ padding: '2px 4px', textAlign: 'right', color: row.tasaVia >= 30 ? '#ef4b54' : row.tasaVia >= 15 ? '#e0991f' : '#3fb978', fontWeight: 700 }}>
+                <td style={{ padding: '2px 4px', textAlign: 'right', color: row.tasaVia >= 30 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : row.tasaVia >= 15 ? 'light-dark(#e0991f, oklch(0.546 0.163 74))' : 'light-dark(#3fb978, oklch(0.564 0.159 156))', fontWeight: 700 }}>
                   {Number(row.tasaVia).toFixed(1)}%
                 </td>
                 {HORAS.map(h => {
@@ -95,7 +95,7 @@ function HeatmapPanel({ rows }: { rows: OcrHeatmapRow[] }) {
 }
 
 // ── Perfil horario mejores vías ───────────────────────────────
-const LINEA_COLORS = ['#3fb978', '#00BBE7', '#FFDD00', '#2dd4a7', '#F99B1C', '#a78bfa', '#60a5fa', '#e879f9']
+const LINEA_COLORS = ['light-dark(#3fb978, oklch(0.564 0.159 156))', 'light-dark(#00BBE7, oklch(0.546 0.150 223))', 'light-dark(#FFDD00, oklch(0.456 0.170 98))', 'light-dark(#2dd4a7, oklch(0.522 0.161 169))', '#F99B1C', 'light-dark(#a78bfa, oklch(0.560 0.170 294))', '#60a5fa', '#e879f9']
 
 function PerfilHorarioChart({ vias }: { vias: OcrTendencias['mejoresVias'] }) {
   if (!vias.length) return null
@@ -166,9 +166,9 @@ function TendenciaDiariaChart({ datos }: { datos: OcrTendencias['tendenciaDiaria
       {/* Área red semitransparente */}
       <polygon points={areaRed} fill="rgba(239,75,84,.07)" />
       {/* Línea red (todos) */}
-      <polyline points={ptsRed} fill="none" stroke="#ef4b54" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
+      <polyline points={ptsRed} fill="none" stroke="light-dark(#ef4b54, oklch(0.595 0.170 22))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
       {/* Línea mejores vías */}
-      {ptsMej && <polyline points={ptsMej} fill="none" stroke="#3fb978" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />}
+      {ptsMej && <polyline points={ptsMej} fill="none" stroke="light-dark(#3fb978, oklch(0.564 0.159 156))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />}
       {/* Eje X (fechas) */}
       {datos.map((d, i) => i % step === 0 ? (
         <text key={i} x={xOf(i)} y={H - 5} textAnchor="middle" fill="var(--tx-dim)" fontSize="7" fontFamily="var(--app-font)">
@@ -206,27 +206,27 @@ function EvolucionDiariaChart({ datos }: { datos: OcrViaEvolucion['diaria'] }) {
           </g>
         ))}
         <polygon points={area} fill="rgba(239,75,84,.08)" />
-        <polyline points={ptsTotal}  fill="none" stroke="#ef4b54" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <polyline points={ptsNoDet}  fill="none" stroke="#e0991f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
-        <polyline points={ptsErrRec} fill="none" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
+        <polyline points={ptsTotal}  fill="none" stroke="light-dark(#ef4b54, oklch(0.595 0.170 22))" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={ptsNoDet}  fill="none" stroke="light-dark(#e0991f, oklch(0.546 0.163 74))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
+        <polyline points={ptsErrRec} fill="none" stroke="light-dark(#a78bfa, oklch(0.560 0.170 294))" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
         {datos.map((d, i) => i % step === 0 ? (
           <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fill="var(--tx-dim)" fontSize="8" fontFamily="var(--app-font)">{d.fecha.length > 10 ? d.fecha.slice(11, 16) : d.fecha.slice(5)}</text>
         ) : null)}
         {n <= 48 && datos.map((d, i) => (
-          <circle key={`p${i}`} cx={xOf(i)} cy={yOf(Number(d.tasaError))} r={2.4} fill="#ef4b54">
+          <circle key={`p${i}`} cx={xOf(i)} cy={yOf(Number(d.tasaError))} r={2.4} fill="light-dark(#ef4b54, oklch(0.595 0.170 22))">
             <title>{`${d.fecha} · ${d.total.toLocaleString()} tránsitos · ${Number(d.tasaError).toFixed(1)}% error (${Number(d.tasaNoDetectada).toFixed(1)}% no detectada, ${Number(d.tasaReconocidaError).toFixed(1)}% con error)`}</title>
           </circle>
         ))}
       </svg>
       <div style={{ display: 'flex', gap: 16, padding: '0 4px 4px', fontFamily: 'var(--app-font)', fontSize: 10 }}>
-        <span style={{ color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 14, height: 2, background: '#ef4b54', display: 'inline-block' }} /> Error total
+        <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 14, height: 2, background: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', display: 'inline-block' }} /> Error total
         </span>
-        <span style={{ color: '#e0991f', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 14, height: 2, background: '#e0991f', display: 'inline-block' }} /> No detectada
+        <span style={{ color: 'light-dark(#e0991f, oklch(0.546 0.163 74))', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 14, height: 2, background: 'light-dark(#e0991f, oklch(0.546 0.163 74))', display: 'inline-block' }} /> No detectada
         </span>
-        <span style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 14, height: 2, background: '#a78bfa', display: 'inline-block' }} /> Reconocida con error
+        <span style={{ color: 'light-dark(#a78bfa, oklch(0.560 0.170 294))', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 14, height: 2, background: 'light-dark(#a78bfa, oklch(0.560 0.170 294))', display: 'inline-block' }} /> Reconocida con error
         </span>
       </div>
     </>
@@ -243,7 +243,7 @@ function EvolucionHoraChart({ datos }: { datos: OcrViaEvolucion['porHora'] }) {
         {horas.map((d, i) => {
           if (!d) return null
           const barH = Math.min(Number(d.tasaError) / 50, 1) * 56
-          const col = Number(d.tasaError) >= 30 ? '#ef4b54' : Number(d.tasaError) >= 15 ? '#e0991f' : '#3fb978'
+          const col = Number(d.tasaError) >= 30 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : Number(d.tasaError) >= 15 ? 'light-dark(#e0991f, oklch(0.546 0.163 74))' : 'light-dark(#3fb978, oklch(0.564 0.159 156))'
           return (
             <g key={i}>
               <rect x={i * 10 + 0.5} y={56 - barH} width={9} height={barH} rx="1.5" fill={col} opacity="0.75" />
@@ -262,7 +262,7 @@ function EvolucionHoraChart({ datos }: { datos: OcrViaEvolucion['porHora'] }) {
 // tenían rosado/morado que no son parte de la paleta de marca.
 const ESTACION_COLOR: Record<string, string> = {
   FORTALEZA: '#72BF44', HUARMEY: '#F99B1C',
-  '402': '#00BBE7', VIRU: '#FFDD00', SANTA: '#D3DF4E',
+  '402': 'light-dark(#00BBE7, oklch(0.546 0.150 223))', VIRU: 'light-dark(#FFDD00, oklch(0.456 0.170 98))', SANTA: 'light-dark(#D3DF4E, oklch(0.473 0.170 114))',
 }
 
 function RankingVias({ vias }: { vias: OcrVia[] }) {
@@ -281,8 +281,8 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
           ordenado por score de Wilson (confianza de tasa de error alta) — no por tasa cruda
         </span>
         <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-muted)', marginLeft: 'auto' }}>
-          <span><span style={{ color: '#ef4b54' }}>■</span> No reconocida</span>
-          <span><span style={{ color: '#e0991f' }}>■</span> Confusión</span>
+          <span><span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>■</span> No reconocida</span>
+          <span><span style={{ color: 'light-dark(#e0991f, oklch(0.546 0.163 74))' }}>■</span> Confusión</span>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
@@ -297,11 +297,11 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
               const tasaConf   = v.total > 0 ? v.confusiones   / v.total * 100 : 0
               const eColor     = ESTACION_COLOR[v.estacion] ?? 'var(--tx-muted)'
               // Umbrales de vía (sistema-visual.md): >=30 rojo intenso, >=20 rojo, >=12 ámbar, resto verde
-              const errColor   = tasaError >= 30 ? '#c0392b' : tasaError >= 20 ? '#ef4b54' : tasaError >= 12 ? '#e0991f' : '#3fb978'
+              const errColor   = tasaError >= 30 ? '#c0392b' : tasaError >= 20 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : tasaError >= 12 ? 'light-dark(#e0991f, oklch(0.546 0.163 74))' : 'light-dark(#3fb978, oklch(0.564 0.159 156))'
               return (
                 <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgb(var(--ov) / .04)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: rank <= 3 ? '#ef4b54' : 'var(--tx-muted)', width: 20, textAlign: 'right', fontWeight: 700 }}>#{rank}</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: rank <= 3 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : 'var(--tx-muted)', width: 20, textAlign: 'right', fontWeight: 700 }}>#{rank}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.via}</span>
@@ -314,16 +314,16 @@ function RankingVias({ vias }: { vias: OcrVia[] }) {
                       {/* Barra de tasa real — cada segmento = % del total de tránsitos */}
                       <div style={{ position: 'relative', height: 7, background: 'rgb(var(--ov) / .05)', borderRadius: 4, overflow: 'hidden', marginBottom: 4 }}>
                         {/* segmento no detectadas */}
-                        <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${tasaNoRec}%`, background: '#ef4b54', opacity: .8, borderRadius: '4px 0 0 4px' }} />
+                        <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${tasaNoRec}%`, background: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', opacity: .8, borderRadius: '4px 0 0 4px' }} />
                         {/* segmento confusiones (comienza donde termina el anterior) */}
-                        <div style={{ position: 'absolute', left: `${tasaNoRec}%`, top: 0, height: '100%', width: `${tasaConf}%`, background: '#e0991f', opacity: .8 }} />
+                        <div style={{ position: 'absolute', left: `${tasaNoRec}%`, top: 0, height: '100%', width: `${tasaConf}%`, background: 'light-dark(#e0991f, oklch(0.546 0.163 74))', opacity: .8 }} />
                       </div>
 
                       <div style={{ display: 'flex', gap: 10, fontFamily: 'var(--app-font)', fontSize: 10 }}>
-                        <span style={{ color: '#ef4b54' }}>{tasaNoRec.toFixed(1)}% no det.</span>
-                        <span style={{ color: '#e0991f' }}>{tasaConf.toFixed(1)}% conf.</span>
+                        <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>{tasaNoRec.toFixed(1)}% no det.</span>
+                        <span style={{ color: 'light-dark(#e0991f, oklch(0.546 0.163 74))' }}>{tasaConf.toFixed(1)}% conf.</span>
                         <span style={{ color: 'var(--tx-muted)' }}>{v.total.toLocaleString()} tráns.</span>
-                        <span style={{ marginLeft: 'auto', color: '#ff9ba0', fontWeight: 700 }}>{Number(v.score).toFixed(1)} pts</span>
+                        <span style={{ marginLeft: 'auto', color: 'light-dark(#ff9ba0, oklch(0.514 0.132 17))', fontWeight: 700 }}>{Number(v.score).toFixed(1)} pts</span>
                       </div>
                     </div>
                   </div>
@@ -359,7 +359,7 @@ function MejoresViasPanel({ vias }: { vias: OcrMejorViaPeriodo[] }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
         {vias.map((v, i) => (
           <div key={i} style={{ padding: '9px 16px', borderBottom: '1px solid rgb(var(--ov) / .04)', borderRight: '1px solid rgb(var(--ov) / .04)', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#3fb978', width: 20, textAlign: 'right', fontWeight: 700 }}>#{i + 1}</span>
+            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'light-dark(#3fb978, oklch(0.564 0.159 156))', width: 20, textAlign: 'right', fontWeight: 700 }}>#{i + 1}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.via}</span>
@@ -367,8 +367,8 @@ function MejoresViasPanel({ vias }: { vias: OcrMejorViaPeriodo[] }) {
               </div>
               <div style={{ display: 'flex', gap: 10, fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-muted)', marginTop: 4 }}>
                 <span>{v.total.toLocaleString()} tráns.</span>
-                <span style={{ color: '#3fb978' }}>{Number(v.tasaError).toFixed(1)}% err</span>
-                <span style={{ marginLeft: 'auto', color: '#2dd4a7', fontWeight: 700 }}>{Number(v.score).toFixed(1)} pts</span>
+                <span style={{ color: 'light-dark(#3fb978, oklch(0.564 0.159 156))' }}>{Number(v.tasaError).toFixed(1)}% err</span>
+                <span style={{ marginLeft: 'auto', color: 'light-dark(#2dd4a7, oklch(0.522 0.161 169))', fontWeight: 700 }}>{Number(v.score).toFixed(1)} pts</span>
               </div>
             </div>
           </div>
@@ -430,7 +430,7 @@ function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; pe
           <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.1em', color: 'var(--tx-muted)', fontWeight: 700 }}>EXPORTAR</span>
           {([['csv', 'CSV'], ['xlsx', 'Excel'], ['pdf', 'PDF']] as const).map(([f, label]) => (
             <div key={f} onClick={() => exportar(f)} title={`Descargar ${label} con el período, orden y estación actuales`}
-              style={{ ...chip(false), color: '#8fd6a8', boxShadow: 'inset 0 0 0 1px rgba(63,185,120,.4)' }}>⬇ {label}</div>
+              style={{ ...chip(false), color: 'light-dark(#8fd6a8, oklch(0.501 0.106 155))', boxShadow: 'inset 0 0 0 1px rgba(63,185,120,.4)' }}>⬇ {label}</div>
           ))}
         </div>
         <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8196', marginLeft: 'auto', maxWidth: 560, textAlign: 'right' }}>
@@ -450,8 +450,8 @@ function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; pe
               <th style={th}>NO LEGIBLES</th>
               <th style={th}>CONFUSIONES</th>
               <th style={{ ...th, minWidth: 190 }}>ACIERTO</th>
-              <th style={{ ...th, color: orden === 'mejor' ? '#8fd6a8' : 'var(--tx-muted)' }} title="Límite inferior de Wilson (95 %) de la tasa de acierto">ACIERTO MÍN. SEGURO</th>
-              <th style={{ ...th, color: orden === 'peor' ? '#f0a0a0' : 'var(--tx-muted)' }} title="Límite inferior de Wilson (95 %) de la tasa de error">ERROR MÍN. SEGURO</th>
+              <th style={{ ...th, color: orden === 'mejor' ? 'light-dark(#8fd6a8, oklch(0.501 0.106 155))' : 'var(--tx-muted)' }} title="Límite inferior de Wilson (95 %) de la tasa de acierto">ACIERTO MÍN. SEGURO</th>
+              <th style={{ ...th, color: orden === 'peor' ? 'light-dark(#f0a0a0, oklch(0.519 0.105 19))' : 'var(--tx-muted)' }} title="Límite inferior de Wilson (95 %) de la tasa de error">ERROR MÍN. SEGURO</th>
             </tr>
           </thead>
           <tbody>
@@ -468,8 +468,8 @@ function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; pe
                   <td style={{ ...td, textAlign: 'left', color: ESTACION_COLOR[v.estacion] ?? 'var(--tx-muted)', fontWeight: 600, fontSize: 12 }}>{v.estacion}</td>
                   <td style={td}>{v.total.toLocaleString()}</td>
                   <td style={td}>{v.aciertos.toLocaleString()}</td>
-                  <td style={{ ...td, color: v.noReconocidas > 0 ? '#ef4b54' : '#5f7184' }}>{v.noReconocidas.toLocaleString()}</td>
-                  <td style={{ ...td, color: v.confusiones > 0 ? '#e0991f' : '#5f7184' }}>{v.confusiones.toLocaleString()}</td>
+                  <td style={{ ...td, color: v.noReconocidas > 0 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : '#5f7184' }}>{v.noReconocidas.toLocaleString()}</td>
+                  <td style={{ ...td, color: v.confusiones > 0 ? 'light-dark(#e0991f, oklch(0.546 0.163 74))' : '#5f7184' }}>{v.confusiones.toLocaleString()}</td>
                   <td style={td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                       <div style={{ width: 90, height: 8, borderRadius: 4, background: 'rgb(var(--ov) / .07)', overflow: 'hidden' }}>
@@ -478,8 +478,8 @@ function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; pe
                       <span style={{ width: 50, color, fontWeight: 700 }}>{v.efectividad.toFixed(1)}%</span>
                     </div>
                   </td>
-                  <td style={{ ...td, color: '#8fd6a8', fontWeight: orden === 'mejor' ? 700 : 500 }}>{v.scoreAcierto.toFixed(1)}%</td>
-                  <td style={{ ...td, color: '#f0a0a0', fontWeight: orden === 'peor' ? 700 : 500 }}>{v.scoreError.toFixed(1)}%</td>
+                  <td style={{ ...td, color: 'light-dark(#8fd6a8, oklch(0.501 0.106 155))', fontWeight: orden === 'mejor' ? 700 : 500 }}>{v.scoreAcierto.toFixed(1)}%</td>
+                  <td style={{ ...td, color: 'light-dark(#f0a0a0, oklch(0.519 0.105 19))', fontWeight: orden === 'peor' ? 700 : 500 }}>{v.scoreError.toFixed(1)}%</td>
                 </tr>
               )
             })}
@@ -493,7 +493,7 @@ function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; pe
 // Resalta caracteres distintos entre dos placas — monoespaciada: la comparación
 // carácter a carácter es el propósito de esta tabla (sistema-visual.md)
 function PlacaDiff({ cajero, ocr }: { cajero: string; ocr: string }) {
-  if (!ocr) return <span style={{ color: '#ef4b54', fontFamily: 'var(--app-font-mono)', fontSize: 14 }}>—</span>
+  if (!ocr) return <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', fontFamily: 'var(--app-font-mono)', fontSize: 14 }}>—</span>
   const maxLen = Math.max(cajero.length, ocr.length)
   return (
     <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 14, letterSpacing: '.06em' }}>
@@ -502,7 +502,7 @@ function PlacaDiff({ cajero, ocr }: { cajero: string; ocr: string }) {
         const o = ocr[i]    ?? ''
         const diff = c !== o
         return (
-          <span key={i} style={{ background: diff ? 'rgba(239,75,84,.25)' : 'transparent', color: diff ? '#ff9ba0' : 'var(--tx)', borderRadius: 3, padding: diff ? '0 2px' : 0 }}>
+          <span key={i} style={{ background: diff ? 'rgba(239,75,84,.25)' : 'transparent', color: diff ? 'light-dark(#ff9ba0, oklch(0.514 0.132 17))' : 'var(--tx)', borderRadius: 3, padding: diff ? '0 2px' : 0 }}>
             {o || '·'}
           </span>
         )
@@ -641,15 +641,15 @@ export function OcrDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div onClick={() => { setSoloPrepago(v => !v); setPagina(1) }} style={{
             padding: '8px 15px', borderRadius: 11, fontSize: 15, fontWeight: soloPrepago ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-            color: soloPrepago ? 'oklch(0.20 0.05 62)' : 'var(--tx-muted)',
-            background: soloPrepago ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+            color: soloPrepago ? 'light-dark(oklch(0.20 0.05 62), oklch(0.966 0.035 62))' : 'var(--tx-muted)',
+            background: soloPrepago ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.13 68), oklch(0.488 0.143 68)), light-dark(oklch(0.76 0.13 62), oklch(0.532 0.143 62)))' : 'transparent',
           }}>Solo prepago</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: 4, borderRadius: 13, background: 'rgb(var(--s1) / 0.80)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.05)' }}>
             {PERIODOS.map(p => (
               <div key={p} onClick={() => { setPeriodo(p); setPagina(1) }} style={{
                 padding: '7px 15px', borderRadius: 10, fontSize: 15, fontWeight: periodo === p ? 600 : 500, cursor: 'pointer',
-                color: periodo === p ? 'oklch(0.22 0.04 62)' : 'var(--tx-muted)',
-                background: periodo === p ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+                color: periodo === p ? 'light-dark(oklch(0.22 0.04 62), oklch(0.959 0.028 62))' : 'var(--tx-muted)',
+                background: periodo === p ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.13 68), oklch(0.488 0.143 68)), light-dark(oklch(0.76 0.13 62), oklch(0.532 0.143 62)))' : 'transparent',
               }}>{PERIODO_LABEL[p] ?? p}</div>
             ))}
           </div>
@@ -659,10 +659,10 @@ export function OcrDashboard() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--tx-muted)' }}>Cargando datos OCR…</div>
       ) : error ? (
-        <div style={{ background: 'oklch(0.45 0.13 22 / 0.10)', border: '1px solid oklch(0.55 0.15 22 / 0.35)', borderRadius: 16, padding: '24px 28px' }}>
-          <div style={{ color: 'color-mix(in oklab, oklch(0.80 0.14 22) var(--acc-k), #000)', fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Error al cargar datos OCR</div>
-          <pre style={{ fontFamily: 'var(--app-font)', fontSize: 13, color: 'color-mix(in oklab, oklch(0.72 0.16 22) var(--acc-k), #000)', whiteSpace: 'pre-wrap', margin: 0 }}>{error}</pre>
-          <button onClick={loadResumen} style={{ marginTop: 16, padding: '8px 20px', background: 'oklch(0.45 0.13 22 / 0.18)', border: '1px solid oklch(0.55 0.15 22 / 0.40)', borderRadius: 11, color: 'color-mix(in oklab, oklch(0.80 0.14 22) var(--acc-k), #000)', cursor: 'pointer', fontFamily: 'var(--app-font)', fontSize: 14 }}>
+        <div style={{ background: 'light-dark(oklch(0.45 0.13 22 / 0.10), oklch(0.702 0.143 22 / 0.1))', border: '1px solid light-dark(oklch(0.55 0.15 22 / 0.35), oklch(0.647 0.165 22 / 0.35))', borderRadius: 16, padding: '24px 28px' }}>
+          <div style={{ color: 'light-dark(oklch(0.80 0.14 22), oklch(0.510 0.154 22))', fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Error al cargar datos OCR</div>
+          <pre style={{ fontFamily: 'var(--app-font)', fontSize: 13, color: 'light-dark(oklch(0.72 0.16 22), oklch(0.554 0.170 22))', whiteSpace: 'pre-wrap', margin: 0 }}>{error}</pre>
+          <button onClick={loadResumen} style={{ marginTop: 16, padding: '8px 20px', background: 'light-dark(oklch(0.45 0.13 22 / 0.18), oklch(0.702 0.143 22 / 0.18))', border: '1px solid light-dark(oklch(0.55 0.15 22 / 0.40), oklch(0.647 0.165 22 / 0.4))', borderRadius: 11, color: 'light-dark(oklch(0.80 0.14 22), oklch(0.510 0.154 22))', cursor: 'pointer', fontFamily: 'var(--app-font)', fontSize: 14 }}>
             Reintentar
           </button>
         </div>
@@ -671,11 +671,11 @@ export function OcrDashboard() {
           {/* ── KPI ────────────────────────────────────────── */}
           <div style={{ height: 100, flex: '0 0 auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 13 }}>
             {[
-              { label: 'Total con placa', val: resumen.totalConPlaca.toLocaleString('es-PE'), fg: 'var(--tx)', etFg: 'oklch(0.62 0.02 265)', bg: 'linear-gradient(160deg, rgb(var(--s2) / 0.60) 0%, rgb(var(--s1) / 0.55) 100%)' },
-              { label: 'Aciertos', val: resumen.aciertos.toLocaleString('es-PE'), fg: 'oklch(0.86 0.14 160)', etFg: 'oklch(0.76 0.10 160)', bg: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.36 0.10 160 / 0.45) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)' },
-              { label: 'No detectadas', val: resumen.sinDetectar.toLocaleString('es-PE'), fg: 'oklch(0.84 0.14 22)', etFg: 'oklch(0.80 0.10 22)', bg: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.36 0.10 20 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)' },
-              { label: 'Errores OCR', val: resumen.errores.toLocaleString('es-PE'), fg: 'oklch(0.90 0.11 62)', etFg: 'oklch(0.84 0.09 62)', bg: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)' },
-              { label: 'Efectividad', val: `${resumen.tasaEfectividad}%`, fg: resumen.tasaEfectividad >= 95 ? 'oklch(0.86 0.14 160)' : resumen.tasaEfectividad >= 85 ? 'oklch(0.90 0.11 62)' : 'oklch(0.84 0.14 22)', etFg: 'oklch(0.76 0.06 200)', bg: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.30 0.045 200 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)' },
+              { label: 'Total con placa', val: resumen.totalConPlaca.toLocaleString('es-PE'), fg: 'var(--tx)', etFg: 'light-dark(oklch(0.62 0.02 265), oklch(0.530 0.020 265))', bg: 'linear-gradient(160deg, rgb(var(--s2) / 0.60) 0%, rgb(var(--s1) / 0.55) 100%)' },
+              { label: 'Aciertos', val: resumen.aciertos.toLocaleString('es-PE'), fg: 'light-dark(oklch(0.86 0.14 160), oklch(0.477 0.154 160))', etFg: 'light-dark(oklch(0.76 0.10 160), oklch(0.532 0.110 160))', bg: 'linear-gradient(160deg, light-dark(oklch(0.36 0.10 160 / 0.45), oklch(0.909 0.070 160 / 0.45)) 0%, rgb(var(--s1) / 0.55) 100%)' },
+              { label: 'No detectadas', val: resumen.sinDetectar.toLocaleString('es-PE'), fg: 'light-dark(oklch(0.84 0.14 22), oklch(0.488 0.154 22))', etFg: 'light-dark(oklch(0.80 0.10 22), oklch(0.510 0.110 22))', bg: 'linear-gradient(160deg, light-dark(oklch(0.36 0.10 20 / 0.55), oklch(0.909 0.070 20 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)' },
+              { label: 'Errores OCR', val: resumen.errores.toLocaleString('es-PE'), fg: 'light-dark(oklch(0.90 0.11 62), oklch(0.455 0.121 62))', etFg: 'light-dark(oklch(0.84 0.09 62), oklch(0.488 0.099 62))', bg: 'linear-gradient(160deg, light-dark(oklch(0.38 0.09 62 / 0.50), oklch(0.901 0.063 62 / 0.5)) 0%, rgb(var(--s1) / 0.55) 100%)' },
+              { label: 'Efectividad', val: `${resumen.tasaEfectividad}%`, fg: resumen.tasaEfectividad >= 95 ? 'light-dark(oklch(0.86 0.14 160), oklch(0.477 0.154 160))' : resumen.tasaEfectividad >= 85 ? 'light-dark(oklch(0.90 0.11 62), oklch(0.455 0.121 62))' : 'light-dark(oklch(0.84 0.14 22), oklch(0.488 0.154 22))', etFg: 'light-dark(oklch(0.76 0.06 200), oklch(0.532 0.066 200))', bg: 'linear-gradient(160deg, light-dark(oklch(0.30 0.045 200 / 0.55), oklch(0.930 0.032 200 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)' },
             ].map(k => (
               <div key={k.label} style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: k.bg, boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
                 <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: k.etFg }}>{k.label}</div>
@@ -698,8 +698,8 @@ export function OcrDashboard() {
               <div key={t} onClick={() => { setTab(t); if (t === 'tendencias') loadTendencias() }} style={{
                 padding: '9px 18px', borderRadius: 12, fontSize: 16, fontWeight: tab === t ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
                 color: tab === t ? 'var(--tx)' : 'var(--tx-muted)',
-                background: tab === t ? 'color-mix(in oklab, oklch(0.32 0.04 210 / 0.70) var(--tint-k), #fff)' : 'transparent',
-                boxShadow: tab === t ? 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.32)' : 'none',
+                background: tab === t ? 'light-dark(oklch(0.32 0.04 210 / 0.70), oklch(0.923 0.028 210 / 0.7))' : 'transparent',
+                boxShadow: tab === t ? 'inset 0 0 0 1px light-dark(oklch(0.70 0.09 200 / 0.32), oklch(0.565 0.099 200 / 0.32))' : 'none',
               }}>{label}</div>
             ))}
           </div>
@@ -740,7 +740,7 @@ export function OcrDashboard() {
                   </div>
 
                   {analisis.topConfusiones.length === 0 ? (
-                    <div style={{ padding: 32, textAlign: 'center', color: '#3fb978', fontFamily: 'var(--app-font)', fontSize: 13 }}>
+                    <div style={{ padding: 32, textAlign: 'center', color: 'light-dark(#3fb978, oklch(0.564 0.159 156))', fontFamily: 'var(--app-font)', fontSize: 13 }}>
                       ✓ Sin sustituciones de caracteres en el período
                     </div>
                   ) : (
@@ -760,16 +760,16 @@ export function OcrDashboard() {
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                               <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', color: 'var(--tx-muted)' }}>{c.posicion}</td>
                               <td style={{ padding: '9px 16px' }}>
-                                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 700, color: '#3fb978', background: 'rgba(63,185,120,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.esperado}</span>
+                                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 700, color: 'light-dark(#3fb978, oklch(0.564 0.159 156))', background: 'rgba(63,185,120,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.esperado}</span>
                               </td>
                               <td style={{ padding: '9px 16px' }}>
-                                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 700, color: '#ef4b54', background: 'rgba(239,75,84,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.ocrLeyo}</span>
+                                <span style={{ fontFamily: 'var(--app-font)', fontSize: 18, fontWeight: 700, color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', background: 'rgba(239,75,84,.1)', padding: '2px 10px', borderRadius: 6 }}>{c.ocrLeyo}</span>
                               </td>
-                              <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', fontWeight: 700, color: '#e0991f' }}>{c.casos}</td>
+                              <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', fontWeight: 700, color: 'light-dark(#e0991f, oklch(0.546 0.163 74))' }}>{c.casos}</td>
                               <td style={{ padding: '9px 16px', fontFamily: 'var(--app-font)', fontSize: 12, color: 'var(--tx-muted)' }}>
-                                <span style={{ color: '#3fb978' }}>{c.esperado}</span>
+                                <span style={{ color: 'light-dark(#3fb978, oklch(0.564 0.159 156))' }}>{c.esperado}</span>
                                 <span style={{ color: 'var(--tx-muted)', margin: '0 8px' }}>→</span>
-                                <span style={{ color: '#ef4b54' }}>{c.ocrLeyo}</span>
+                                <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>{c.ocrLeyo}</span>
                                 <span style={{ color: 'var(--tx-muted)', marginLeft: 8, fontSize: 10 }}>en pos.{c.posicion}</span>
                               </td>
                             </tr>
@@ -783,7 +783,7 @@ export function OcrDashboard() {
                 {/* Top pares (placa cajero → placa OCR) */}
                 <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#8fc4b3, oklch(0.522 0.067 173))', fontWeight: 700 }}>
                       TOP PARES MÁS FRECUENTES · ERRORES OCR
                     </span>
                   </div>
@@ -797,7 +797,7 @@ export function OcrDashboard() {
                         <span style={{ marginLeft: 'auto', fontSize: 11, color: colorError(p.tipoError), fontFamily: 'var(--app-font)', fontWeight: 600, flexShrink: 0 }}>
                           {p.tipoError}
                         </span>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 13, fontWeight: 700, color: '#e0991f', width: 36, textAlign: 'right' }}>{p.casos}×</span>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 13, fontWeight: 700, color: 'light-dark(#e0991f, oklch(0.546 0.163 74))', width: 36, textAlign: 'right' }}>{p.casos}×</span>
                       </div>
                     ))}
                   </div>
@@ -810,7 +810,7 @@ export function OcrDashboard() {
                 {/* Por estación */}
                 <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>EFECTIVIDAD POR ESTACIÓN</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#8fc4b3, oklch(0.522 0.067 173))', fontWeight: 700 }}>EFECTIVIDAD POR ESTACIÓN</span>
                   </div>
                   <div style={{ padding: '8px 0' }}>
                     {resumen.porEstacion.map(e => (
@@ -818,7 +818,7 @@ export function OcrDashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                           <span style={{ fontSize: 13, color: 'var(--tx-2)', fontWeight: 600 }}>{e.estacion}</span>
                           <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--app-font)', fontSize: 11 }}>
-                            <span style={{ color: '#ef4b54' }}>✗ {e.sinDetectar + e.errores}</span>
+                            <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>✗ {e.sinDetectar + e.errores}</span>
                             <span style={{ color: colorTasa(e.efectividad), fontWeight: 700 }}>{e.efectividad}%</span>
                           </div>
                         </div>
@@ -828,9 +828,9 @@ export function OcrDashboard() {
                         <div style={{ display: 'flex', gap: 12, marginTop: 3, fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-muted)' }}>
                           <span>{e.total.toLocaleString()} tránsitos</span>
                           <span>·</span>
-                          <span style={{ color: '#3fb978' }}>{e.aciertos.toLocaleString()} OK</span>
+                          <span style={{ color: 'light-dark(#3fb978, oklch(0.564 0.159 156))' }}>{e.aciertos.toLocaleString()} OK</span>
                           <span>·</span>
-                          <span style={{ color: '#ef4b54' }}>{e.sinDetectar} no detectadas</span>
+                          <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>{e.sinDetectar} no detectadas</span>
                         </div>
                       </div>
                     ))}
@@ -840,7 +840,7 @@ export function OcrDashboard() {
                 {/* Tipos de error */}
                 <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>CLASIFICACIÓN DE ERRORES</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#8fc4b3, oklch(0.522 0.067 173))', fontWeight: 700 }}>CLASIFICACIÓN DE ERRORES</span>
                   </div>
                   <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {resumen.porTipoError.map(t => {
@@ -863,7 +863,7 @@ export function OcrDashboard() {
                 {/* Efectividad por hora (últimos 7 días) */}
                 <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>EFECTIVIDAD POR HORA · 7 DÍAS</span>
+                    <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#8fc4b3, oklch(0.522 0.067 173))', fontWeight: 700 }}>EFECTIVIDAD POR HORA · 7 DÍAS</span>
                     <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-dim)' }}>posibles caídas de iluminación</span>
                   </div>
                   <div style={{ padding: '12px 18px' }}>
@@ -887,7 +887,7 @@ export function OcrDashboard() {
                   {/* ── Heatmap vía × hora ── */}
                   <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#8fc4b3, oklch(0.522 0.067 173))', fontWeight: 700 }}>
                         HEATMAP ERROR OCR · VÍA × HORA DEL DÍA · ÚLTIMOS 30 DÍAS
                       </span>
                       <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-dim)' }}>peor a mejor de arriba a abajo · hover para detalle</span>
@@ -929,8 +929,8 @@ export function OcrDashboard() {
                             <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'var(--tx-2)' }}>{v.via}</span>
                             <span style={{ fontSize: 10, color: ESTACION_COLOR[v.estacion] ?? 'var(--tx-muted)', marginLeft: 2 }}>{v.estacion}</span>
                             <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-muted)', marginLeft: 'auto' }}>{v.total.toLocaleString()} tráns.</span>
-                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#3fb978' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
-                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, fontWeight: 700, color: '#2dd4a7', width: 46, textAlign: 'right' }}>{Number(v.score).toFixed(1)} pts</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: 'light-dark(#3fb978, oklch(0.564 0.159 156))' }}>{Number(v.tasaVia).toFixed(1)}% err</span>
+                            <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, fontWeight: 700, color: 'light-dark(#2dd4a7, oklch(0.522 0.161 169))', width: 46, textAlign: 'right' }}>{Number(v.score).toFixed(1)} pts</span>
                           </div>
                         ))}
                       </div>
@@ -944,7 +944,7 @@ export function OcrDashboard() {
                     {/* Tendencia diaria 30d */}
                     <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                       <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c07777', fontWeight: 700 }}>
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#c07777, oklch(0.594 0.101 20))', fontWeight: 700 }}>
                           TENDENCIA DIARIA · % ERROR RED VS REFERENCIA
                         </span>
                         <div style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-dim)', marginTop: 3 }}>
@@ -955,11 +955,11 @@ export function OcrDashboard() {
                         <TendenciaDiariaChart datos={tendencias.tendenciaDiaria} />
                       </div>
                       <div style={{ padding: '0 18px 14px', display: 'flex', gap: 18 }}>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#ef4b54', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ width: 20, height: 2, background: '#ef4b54', borderRadius: 2 }} /> Red completa
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 20, height: 2, background: 'light-dark(#ef4b54, oklch(0.595 0.170 22))', borderRadius: 2 }} /> Red completa
                         </span>
-                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: '#3fb978', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ width: 20, height: 2, background: '#3fb978', borderRadius: 2 }} /> Mejores vías
+                        <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, color: 'light-dark(#3fb978, oklch(0.564 0.159 156))', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 20, height: 2, background: 'light-dark(#3fb978, oklch(0.564 0.159 156))', borderRadius: 2 }} /> Mejores vías
                         </span>
                         {tendencias.tendenciaDiaria.length > 1 && (() => {
                           const first = Number(tendencias.tendenciaDiaria[0].tasaRed)
@@ -967,7 +967,7 @@ export function OcrDashboard() {
                           const delta = last - first
                           return (
                             <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 11,
-                              color: delta > 2 ? '#ef4b54' : delta < -2 ? '#3fb978' : 'var(--tx-muted)' }}>
+                              color: delta > 2 ? 'light-dark(#ef4b54, oklch(0.595 0.170 22))' : delta < -2 ? 'light-dark(#3fb978, oklch(0.564 0.159 156))' : 'var(--tx-muted)' }}>
                               {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(1)}% vs hace 30d
                             </span>
                           )
@@ -996,7 +996,7 @@ export function OcrDashboard() {
                 <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
                   {([[1, '24 h'], [7, 'Semana'], [30, '30 días'], [60, '60 días'], [90, '90 días']] as const).map(([d, etiqueta]) => (
                     <button key={d} onClick={() => setViaDias(d)}
-                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? '#2dd4a7' : 'rgb(var(--ov) / .1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? '#2dd4a7' : 'var(--tx-muted)' }}>
+                      style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: viaDias === d ? 'light-dark(#2dd4a7, oklch(0.522 0.161 169))' : 'rgb(var(--ov) / .1)', background: viaDias === d ? 'rgba(45,212,167,.12)' : 'transparent', color: viaDias === d ? 'light-dark(#2dd4a7, oklch(0.522 0.161 169))' : 'var(--tx-muted)' }}>
                       {etiqueta}
                     </button>
                   ))}
@@ -1014,7 +1014,7 @@ export function OcrDashboard() {
                 <>
                   <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(239,75,84,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(239,75,84,.08)' }}>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#c07777', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#c07777, oklch(0.594 0.101 20))', fontWeight: 700 }}>
                         {viaEvolucion.estacion} · {viaEvolucion.via} — {(viaEvolucion.horas ?? 0) > 0
                           ? `% ERROR POR HORA · ÚLTIMAS ${viaEvolucion.horas} H`
                           : viaEvolucion.dias === 7 ? '% ERROR POR DÍA · ÚLTIMA SEMANA' : `% ERROR POR DÍA · ÚLTIMOS ${viaEvolucion.dias}D`}
@@ -1028,7 +1028,7 @@ export function OcrDashboard() {
                   {(viaEvolucion.horas ?? 0) === 0 && (
                   <div style={{ background: 'linear-gradient(180deg,var(--panel-a),var(--panel-b))', border: '1px solid rgba(45,212,167,.12)', borderRadius: 12, overflow: 'hidden' }}>
                     <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(45,212,167,.1)' }}>
-                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: '#8fc4b3', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'var(--app-font)', fontSize: 11, letterSpacing: '.14em', color: 'light-dark(#8fc4b3, oklch(0.522 0.067 173))', fontWeight: 700 }}>
                         PERFIL HORARIO · MISMA VÍA · {viaEvolucion.dias === 7 ? 'ÚLTIMA SEMANA' : `${viaEvolucion.dias}D`}
                       </span>
                     </div>
@@ -1057,7 +1057,7 @@ export function OcrDashboard() {
                 <input placeholder="Buscar placa…" value={placa} onChange={e => { setPlaca(e.target.value.toUpperCase()); setPagina(1) }}
                   style={{ padding: '6px 12px', background: 'var(--panel-b)', border: '1px solid rgb(var(--ov) / .1)', borderRadius: 8, color: 'var(--tx)', fontFamily: 'var(--app-font)', fontSize: 12, width: 160 }} />
                 <button onClick={loadDetalle}
-                  style={{ padding: '6px 18px', background: 'rgba(45,212,167,.12)', border: '1px solid rgba(45,212,167,.3)', borderRadius: 8, color: '#2dd4a7', fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ padding: '6px 18px', background: 'rgba(45,212,167,.12)', border: '1px solid rgba(45,212,167,.3)', borderRadius: 8, color: 'light-dark(#2dd4a7, oklch(0.522 0.161 169))', fontFamily: 'var(--app-font)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Buscar
                 </button>
                 {detalle && <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 12, color: 'var(--tx-muted)', alignSelf: 'center' }}>{detalle.total.toLocaleString()} registros</span>}
@@ -1083,14 +1083,14 @@ export function OcrDashboard() {
                           <td style={{ padding: '9px 14px', fontSize: 12, color: 'var(--tx-muted)' }}>{item.estacion}</td>
                           <td style={{ padding: '9px 14px', fontSize: 12, color: 'var(--tx-muted)' }}>{item.via}</td>
                           <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 11, color: 'var(--tx-muted)' }}>{item.ticket}</td>
-                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font-mono)', fontSize: 14, color: '#3fb978', letterSpacing: '.06em' }}>{item.placaCajero}</td>
+                          <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font-mono)', fontSize: 14, color: 'light-dark(#3fb978, oklch(0.564 0.159 156))', letterSpacing: '.06em' }}>{item.placaCajero}</td>
                           <td style={{ padding: '9px 14px' }}><PlacaDiff cajero={item.placaCajero} ocr={item.placaOcr} /></td>
                           <td style={{ padding: '9px 14px', fontFamily: 'var(--app-font)', fontSize: 12, color: 'var(--tx-muted)' }}>
                             {item.placaOcr ? (
                               Array.from(item.placaCajero).filter((c, i) => c !== (item.placaOcr[i] ?? '')).length > 0
-                                ? <span style={{ color: '#ef4b54' }}>{Array.from(item.placaCajero).filter((c, i) => c !== (item.placaOcr[i] ?? '')).length} char(s)</span>
-                                : <span style={{ color: '#ef4b54' }}>±{Math.abs(item.placaCajero.length - item.placaOcr.length)} largo</span>
-                            ) : <span style={{ color: '#ef4b54' }}>no detectada</span>}
+                                ? <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>{Array.from(item.placaCajero).filter((c, i) => c !== (item.placaOcr[i] ?? '')).length} char(s)</span>
+                                : <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>±{Math.abs(item.placaCajero.length - item.placaOcr.length)} largo</span>
+                            ) : <span style={{ color: 'light-dark(#ef4b54, oklch(0.595 0.170 22))' }}>no detectada</span>}
                           </td>
                           <td style={{ padding: '9px 14px' }}>
                             <span style={{ fontSize: 11, fontFamily: 'var(--app-font)', fontWeight: 600, color: colorError(item.tipoError), background: `${colorError(item.tipoError)}18`, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
@@ -1107,7 +1107,7 @@ export function OcrDashboard() {
                     <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderTop: '1px solid rgb(var(--ov) / .05)' }}>
                       {Array.from({ length: Math.min(Math.ceil(detalle.total / 50), 10) }, (_, i) => i + 1).map(p => (
                         <button key={p} onClick={() => setPagina(p)}
-                          style={{ width: 32, height: 32, borderRadius: 6, fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: pagina === p ? '#2dd4a7' : 'rgb(var(--ov) / .1)', background: pagina === p ? 'rgba(45,212,167,.12)' : 'transparent', color: pagina === p ? '#2dd4a7' : 'var(--tx-muted)' }}>
+                          style={{ width: 32, height: 32, borderRadius: 6, fontFamily: 'var(--app-font)', fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: pagina === p ? 'light-dark(#2dd4a7, oklch(0.522 0.161 169))' : 'rgb(var(--ov) / .1)', background: pagina === p ? 'rgba(45,212,167,.12)' : 'transparent', color: pagina === p ? 'light-dark(#2dd4a7, oklch(0.522 0.161 169))' : 'var(--tx-muted)' }}>
                           {p}
                         </button>
                       ))}
@@ -1149,7 +1149,7 @@ function HoraChart({ data }: { data: { hora: number; total: number; efectividad:
           )
         })}
         {/* 95% line */}
-        <line x1="0" y1={48 * 0.05} x2="240" y2={48 * 0.05} stroke="#3fb978" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
+        <line x1="0" y1={48 * 0.05} x2="240" y2={48 * 0.05} stroke="light-dark(#3fb978, oklch(0.564 0.159 156))" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
       </svg>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--app-font)', fontSize: 10, color: 'var(--tx-muted)', marginTop: 2 }}>
         <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>

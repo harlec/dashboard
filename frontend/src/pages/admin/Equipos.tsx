@@ -142,7 +142,7 @@ export function AdminEquipos() {
             { key: 'esCritico',  label: 'Crítico', render: r => r.esCritico ? '⚠️' : '—' },
             { key: 'agente', label: 'Agente', render: r => r.agenteInstalado
                 ? <button onClick={() => openRestart(r)}
-                    className="px-3 py-1 rounded-md bg-[#1a2a1a] text-brand text-xs font-bold hover:brightness-110 transition-all">
+                    className="px-3 py-1 rounded-md bg-[color:light-dark(#1a2a1a,oklch(0.943 0.025 144))] text-brand text-xs font-bold hover:brightness-110 transition-all">
                     Reiniciar servicio
                   </button>
                 : '—' },

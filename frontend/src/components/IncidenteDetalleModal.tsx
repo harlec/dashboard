@@ -57,7 +57,7 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="text-muted hover:bg-[#2D1212] hover:text-danger px-2 py-1 rounded-md transition-colors"
+            className="text-muted hover:bg-[color:light-dark(#2D1212,oklch(0.958 0.031 21))] hover:text-danger px-2 py-1 rounded-md transition-colors"
           >✕</button>
         </div>
 

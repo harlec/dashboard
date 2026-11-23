@@ -15,10 +15,10 @@ export default {
         border:  'rgb(var(--c-border) / <alpha-value>)',
         // Semáforo — sistema-visual.md del rediseño "monitoreo funcional". Único
         // set de estado para toda la app (no reasignar por pantalla).
-        ok:      'oklch(0.78 0.13 160)',
-        warn:    'oklch(0.82 0.13 62)',
-        danger:  'oklch(0.70 0.17 22)',
-        info:    'oklch(0.78 0.11 205)',
+        ok:      'oklch(var(--c-ok) / <alpha-value>)',
+        warn:    'oklch(var(--c-warn) / <alpha-value>)',
+        danger:  'oklch(var(--c-danger) / <alpha-value>)',
+        info:    'oklch(var(--c-info) / <alpha-value>)',
         // Texto — primario/secundario/terciario del mismo sistema.
         ink:   'rgb(var(--c-ink) / <alpha-value>)',
         muted: 'rgb(var(--c-muted) / <alpha-value>)',

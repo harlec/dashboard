@@ -47,7 +47,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
     return () => document.removeEventListener('mousedown', onClick)
   }, [open])
 
-  const dotColor = { idle: 'var(--tx-dim)', ok: 'oklch(0.82 0.13 168)', error: 'oklch(0.70 0.17 22)' }[signalStatus]
+  const dotColor = { idle: 'var(--tx-dim)', ok: 'light-dark(oklch(0.82 0.13 168), oklch(0.499 0.143 168))', error: 'light-dark(oklch(0.70 0.17 22), oklch(0.565 0.170 22))' }[signalStatus]
   const dotLabel = { idle: 'En espera', ok: 'EN VIVO', error: 'Sin conexión' }[signalStatus]
 
   return (
@@ -61,7 +61,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
             boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)',
           }}>
             {[0, 1, 2].map(i => (
-              <div key={i} style={{ width: 17, height: 2, borderRadius: 2, background: 'oklch(0.84 0.06 200)' }} />
+              <div key={i} style={{ width: 17, height: 2, borderRadius: 2, background: 'light-dark(oklch(0.84 0.06 200), oklch(0.488 0.066 200))' }} />
             ))}
           </div>
           {open && (
@@ -73,7 +73,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
               {LINKS.map(l => (
                 <Link key={l.to} to={l.to} onClick={() => setOpen(false)} style={{
                   display: 'block', padding: '9px 14px', borderRadius: 8, textDecoration: 'none', fontSize: 15, fontWeight: 500,
-                  color: l.label === activo ? 'var(--tx)' : 'oklch(0.78 0.006 265)',
+                  color: l.label === activo ? 'var(--tx)' : 'light-dark(oklch(0.78 0.006 265), oklch(0.370 0.012 265))',
                   background: l.label === activo ? 'rgb(var(--ov) / 0.08)' : 'transparent',
                 }}>{l.label}</Link>
               ))}
@@ -85,7 +85,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
           )}
         </div>
 
-        <div style={{ fontSize: 23, fontWeight: 700, letterSpacing: '0.2em', color: 'color-mix(in oklab, oklch(0.84 0.11 195) var(--acc-k), #000)' }}>
+        <div style={{ fontSize: 23, fontWeight: 700, letterSpacing: '0.2em', color: 'light-dark(oklch(0.84 0.11 195), oklch(0.488 0.121 195))' }}>
           SIGMA
         </div>
 
@@ -95,17 +95,17 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
               padding: '8px 15px', borderRadius: 11, fontSize: 16, fontWeight: l.label === activo ? 600 : 500,
               letterSpacing: '0.01em', textDecoration: 'none', whiteSpace: 'nowrap',
               color: l.label === activo ? 'var(--tx)' : 'var(--tx-muted)',
-              background: l.label === activo ? 'color-mix(in oklab, oklch(0.34 0.045 210 / 0.75) var(--tint-k), #fff)' : 'transparent',
-              boxShadow: l.label === activo ? 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' : 'none',
+              background: l.label === activo ? 'light-dark(oklch(0.34 0.045 210 / 0.75), oklch(0.916 0.032 210 / 0.75))' : 'transparent',
+              boxShadow: l.label === activo ? 'inset 0 0 0 1px light-dark(oklch(0.70 0.09 200 / 0.35), oklch(0.565 0.099 200 / 0.35))' : 'none',
             }}>{l.label}</Link>
           ))}
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px 7px 12px', borderRadius: 999, background: 'oklch(0.45 0.09 168 / 0.16)', boxShadow: 'inset 0 0 0 1px oklch(0.60 0.10 168 / 0.28)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 15px 7px 12px', borderRadius: 999, background: 'light-dark(oklch(0.45 0.09 168 / 0.16), oklch(0.702 0.099 168 / 0.16))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.60 0.10 168 / 0.28), oklch(0.620 0.110 168 / 0.28))' }}>
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: dotColor, animation: signalStatus === 'ok' ? 'breathe 2.6s ease-in-out infinite' : undefined }} />
-          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.04em', color: 'color-mix(in oklab, oklch(0.84 0.10 168) var(--acc-k), #000)' }}>{dotLabel}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.04em', color: 'light-dark(oklch(0.84 0.10 168), oklch(0.488 0.110 168))' }}>{dotLabel}</span>
         </div>
         <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx-muted)' }}>{user?.nombre ?? user?.username ?? 'Administrador'}</div>
         <div style={{ fontSize: 32, fontWeight: 300, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>
@@ -114,7 +114,7 @@ export function WallTopbar({ activo, signalStatus = 'ok' }: Props) {
         <ThemeToggle />
         <div onClick={logout} role="button" aria-label="Cerrar sesión" title="Cerrar sesión" style={{
           padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-          color: 'color-mix(in oklab, oklch(0.80 0.08 20) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.30 0.05 20 / 0.35) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px oklch(0.60 0.12 20 / 0.40)',
+          color: 'light-dark(oklch(0.80 0.08 20), oklch(0.510 0.088 20))', background: 'light-dark(oklch(0.30 0.05 20 / 0.35), oklch(0.930 0.035 20 / 0.35))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.60 0.12 20 / 0.40), oklch(0.620 0.132 20 / 0.4))',
         }}>
           Salir
         </div>

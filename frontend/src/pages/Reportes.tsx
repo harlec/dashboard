@@ -142,12 +142,12 @@ export function Reportes() {
               return (
                 <div key={t.tipo} onClick={() => setTipo(t.tipo)} style={{
                   boxSizing: 'border-box', padding: '15px 18px', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer',
-                  background: on ? 'color-mix(in oklab, oklch(0.32 0.045 210 / 0.70) var(--tint-k), #fff)' : 'rgb(var(--s2) / 0.50)',
-                  boxShadow: on ? 'inset 0 0 0 1px oklch(0.72 0.10 200 / 0.45)' : 'inset 0 0 0 1px rgb(var(--ov) / 0.05)',
+                  background: on ? 'light-dark(oklch(0.32 0.045 210 / 0.70), oklch(0.923 0.032 210 / 0.7))' : 'rgb(var(--s2) / 0.50)',
+                  boxShadow: on ? 'inset 0 0 0 1px light-dark(oklch(0.72 0.10 200 / 0.45), oklch(0.554 0.110 200 / 0.45))' : 'inset 0 0 0 1px rgb(var(--ov) / 0.05)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', color: on ? 'var(--tx)' : 'var(--tx-2)' }}>{t.nombre}</div>
-                    <div style={{ width: 19, height: 19, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'oklch(0.18 0.04 200)', background: on ? 'oklch(0.82 0.11 200)' : 'transparent', boxShadow: on ? 'none' : 'inset 0 0 0 1px oklch(0.40 0.015 265)' }}>{on ? '✓' : ''}</div>
+                    <div style={{ width: 19, height: 19, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))', background: on ? 'light-dark(oklch(0.82 0.11 200), oklch(0.499 0.121 200))' : 'transparent', boxShadow: on ? 'none' : 'inset 0 0 0 1px light-dark(oklch(0.40 0.015 265), oklch(0.894 0.010 265))' }}>{on ? '✓' : ''}</div>
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.45, color: 'var(--tx-muted)' }}>{t.desc}</div>
                 </div>
@@ -169,8 +169,8 @@ export function Reportes() {
                     {PRESETS.map(p => (
                       <div key={p} onClick={() => setPreset(p)} style={{
                         padding: '8px 14px', borderRadius: 11, fontSize: 15, fontWeight: preset === p ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                        color: preset === p ? 'oklch(0.18 0.04 200)' : 'var(--tx-muted)',
-                        background: preset === p ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'rgb(var(--s2) / 0.75)',
+                        color: preset === p ? 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))' : 'var(--tx-muted)',
+                        background: preset === p ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.11 200), oklch(0.488 0.121 200)), light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200)))' : 'rgb(var(--s2) / 0.75)',
                         boxShadow: preset === p ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
                       }}>{p}</div>
                     ))}
@@ -191,8 +191,8 @@ export function Reportes() {
                   {PERIODOS_CORTOS.map(p => (
                     <div key={p.key} onClick={() => setPeriodoCorto(p.key)} style={{
                       padding: '8px 14px', borderRadius: 11, fontSize: 15, fontWeight: periodoCorto === p.key ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                      color: periodoCorto === p.key ? 'oklch(0.18 0.04 200)' : 'var(--tx-muted)',
-                      background: periodoCorto === p.key ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'rgb(var(--s2) / 0.75)',
+                      color: periodoCorto === p.key ? 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))' : 'var(--tx-muted)',
+                      background: periodoCorto === p.key ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.11 200), oklch(0.488 0.121 200)), light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200)))' : 'rgb(var(--s2) / 0.75)',
                       boxShadow: periodoCorto === p.key ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
                     }}>{p.label}</div>
                   ))}
@@ -205,8 +205,8 @@ export function Reportes() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 <div onClick={() => setEstsMarcadas(new Set())} style={{
                   padding: '8px 14px', borderRadius: 11, fontSize: 15, fontWeight: estsMarcadas.size === 0 ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                  color: estsMarcadas.size === 0 ? 'oklch(0.18 0.04 200)' : 'var(--tx-muted)',
-                  background: estsMarcadas.size === 0 ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'rgb(var(--s2) / 0.75)',
+                  color: estsMarcadas.size === 0 ? 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))' : 'var(--tx-muted)',
+                  background: estsMarcadas.size === 0 ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.11 200), oklch(0.488 0.121 200)), light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200)))' : 'rgb(var(--s2) / 0.75)',
                   boxShadow: estsMarcadas.size === 0 ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
                 }}>Todas</div>
                 {ESTS.map(e => {
@@ -214,15 +214,15 @@ export function Reportes() {
                   return (
                     <div key={e} onClick={() => setEstsMarcadas(s => { const n = new Set(s); n.has(e) ? n.delete(e) : n.add(e); return n })} style={{
                       padding: '8px 14px', borderRadius: 11, fontSize: 15, fontWeight: on ? 600 : 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                      color: on ? 'oklch(0.18 0.04 200)' : 'var(--tx-muted)',
-                      background: on ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'rgb(var(--s2) / 0.75)',
+                      color: on ? 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))' : 'var(--tx-muted)',
+                      background: on ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.11 200), oklch(0.488 0.121 200)), light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200)))' : 'rgb(var(--s2) / 0.75)',
                       boxShadow: on ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
                     }}>{e}</div>
                   )
                 })}
               </div>
               {estsMarcadas.size > 1 && (
-                <div style={{ fontSize: 12.5, color: 'oklch(0.62 0.02 62)' }}>Con varias marcadas, la descarga trae todas (el filtro por una sola estación se aplica cuando hay exactamente una marcada).</div>
+                <div style={{ fontSize: 12.5, color: 'light-dark(oklch(0.62 0.02 62), oklch(0.530 0.020 62))' }}>Con varias marcadas, la descarga trae todas (el filtro por una sola estación se aplica cuando hay exactamente una marcada).</div>
               )}
             </div>
 
@@ -230,8 +230,8 @@ export function Reportes() {
               <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--tx-dim)' }}>Opciones de {seleccion.nombre}</div>
               {opciones.map(o => (
                 <div key={o.txt} onClick={o.toggle} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 15px', borderRadius: 12, cursor: 'pointer', background: 'rgb(var(--s2) / 0.55)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.05)' }}>
-                  <div style={{ width: 34, height: 19, flex: '0 0 auto', borderRadius: 999, display: 'flex', alignItems: 'center', padding: 2, justifyContent: o.on ? 'flex-end' : 'flex-start', background: o.on ? 'oklch(0.74 0.11 200)' : 'rgb(var(--s3))' }}>
-                    <div style={{ width: 15, height: 15, borderRadius: '50%', background: o.on ? 'color-mix(in oklab, oklch(0.20 0.04 200) var(--tint-k), #fff)' : 'var(--tx-muted)' }} />
+                  <div style={{ width: 34, height: 19, flex: '0 0 auto', borderRadius: 999, display: 'flex', alignItems: 'center', padding: 2, justifyContent: o.on ? 'flex-end' : 'flex-start', background: o.on ? 'light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200))' : 'rgb(var(--s3))' }}>
+                    <div style={{ width: 15, height: 15, borderRadius: '50%', background: o.on ? 'light-dark(oklch(0.20 0.04 200), oklch(0.966 0.028 200))' : 'var(--tx-muted)' }} />
                   </div>
                   <div style={{ minWidth: 0, fontSize: 15, fontWeight: 500, color: o.on ? 'var(--tx)' : 'var(--tx-muted)' }}>{o.txt}</div>
                 </div>
@@ -241,7 +241,7 @@ export function Reportes() {
         </Panel>
 
         {/* ── Paso 3 ── */}
-        <div style={{ minWidth: 0, boxSizing: 'border-box', borderRadius: 22, padding: '16px 22px', display: 'flex', flexDirection: 'column', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.26 0.035 210 / 0.75) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.92) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.08), 0 14px 40px rgb(var(--shadow) / 0.32)' }}>
+        <div style={{ minWidth: 0, boxSizing: 'border-box', borderRadius: 22, padding: '16px 22px', display: 'flex', flexDirection: 'column', background: 'linear-gradient(160deg, light-dark(oklch(0.26 0.035 210 / 0.75), oklch(0.945 0.025 210 / 0.75)) 0%, rgb(var(--s1) / 0.92) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.08), 0 14px 40px rgb(var(--shadow) / 0.32)' }}>
           <div style={{ fontSize: 19, fontWeight: 600 }}>3 · Qué vas a descargar</div>
           <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 14 }}>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -251,14 +251,14 @@ export function Reportes() {
                 { label: 'Tamaño aprox.', val: estimado ? fmtBytes(estimado.bytesAprox) : '—' },
               ].map(k => (
                 <div key={k.label} style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, padding: '13px 16px', borderRadius: 14, background: 'rgb(var(--s1) / 0.70)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'oklch(0.56 0.02 265)' }}>{k.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'light-dark(oklch(0.56 0.02 265), oklch(0.590 0.020 265))' }}>{k.label}</div>
                   <div style={{ fontSize: 28, fontWeight: 300, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>{k.val}</div>
                 </div>
               ))}
             </div>
 
             <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'oklch(0.56 0.02 265)' }}>Columnas incluidas</div>
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'light-dark(oklch(0.56 0.02 265), oklch(0.590 0.020 265))' }}>Columnas incluidas</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {(estimado?.columnasNombres ?? []).map(c => (
                   <div key={c} style={{ padding: '7px 13px', borderRadius: 10, fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap', color: 'var(--tx-2)', background: 'rgb(var(--s2) / 0.60)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>{c}</div>
@@ -267,13 +267,13 @@ export function Reportes() {
             </div>
 
             {estimado?.aviso && (
-              <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 9, padding: '11px 14px', borderRadius: 12, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'color-mix(in oklab, oklch(0.82 0.06 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.30 0.04 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>{estimado.aviso}</div>
+              <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 9, padding: '11px 14px', borderRadius: 12, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'light-dark(oklch(0.82 0.06 200), oklch(0.499 0.066 200))', background: 'light-dark(oklch(0.30 0.04 210 / 0.45), oklch(0.930 0.028 210 / 0.45))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>{estimado.aviso}</div>
             )}
 
             <div style={{ flex: '0 0 auto', display: 'flex', gap: 10 }}>
-              <div onClick={() => descargar('csv')} style={{ flex: '1 1 0', padding: '13px 18px', borderRadius: 13, textAlign: 'center', fontSize: 16, fontWeight: 600, cursor: descargando ? 'default' : 'pointer', opacity: descargando ? 0.6 : 1, color: 'oklch(0.18 0.04 165)', background: 'linear-gradient(180deg, oklch(0.84 0.13 165), oklch(0.74 0.13 163))' }}>Descargar CSV</div>
+              <div onClick={() => descargar('csv')} style={{ flex: '1 1 0', padding: '13px 18px', borderRadius: 13, textAlign: 'center', fontSize: 16, fontWeight: 600, cursor: descargando ? 'default' : 'pointer', opacity: descargando ? 0.6 : 1, color: 'light-dark(oklch(0.18 0.04 165), oklch(0.973 0.028 165))', background: 'linear-gradient(180deg, light-dark(oklch(0.84 0.13 165), oklch(0.488 0.143 165)), light-dark(oklch(0.74 0.13 163), oklch(0.543 0.143 163)))' }}>Descargar CSV</div>
               {pdfDisponible && (
-                <div onClick={() => descargar('pdf')} style={{ flex: '1 1 0', padding: '13px 18px', borderRadius: 13, textAlign: 'center', fontSize: 16, fontWeight: 600, cursor: descargando ? 'default' : 'pointer', opacity: descargando ? 0.6 : 1, color: 'color-mix(in oklab, oklch(0.90 0.10 22) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.38 0.10 22 / 0.40) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px oklch(0.65 0.13 22 / 0.32)' }}>Descargar PDF</div>
+                <div onClick={() => descargar('pdf')} style={{ flex: '1 1 0', padding: '13px 18px', borderRadius: 13, textAlign: 'center', fontSize: 16, fontWeight: 600, cursor: descargando ? 'default' : 'pointer', opacity: descargando ? 0.6 : 1, color: 'light-dark(oklch(0.90 0.10 22), oklch(0.455 0.110 22))', background: 'light-dark(oklch(0.38 0.10 22 / 0.40), oklch(0.901 0.070 22 / 0.4))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.65 0.13 22 / 0.32), oklch(0.592 0.143 22 / 0.32))' }}>Descargar PDF</div>
               )}
             </div>
           </div>
@@ -301,12 +301,12 @@ export function Reportes() {
                 <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--tx-muted)' }}>{r.filtros}</div>
                 <div><span style={{
                   padding: '3px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  color: r.formato === 'csv' ? 'color-mix(in oklab, oklch(0.88 0.11 160) var(--acc-k), #000)' : 'color-mix(in oklab, oklch(0.86 0.11 22) var(--acc-k), #000)',
-                  background: r.formato === 'csv' ? 'oklch(0.40 0.09 165 / 0.32)' : 'oklch(0.42 0.11 22 / 0.30)',
+                  color: r.formato === 'csv' ? 'light-dark(oklch(0.88 0.11 160), oklch(0.466 0.121 160))' : 'light-dark(oklch(0.86 0.11 22), oklch(0.477 0.121 22))',
+                  background: r.formato === 'csv' ? 'light-dark(oklch(0.40 0.09 165 / 0.32), oklch(0.894 0.063 165 / 0.32))' : 'light-dark(oklch(0.42 0.11 22 / 0.30), oklch(0.887 0.077 22 / 0.3))',
                 }}>{r.formato.toUpperCase()}</span></div>
                 <div style={{ color: 'var(--tx-2)' }}>{r.filas.toLocaleString('es-PE')}</div>
                 <div style={{ color: 'var(--tx-muted)' }}>{new Date(r.fecha).toLocaleString('es-PE', { hour12: false, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
-                <div onClick={() => window.open(r.url, '_blank')} style={{ padding: '7px 14px', borderRadius: 10, textAlign: 'center', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'color-mix(in oklab, oklch(0.84 0.08 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.30 0.04 210 / 0.50) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>Descargar</div>
+                <div onClick={() => window.open(r.url, '_blank')} style={{ padding: '7px 14px', borderRadius: 10, textAlign: 'center', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.84 0.08 200), oklch(0.488 0.088 200))', background: 'light-dark(oklch(0.30 0.04 210 / 0.50), oklch(0.930 0.028 210 / 0.5))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>Descargar</div>
               </div>
             ))}
         </div>

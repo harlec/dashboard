@@ -8,7 +8,7 @@ const ARC    = Math.PI * R   // longitud del semicírculo ≈ 131.9
 function arcColor(pct: number) {
   if (pct >= 99) return '#72BF44'
   if (pct >= 95) return '#F99B1C'
-  return '#F04545'
+  return 'light-dark(#F04545, oklch(0.598 0.170 25))'
 }
 
 export function StationGauge({ pct, up, down, enlace }: Props) {

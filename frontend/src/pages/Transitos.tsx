@@ -20,13 +20,13 @@ const gris = 'var(--tx-muted)'
 
 // Color fijo por medio de pago (código tra_tipop).
 const MEDIO_COLOR: Record<string, string> = {
-  E: 'oklch(0.82 0.13 85)',   // efectivo
-  T: 'oklch(0.78 0.11 205)',  // tag
-  S: 'oklch(0.76 0.10 300)',  // tarjeta
-  O: 'oklch(0.78 0.13 160)',  // por placa
+  E: 'light-dark(oklch(0.82 0.13 85), oklch(0.499 0.143 85))',   // efectivo
+  T: 'light-dark(oklch(0.78 0.11 205), oklch(0.521 0.121 205))',  // tag
+  S: 'light-dark(oklch(0.76 0.10 300), oklch(0.532 0.110 300))',  // tarjeta
+  O: 'light-dark(oklch(0.78 0.13 160), oklch(0.521 0.143 160))',  // por placa
   X: 'var(--tx-muted)', // exento
 }
-const colorMedio = (c: string) => MEDIO_COLOR[c] ?? 'oklch(0.72 0.12 30)'
+const colorMedio = (c: string) => MEDIO_COLOR[c] ?? 'light-dark(oklch(0.72 0.12 30), oklch(0.554 0.132 30))'
 const ORDEN_MEDIOS = ['E', 'T', 'S', 'O', 'X']
 
 function Panel({ children, style }: { children: ReactNode; style?: CSSProperties }) {
@@ -53,7 +53,7 @@ function Kpi({ titulo, valor, sub, fondo, colorTitulo, colorValor }: {
     <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: fondo, boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
       <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: colorTitulo }}>{titulo}</div>
       <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: colorValor }}>{valor}</div>
-      <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.58 0.02 265)' }}>{sub}</div>
+      <div style={{ fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.58 0.02 265), oklch(0.570 0.020 265))' }}>{sub}</div>
     </div>
   )
 }
@@ -156,7 +156,7 @@ export function Transitos() {
       <div style={{ height: 40, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.015em' }}>Tránsitos por vía</div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: error ? 'color-mix(in oklab, oklch(0.75 0.15 25) var(--acc-k), #000)' : 'var(--tx-dim)' }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: error ? 'light-dark(oklch(0.75 0.15 25), oklch(0.537 0.165 25))' : 'var(--tx-dim)' }}>
             {error ? 'sin conexión con la base de tránsitos · reintentando' : `${cargando ? 'cargando…' : `actualizado ${lastUpdate.toLocaleTimeString('es-PE', { hour12: false })}`} · refresco automático`}
           </div>
         </div>
@@ -175,8 +175,8 @@ export function Transitos() {
               <div onClick={() => setSoloCobro(v => !v)}
                 title={nOtros > 0 ? `Tránsitos que no son cobro (TR) en el período — ${detalle}` : 'Sin tránsitos fuera de cobro en el período'}
                 style={{ padding: '7px 13px', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                  color: soloCobro ? 'color-mix(in oklab, oklch(0.80 0.08 200) var(--acc-k), #000)' : 'color-mix(in oklab, oklch(0.80 0.12 62) var(--acc-k), #000)',
-                  background: soloCobro ? 'color-mix(in oklab, oklch(0.35 0.05 210 / 0.45) var(--tint-k), #fff)' : 'color-mix(in oklab, oklch(0.38 0.08 62 / 0.45) var(--tint-k), #fff)',
+                  color: soloCobro ? 'light-dark(oklch(0.80 0.08 200), oklch(0.510 0.088 200))' : 'light-dark(oklch(0.80 0.12 62), oklch(0.510 0.132 62))',
+                  background: soloCobro ? 'light-dark(oklch(0.35 0.05 210 / 0.45), oklch(0.912 0.035 210 / 0.45))' : 'light-dark(oklch(0.38 0.08 62 / 0.45), oklch(0.901 0.056 62 / 0.45))',
                   boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
                 {soloCobro ? `Solo cobro (TR)${nOtros > 0 ? ` · ocultos ${nOtros}` : ''}` : `Todos los tipos${detalle ? ` · ${detalle}` : ''}`}
               </div>
@@ -186,8 +186,8 @@ export function Transitos() {
             {PERIODOS.map(({ key, label }) => (
               <div key={key} onClick={() => setPeriodo(key)} style={{
                 padding: '7px 13px', borderRadius: 10, fontSize: 15, fontWeight: periodo === key ? 600 : 500, cursor: 'pointer',
-                color: periodo === key ? 'oklch(0.22 0.04 62)' : 'var(--tx-muted)',
-                background: periodo === key ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+                color: periodo === key ? 'light-dark(oklch(0.22 0.04 62), oklch(0.959 0.028 62))' : 'var(--tx-muted)',
+                background: periodo === key ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.13 68), oklch(0.488 0.143 68)), light-dark(oklch(0.76 0.13 62), oklch(0.532 0.143 62)))' : 'transparent',
               }}>{label}</div>
             ))}
             {periodo === 'rango' && (['desde', 'hasta'] as const).map(k => (
@@ -203,18 +203,18 @@ export function Transitos() {
       {/* ── KPI: total · ritmo · último · medios de pago ───── */}
       <div style={{ height: 112, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '0.9fr 0.8fr 0.8fr 2.4fr', gap: 14, opacity: cargando ? 0.35 : 1, transition: 'opacity .2s' }}>
         <Kpi titulo="Tránsitos" valor={cargando ? '···' : total.toLocaleString('en-US')} sub={`${data?.via ?? ''} · ${etiquetaPeriodo}`}
-          fondo="linear-gradient(160deg, color-mix(in oklab, oklch(0.30 0.045 200 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)"
-          colorTitulo="oklch(0.76 0.06 200)" colorValor="oklch(0.92 0.06 200)" />
+          fondo="linear-gradient(160deg, light-dark(oklch(0.30 0.045 200 / 0.55), oklch(0.930 0.032 200 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)"
+          colorTitulo="light-dark(oklch(0.76 0.06 200), oklch(0.532 0.066 200))" colorValor="light-dark(oklch(0.92 0.06 200), oklch(0.444 0.066 200))" />
         <Kpi titulo="Ritmo" valor={cargando ? '···' : data?.porHora != null ? data.porHora.toLocaleString('en-US') : '—'} sub="tránsitos por hora"
           fondo="linear-gradient(160deg, rgb(var(--s2) / 0.60) 0%, rgb(var(--s1) / 0.55) 100%)"
-          colorTitulo="oklch(0.72 0.03 265)" colorValor="var(--tx)" />
+          colorTitulo="light-dark(oklch(0.72 0.03 265), oklch(0.430 0.030 265))" colorValor="var(--tx)" />
         <Kpi titulo="Último tránsito" valor={cargando ? '···' : data?.ultimoTransito?.slice(11) ?? '—'} sub={data?.ultimoTransito?.slice(0, 10) ?? 'sin tránsitos en el período'}
-          fondo="linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)"
-          colorTitulo="oklch(0.84 0.09 62)" colorValor="oklch(0.90 0.11 62)" />
+          fondo="linear-gradient(160deg, light-dark(oklch(0.38 0.09 62 / 0.50), oklch(0.901 0.063 62 / 0.5)) 0%, rgb(var(--s1) / 0.55) 100%)"
+          colorTitulo="light-dark(oklch(0.84 0.09 62), oklch(0.488 0.099 62))" colorValor="light-dark(oklch(0.90 0.11 62), oklch(0.455 0.121 62))" />
 
         <Panel style={{ padding: '12px 20px', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.62 0.02 265)' }}>Medios de pago</div>
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.62 0.02 265), oklch(0.530 0.020 265))' }}>Medios de pago</div>
             <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>prepago (subforma 1): {(data?.prepago ?? 0).toLocaleString('en-US')}</div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(medios.length, 1)}, 1fr)`, gap: 12 }}>
@@ -281,7 +281,7 @@ export function Transitos() {
                 <div key={c.categoria} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 150, flex: '0 0 auto', textAlign: 'right', fontSize: 14, fontWeight: 500, color: 'var(--tx-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.categoria}</div>
                   <div style={{ flex: '1 1 auto', minWidth: 0, height: 13, borderRadius: 5, background: 'rgb(var(--ov) / 0.05)' }}>
-                    <div style={{ width: `${c.total / maxCat * 100}%`, height: '100%', borderRadius: 5, background: 'linear-gradient(90deg, oklch(0.52 0.09 210), oklch(0.68 0.11 205))' }} />
+                    <div style={{ width: `${c.total / maxCat * 100}%`, height: '100%', borderRadius: 5, background: 'linear-gradient(90deg, light-dark(oklch(0.52 0.09 210), oklch(0.664 0.099 210)), light-dark(oklch(0.68 0.11 205), oklch(0.576 0.121 205)))' }} />
                   </div>
                   <div style={{ width: 48, flex: '0 0 auto', fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: 'var(--tx-muted)' }}>{c.total.toLocaleString('en-US')}</div>
                 </div>
@@ -302,7 +302,7 @@ export function Transitos() {
           <div style={{ display: 'flex', gap: 8, opacity: puedeExportar ? 1 : 0.4, pointerEvents: puedeExportar ? 'auto' : 'none' }}>
             {(['xlsx', 'pdf'] as const).map(f => (
               <div key={f} onClick={() => exportar(f)} title={`Exportar ${f === 'xlsx' ? 'Excel' : 'PDF'} de ${data?.via ?? 'la vía'} · ${etiquetaPeriodo}`}
-                style={{ padding: '6px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'color-mix(in oklab, oklch(0.80 0.08 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.35 0.05 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
+                style={{ padding: '6px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.80 0.08 200), oklch(0.510 0.088 200))', background: 'light-dark(oklch(0.35 0.05 210 / 0.45), oklch(0.912 0.035 210 / 0.45))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
                 {f === 'xlsx' ? 'Exportar Excel' : 'Exportar PDF'}
               </div>
             ))}
@@ -322,7 +322,7 @@ export function Transitos() {
                 <div style={{ fontWeight: 600 }}>{r.placa || r.placaOcr || '—'}</div>
                 <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.categoria}</div>
                 <div style={{ fontWeight: 600, color: colorMedio(r.medio) }}>{nombreMedio(r.medio)}</div>
-                <div style={{ color: r.prepago ? 'color-mix(in oklab, oklch(0.82 0.13 160) var(--acc-k), #000)' : 'var(--tx-dim)' }}>{r.prepago ? 'Sí' : '—'}</div>
+                <div style={{ color: r.prepago ? 'light-dark(oklch(0.82 0.13 160), oklch(0.499 0.143 160))' : 'var(--tx-dim)' }}>{r.prepago ? 'Sí' : '—'}</div>
                 <div style={{ color: gris }}>{r.tipoTransito || '—'}</div>
                 <div style={{ color: gris, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.cobrador || '—'}</div>
               </div>

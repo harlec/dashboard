@@ -4,7 +4,7 @@ interface Props {
   label: string
   value: ReactNode
   sub?: ReactNode
-  /** Color de arranque del degradado — ya con su alpha, ej. 'color-mix(in oklab, oklch(0.38 0.09 62 / .50) var(--tint-k), #fff)' */
+  /** Color de arranque del degradado — ya con su alpha, ej. 'light-dark(oklch(0.38 0.09 62 / .50), oklch(0.901 0.063 62 / 0.5))' */
   tint: string
   /** Color sólido para la etiqueta y la cifra */
   accent: string

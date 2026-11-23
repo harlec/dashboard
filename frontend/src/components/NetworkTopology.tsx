@@ -15,7 +15,7 @@ const STAGGER  = 400
 // Verde si 100% operativo · Ámbar si algo down · Rojo si mayoría down
 function statusColor(up: number, total: number): string {
   if (total === 0 || up === total) return '#72BF44'
-  return up / total >= 0.5 ? '#F59E0B' : '#EF4444'
+  return up / total >= 0.5 ? 'light-dark(#F59E0B, oklch(0.527 0.170 70))' : 'light-dark(#EF4444, oklch(0.600 0.170 25))'
 }
 
 // Path de sector de pastel (sentido horario desde la cima)
@@ -65,9 +65,9 @@ function MiniPie({ cx, cy, r, upPct, col }: { cx:number; cy:number; r:number; up
         : null}
       {/* Sector DOWN */}
       {upPct < 0.995 && upPct > 0.005
-        ? <path d={sector(cx, cy, r, upDeg, 360)} fill="#EF4444" opacity="0.55" />
+        ? <path d={sector(cx, cy, r, upDeg, 360)} fill="light-dark(#EF4444, oklch(0.600 0.170 25))" opacity="0.55" />
         : upPct <= 0.005
-        ? <circle cx={cx} cy={cy} r={r} fill="#EF4444" opacity="0.85" />
+        ? <circle cx={cx} cy={cy} r={r} fill="light-dark(#EF4444, oklch(0.600 0.170 25))" opacity="0.85" />
         : null}
       <circle cx={cx} cy={cy} r={r} fill="none" stroke={col} strokeWidth="0.8" opacity="0.6" />
     </g>
@@ -122,7 +122,7 @@ export function NetworkTopology({ estaciones }: Props) {
   }, [])
 
   return (
-    <div className="bg-[#070d12] rounded-xl border border-[#72BF44]/30 overflow-hidden h-full flex flex-col">
+    <div className="bg-[color:light-dark(#070d12,oklch(0.982 0.010 243))] rounded-xl border border-[#72BF44]/30 overflow-hidden h-full flex flex-col">
       <div className="flex items-center justify-between px-5 py-3 border-b border-[#72BF44]/20 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2.5 w-2.5">
@@ -165,7 +165,7 @@ export function NetworkTopology({ estaciones }: Props) {
           </filter>
         </defs>
 
-        <rect width={W} height={H} fill="#070d12" />
+        <rect width={W} height={H} fill="light-dark(#070d12, oklch(0.982 0.010 243))" />
         <rect width={W} height={H} fill="url(#nt-g)" />
 
         {/* Anillo guía */}
@@ -203,9 +203,9 @@ export function NetworkTopology({ estaciones }: Props) {
           const col   = statusColor(est.up, total)
           const lat   = avgLat(est)
           const pct   = Math.round(upPct * 100)
-          const glowF = col === '#72BF44' ? 'f-gn' : col === '#F59E0B' ? 'f-am' : 'f-rd'
-          const lblFill = col === '#72BF44' ? '#ccc8c4' : col === '#F59E0B' ? '#F5C56A' : '#FF8888'
-          const lblFill2 = col === '#72BF44' ? '#1e4040' : col === '#F59E0B' ? '#6a4208' : '#5a1a1a'
+          const glowF = col === '#72BF44' ? 'f-gn' : col === 'light-dark(#F59E0B, oklch(0.527 0.170 70))' ? 'f-am' : 'f-rd'
+          const lblFill = col === '#72BF44' ? '#ccc8c4' : col === 'light-dark(#F59E0B, oklch(0.527 0.170 70))' ? '#F5C56A' : '#FF8888'
+          const lblFill2 = col === '#72BF44' ? '#1e4040' : col === 'light-dark(#F59E0B, oklch(0.527 0.170 70))' ? '#6a4208' : '#5a1a1a'
 
           return (
             <g key={`node-${est.id}`}>

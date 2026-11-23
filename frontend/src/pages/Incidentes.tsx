@@ -96,12 +96,12 @@ export function Incidentes() {
     const logPos = (v: number) => v <= 0 ? 0 : Math.min(100, Math.max(2, Math.round(Math.log10(v + 1) / Math.log10(cap + 1) * 100)))
     const tendencia = dat.map(d => ({
       dia: d.fecha, n: d.total.toLocaleString('es-PE'), alto: `${logPos(d.total)}%`,
-      fg: d.total === max ? 'oklch(0.86 0.14 25)' : gris,
+      fg: d.total === max ? 'light-dark(oklch(0.86 0.14 25), oklch(0.477 0.154 25))' : gris,
       color: d.total === max
-        ? 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.56 0.16 22))'
+        ? 'linear-gradient(180deg, light-dark(oklch(0.72 0.18 25), oklch(0.554 0.170 25)), light-dark(oklch(0.56 0.16 22), oklch(0.642 0.170 22)))'
         : d.total >= max * 0.1
-          ? 'linear-gradient(180deg, oklch(0.80 0.13 62), oklch(0.66 0.12 62))'
-          : 'linear-gradient(180deg, oklch(0.60 0.07 220), oklch(0.48 0.06 225))',
+          ? 'linear-gradient(180deg, light-dark(oklch(0.80 0.13 62), oklch(0.510 0.143 62)), light-dark(oklch(0.66 0.12 62), oklch(0.587 0.132 62)))'
+          : 'linear-gradient(180deg, light-dark(oklch(0.60 0.07 220), oklch(0.620 0.077 220)), light-dark(oklch(0.48 0.06 225), oklch(0.686 0.066 225)))',
     }))
     const niveles = [cap, Math.round(cap / 10), Math.round(cap / 100) || (cap >= 10 ? 1 : 0), 0]
     const ejeY = [...new Set(niveles)].map(v => ({
@@ -117,7 +117,7 @@ export function Incidentes() {
     const max = vias[0]?.total ?? 1
     return vias.map((v, i) => ({
       rank: `#${i + 1}`, via: v.via, est: v.estacion, n: v.total,
-      rankFg: i < 3 ? 'oklch(0.72 0.16 22)' : 'var(--tx-dim)',
+      rankFg: i < 3 ? 'light-dark(oklch(0.72 0.16 22), oklch(0.554 0.170 22))' : 'var(--tx-dim)',
       color: COLORS[v.estacion] ?? gris,
       ancho: `${Math.round(v.total / max * 100)}%`,
     }))
@@ -133,10 +133,10 @@ export function Incidentes() {
         txt: String(h.hora).padStart(2, '0'), fg: h.hora % 2 ? 'transparent' : 'var(--tx-dim)',
         alto: `${Math.round(h.total / max * 100)}%`,
         color: h.total === max
-          ? 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.56 0.16 22))'
+          ? 'linear-gradient(180deg, light-dark(oklch(0.72 0.18 25), oklch(0.554 0.170 25)), light-dark(oklch(0.56 0.16 22), oklch(0.642 0.170 22)))'
           : h.total >= max * 0.55
-            ? 'linear-gradient(180deg, oklch(0.80 0.13 62), oklch(0.66 0.12 62))'
-            : 'linear-gradient(180deg, oklch(0.60 0.07 220), oklch(0.48 0.06 225))',
+            ? 'linear-gradient(180deg, light-dark(oklch(0.80 0.13 62), oklch(0.510 0.143 62)), light-dark(oklch(0.66 0.12 62), oklch(0.587 0.132 62)))'
+            : 'linear-gradient(180deg, light-dark(oklch(0.60 0.07 220), oklch(0.620 0.077 220)), light-dark(oklch(0.48 0.06 225), oklch(0.686 0.066 225)))',
       })),
       nota: `${totalSinRafaga.toLocaleString('es-PE')} incidentes · excluye la ráfaga dominante`,
     }
@@ -148,10 +148,10 @@ export function Incidentes() {
     const max = dat[0]?.total ?? 1
     return dat.map((c, i) => ({
       txt: c.causa, n: c.total.toLocaleString('es-PE'),
-      fg: i === 0 ? 'oklch(0.86 0.13 22)' : 'var(--tx-muted)',
+      fg: i === 0 ? 'light-dark(oklch(0.86 0.13 22), oklch(0.477 0.143 22))' : 'var(--tx-muted)',
       barra: i === 0
-        ? 'linear-gradient(90deg, oklch(0.56 0.15 20), oklch(0.72 0.16 22))'
-        : 'linear-gradient(90deg, oklch(0.50 0.02 265), oklch(0.62 0.02 265))',
+        ? 'linear-gradient(90deg, light-dark(oklch(0.56 0.15 20), oklch(0.642 0.165 20)), light-dark(oklch(0.72 0.16 22), oklch(0.554 0.170 22)))'
+        : 'linear-gradient(90deg, light-dark(oklch(0.50 0.02 265), oklch(0.650 0.020 265)), light-dark(oklch(0.62 0.02 265), oklch(0.530 0.020 265)))',
       ancho: `${Math.round(c.total / max * 100)}%`,
     }))
   }, [resumen?.porCausa])
@@ -177,8 +177,8 @@ export function Incidentes() {
           {RANGOS.map(r => (
             <div key={r.key} onClick={() => setDias(r.key)} style={{
               padding: '7px 16px', borderRadius: 10, fontSize: 15, fontWeight: dias === r.key ? 600 : 500, cursor: 'pointer',
-              color: dias === r.key ? 'oklch(0.22 0.04 62)' : 'var(--tx-muted)',
-              background: dias === r.key ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+              color: dias === r.key ? 'light-dark(oklch(0.22 0.04 62), oklch(0.959 0.028 62))' : 'var(--tx-muted)',
+              background: dias === r.key ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.13 68), oklch(0.488 0.143 68)), light-dark(oklch(0.76 0.13 62), oklch(0.532 0.143 62)))' : 'transparent',
             }}>{r.label}</div>
           ))}
         </div>
@@ -186,34 +186,34 @@ export function Incidentes() {
 
       {/* ── KPI ────────────────────────────────────────────── */}
       <div style={{ height: 98, flex: '0 0 auto', display: 'grid', gridTemplateColumns: '0.85fr 0.85fr 0.85fr 2.2fr', gap: 13 }}>
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.36 0.10 20 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.80 0.10 22) var(--acc-k), #000)' }}>En el período</div>
-          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.86 0.13 22) var(--acc-k), #000)' }}>{(resumen?.total ?? 0).toLocaleString('es-PE')}</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.62 0.035 22)' }}>equipos caídos en {RANGOS.find(r => r.key === dias)?.label.toLowerCase()}</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.36 0.10 20 / 0.55), oklch(0.909 0.070 20 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.80 0.10 22), oklch(0.510 0.110 22))' }}>En el período</div>
+          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.86 0.13 22), oklch(0.477 0.143 22))' }}>{(resumen?.total ?? 0).toLocaleString('es-PE')}</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.62 0.035 22), oklch(0.530 0.035 22))' }}>equipos caídos en {RANGOS.find(r => r.key === dias)?.label.toLowerCase()}</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.38 0.09 62 / 0.50), oklch(0.901 0.063 62 / 0.5)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.80 0.14 62)', animation: 'breathe 1.8s ease-in-out infinite' }} />
-            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.84 0.09 62) var(--acc-k), #000)' }}>Activos ahora</div>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'light-dark(oklch(0.80 0.14 62), oklch(0.510 0.154 62))', animation: 'breathe 1.8s ease-in-out infinite' }} />
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.84 0.09 62), oklch(0.488 0.099 62))' }}>Activos ahora</div>
           </div>
-          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.90 0.12 62) var(--acc-k), #000)' }}>{resumen?.activos ?? 0}</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.64 0.035 62)' }}>sin cerrar en este momento</div>
+          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.90 0.12 62), oklch(0.455 0.132 62))' }}>{resumen?.activos ?? 0}</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.64 0.035 62), oklch(0.510 0.035 62))' }}>sin cerrar en este momento</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.30 0.045 200 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.76 0.06 200) var(--acc-k), #000)' }}>MTTR</div>
-          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.92 0.06 200) var(--acc-k), #000)' }}>{resumen?.mttrMin != null ? dur(resumen.mttrMin) : '—'}</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.60 0.03 200)' }}>promedio de recuperación</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.30 0.045 200 / 0.55), oklch(0.930 0.032 200 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.76 0.06 200), oklch(0.532 0.066 200))' }}>MTTR</div>
+          <div style={{ fontSize: 40, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.92 0.06 200), oklch(0.444 0.066 200))' }}>{resumen?.mttrMin != null ? dur(resumen.mttrMin) : '—'}</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.60 0.03 200), oklch(0.550 0.030 200))' }}>promedio de recuperación</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.32 0.05 25 / 0.45) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.60) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.32 0.05 25 / 0.45), oklch(0.923 0.035 25 / 0.45)) 0%, rgb(var(--s1) / 0.60) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.82 0.11 25) var(--acc-k), #000)' }}>Ráfaga dominante</div>
-            <div style={{ padding: '3px 10px', borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'oklch(0.22 0.05 25)', background: 'oklch(0.78 0.14 25)' }}>{rafagaVista.share} del período</div>
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.82 0.11 25), oklch(0.499 0.121 25))' }}>Ráfaga dominante</div>
+            <div style={{ padding: '3px 10px', borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'light-dark(oklch(0.22 0.05 25), oklch(0.959 0.035 25))', background: 'light-dark(oklch(0.78 0.14 25), oklch(0.521 0.154 25))' }}>{rafagaVista.share} del período</div>
           </div>
           <div style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.01em', color: 'var(--tx)' }}>{rafagaVista.titulo}</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: 'oklch(0.64 0.02 265)' }}>{rafagaVista.detalle}</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.64 0.02 265), oklch(0.510 0.020 265))' }}>{rafagaVista.detalle}</div>
         </div>
       </div>
 
@@ -355,15 +355,15 @@ export function Incidentes() {
             </select>
             <div onClick={() => setSolo(v => !v)} style={{
               padding: '8px 15px', borderRadius: 11, fontSize: 15, fontWeight: solo ? 600 : 500, cursor: 'pointer',
-              color: solo ? 'oklch(0.20 0.05 62)' : 'var(--tx-muted)',
-              background: solo ? 'linear-gradient(180deg, oklch(0.86 0.13 68), oklch(0.78 0.13 62))' : 'rgb(var(--s2) / 0.80)',
+              color: solo ? 'light-dark(oklch(0.20 0.05 62), oklch(0.966 0.035 62))' : 'var(--tx-muted)',
+              background: solo ? 'linear-gradient(180deg, light-dark(oklch(0.86 0.13 68), oklch(0.477 0.143 68)), light-dark(oklch(0.78 0.13 62), oklch(0.521 0.143 62)))' : 'rgb(var(--s2) / 0.80)',
               boxShadow: solo ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
             }}>Solo activos</div>
             {isAdmin && (
               <div onClick={() => selected.size > 0 && setTagModal(true)} style={{
                 padding: '8px 16px', borderRadius: 11, fontSize: 15, fontWeight: 600, cursor: selected.size > 0 ? 'pointer' : 'default',
-                color: selected.size > 0 ? 'oklch(0.18 0.04 200)' : 'var(--tx-dim)',
-                background: selected.size > 0 ? 'linear-gradient(180deg, oklch(0.84 0.11 200), oklch(0.74 0.11 200))' : 'rgb(var(--s1) / 0.80)',
+                color: selected.size > 0 ? 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))' : 'var(--tx-dim)',
+                background: selected.size > 0 ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.11 200), oklch(0.488 0.121 200)), light-dark(oklch(0.74 0.11 200), oklch(0.543 0.121 200)))' : 'rgb(var(--s1) / 0.80)',
                 boxShadow: selected.size > 0 ? 'none' : 'inset 0 0 0 1px rgb(var(--ov) / 0.05)',
               }}>{selected.size > 0 ? `Etiquetar seleccionados (${selected.size})` : 'Etiquetar seleccionados'}</div>
             )}
@@ -387,19 +387,19 @@ export function Incidentes() {
                 })} style={{ display: 'grid', gridTemplateColumns: '34px 1.25fr 0.9fr 60px 1.15fr 1.15fr 88px 92px 2fr', gap: 12, alignItems: 'center', cursor: 'pointer', fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>
                   <div style={{
                     width: 19, height: 19, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700,
-                    color: 'oklch(0.18 0.04 200)', background: marcado ? 'oklch(0.80 0.11 200)' : 'transparent',
-                    boxShadow: marcado ? 'none' : 'inset 0 0 0 1px oklch(0.40 0.015 265)',
+                    color: 'light-dark(oklch(0.18 0.04 200), oklch(0.973 0.028 200))', background: marcado ? 'light-dark(oklch(0.80 0.11 200), oklch(0.510 0.121 200))' : 'transparent',
+                    boxShadow: marcado ? 'none' : 'inset 0 0 0 1px light-dark(oklch(0.40 0.015 265), oklch(0.894 0.010 265))',
                   }}>{marcado ? '✓' : ''}</div>
                   <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{inc.equipoNombre}</div>
                   <div style={{ fontWeight: 600, color: COLORS[inc.estacion] ?? gris }}>{inc.estacion}</div>
                   <div style={{ color: 'var(--tx-muted)' }}>{inc.via}</div>
                   <div style={{ color: 'var(--tx-muted)' }}>{fmt(inc.inicio)}</div>
                   <div style={{ color: 'var(--tx-muted)' }}>{fmt(inc.fin)}</div>
-                  <div style={{ fontWeight: 600, color: activo ? 'color-mix(in oklab, oklch(0.86 0.13 62) var(--acc-k), #000)' : 'var(--tx-2)' }}>{dur(inc.duracionMin)}</div>
+                  <div style={{ fontWeight: 600, color: activo ? 'light-dark(oklch(0.86 0.13 62), oklch(0.477 0.143 62))' : 'var(--tx-2)' }}>{dur(inc.duracionMin)}</div>
                   <div><span style={{
                     padding: '3px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    color: real ? 'color-mix(in oklab, oklch(0.86 0.13 22) var(--acc-k), #000)' : 'var(--tx-muted)',
-                    background: real ? 'oklch(0.45 0.13 22 / 0.28)' : 'rgb(var(--s3) / 0.45)',
+                    color: real ? 'light-dark(oklch(0.86 0.13 22), oklch(0.477 0.143 22))' : 'var(--tx-muted)',
+                    background: real ? 'light-dark(oklch(0.45 0.13 22 / 0.28), oklch(0.702 0.143 22 / 0.28))' : 'rgb(var(--s3) / 0.45)',
                   }}>{TIPO_LABELS[inc.tipo]}</span></div>
                   <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, color: 'var(--tx-muted)' }} title={inc.causa ?? ''}>{inc.causa ?? '—'}</div>
                 </div>

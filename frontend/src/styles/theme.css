@@ -42,9 +42,11 @@
   --ov: 255 255 255;
   --shadow: 0 0 0;
 
-  /* Atenuación de tintes/acentos (100% = color original) */
-  --tint-k: 100%;   /* fondos con matiz: mezcla hacia blanco al bajar */
-  --acc-k:  100%;   /* texto de acento: mezcla hacia negro al bajar  */
+  /* Semáforo (Tailwind ok/warn/danger/info) */
+  --c-ok:     0.78 0.13 160;
+  --c-warn:   0.82 0.13 62;
+  --c-danger: 0.70 0.17 22;
+  --c-info:   0.78 0.11 205;
 
   /* Fondo de página (.page-bg) */
   --pg-glow-1: oklch(0.30 0.055 250 / 0.55);
@@ -53,41 +55,46 @@
   --pg-bot:    oklch(0.112 0.014 262);
 }
 
-/* ── CLARO ────────────────────────────────────────────────────────────────── */
+/* ── CLARO — "NOC Tablero analítico teal claro" (docs/temaclaro/.../TEMA_CLARO.md)
+   Tinta y superficies teal (H=190). Los colores oklch sueltos de los componentes
+   se convierten solos con light-dark(oscuro, claro) usando la regla del handoff. */
 [data-theme="light"] {
   color-scheme: light;
 
-  --c-surface:   255 255 255;
-  --c-surface-2: 246 248 251;
-  --c-surface-3: 237 241 246;
-  --c-border:    214 220 230;
-  --c-ink:       22 29 42;
-  --c-muted:     89 101 120;
-  --c-dim:       125 136 154;
+  --c-surface:   234 250 248;   /* tarjeta fin   oklch(0.972 0.017 190) */
+  --c-surface-2: 229 246 245;   /* tile interior oklch(0.961 0.018 190) */
+  --c-surface-3: 223 243 241;   /* tarjeta inicio oklch(0.948 0.021 190) */
+  --c-border:    212 232 230;   /* borde tarjeta oklch(0.916 0.021 190) */
+  --c-ink:       16 24 23;      /* tinta         oklch(0.2 0.012 190)   */
+  --c-muted:     73 89 88;      /* apagado       oklch(0.45 0.02 190)   */
+  --c-dim:       89 106 104;    /* tenue         oklch(0.51 0.02 190)   */
 
-  --tx:        #1b2230;
-  --tx-2:      #353f50;
-  --tx-muted:  #566274;
-  --tx-dim:    #7b8798;
+  --tx:        oklch(0.2 0.012 190);
+  --tx-2:      oklch(0.33 0.018 190);
+  --tx-muted:  oklch(0.45 0.02 190);
+  --tx-dim:    oklch(0.51 0.02 190);
 
-  --bg:        #eef1f6;
-  --panel-a:   #ffffff;
-  --panel-b:   #f5f7fa;
-  --line:      #d9dee7;
+  --bg:        oklch(0.965 0.008 190);
+  --panel-a:   oklch(0.948 0.021 190);
+  --panel-b:   oklch(0.972 0.017 190);
+  --line:      oklch(0.916 0.021 190);
 
-  --s0: 255 255 255;
-  --s1: 247 249 252;
-  --s2: 238 241 246;
-  --s3: 226 231 239;
+  --s0: 234 250 248;
+  --s1: 229 246 245;
+  --s2: 223 243 241;
+  --s3: 217 235 234;
 
-  --ov: 15 23 42;
-  --shadow: 15 23 42;
+  --ov: 16 24 23;
+  --shadow: 53 77 75;
 
-  --tint-k: 28%;
-  --acc-k:  62%;
+  --pg-glow-1: oklch(0.919 0.032 185 / 0.65);
+  --pg-glow-2: oklch(0.93 0.028 200 / 0.45);
+  --pg-top:    oklch(0.965 0.008 190);
+  --pg-bot:    oklch(0.955 0.012 190);
 
-  --pg-glow-1: oklch(0.93 0.035 250 / 0.9);
-  --pg-glow-2: oklch(0.94 0.03 190 / 0.7);
-  --pg-top:    oklch(0.975 0.006 262);
-  --pg-bot:    oklch(0.94 0.01 262);
+  /* Semáforo (Tailwind ok/warn/danger/info) — ya convertido a claro */
+  --c-ok:     0.51 0.165 172;
+  --c-warn:   0.499 0.121 78;
+  --c-danger: 0.576 0.17 18;
+  --c-info:   0.532 0.099 200;
 }

@@ -32,9 +32,9 @@ export function Login() {
     }
   }
 
-  const teal = 'oklch(0.84 0.11 195)'
+  const teal = 'light-dark(oklch(0.84 0.11 195), oklch(0.488 0.121 195))'
   const esquina = (pos: React.CSSProperties) => (
-    <div style={{ position: 'absolute', width: 22, height: 22, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px oklch(0.80 0.12 195 / 0.7))', ...pos }} />
+    <div style={{ position: 'absolute', width: 22, height: 22, pointerEvents: 'none', filter: 'drop-shadow(0 0 6px light-dark(oklch(0.80 0.12 195 / 0.7), oklch(0.510 0.132 195 / 0.7)))', ...pos }} />
   )
   const brd = `2px solid ${teal}`
 
@@ -42,39 +42,39 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{
       backgroundColor: '#07100f',
       backgroundImage: [
-        'radial-gradient(900px 560px at 50% 38%, color-mix(in oklab, oklch(0.30 0.06 192 / 0.40) var(--tint-k), #fff), transparent 70%)',
-        'linear-gradient(oklch(0.80 0.10 192 / 0.05) 1px, transparent 1px)',
-        'linear-gradient(90deg, oklch(0.80 0.10 192 / 0.05) 1px, transparent 1px)',
+        'radial-gradient(900px 560px at 50% 38%, light-dark(oklch(0.30 0.06 192 / 0.40), oklch(0.930 0.042 192 / 0.4)), transparent 70%)',
+        'linear-gradient(light-dark(oklch(0.80 0.10 192 / 0.05), oklch(0.510 0.110 192 / 0.05)) 1px, transparent 1px)',
+        'linear-gradient(90deg, light-dark(oklch(0.80 0.10 192 / 0.05), oklch(0.510 0.110 192 / 0.05)) 1px, transparent 1px)',
       ].join(', '),
       backgroundSize: 'auto, 44px 44px, 44px 44px',
     }}>
       <style>{`
-        .sigma-input { background: color-mix(in oklab, oklch(0.20 0.025 192 / 0.7) var(--tint-k), #fff); border: 1px solid oklch(0.45 0.05 192 / 0.55); transition: border-color .15s, box-shadow .15s; }
-        .sigma-input:hover { border-color: oklch(0.62 0.08 192 / 0.8); }
-        .sigma-input:focus { border-color: color-mix(in oklab, oklch(0.84 0.11 195) var(--acc-k), #000); box-shadow: 0 0 0 3px oklch(0.84 0.11 195 / 0.18), 0 0 18px oklch(0.84 0.11 195 / 0.25); }
-        .sigma-btn { background: linear-gradient(180deg, oklch(0.80 0.11 195), oklch(0.66 0.11 195)); color: oklch(0.16 0.03 195);
-          box-shadow: 0 0 22px oklch(0.80 0.11 195 / 0.35), inset 0 1px 0 rgb(var(--ov) / 0.35); transition: filter .15s, transform .1s, box-shadow .15s; }
-        .sigma-btn:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 0 30px oklch(0.80 0.11 195 / 0.55), inset 0 1px 0 rgb(var(--ov) / 0.35); }
+        .sigma-input { background: light-dark(oklch(0.20 0.025 192 / 0.7), oklch(0.966 0.017 192 / 0.7)); border: 1px solid light-dark(oklch(0.45 0.05 192 / 0.55), oklch(0.700 0.050 192 / 0.55)); transition: border-color .15s, box-shadow .15s; }
+        .sigma-input:hover { border-color: light-dark(oklch(0.62 0.08 192 / 0.8), oklch(0.609 0.088 192 / 0.8)); }
+        .sigma-input:focus { border-color: light-dark(oklch(0.84 0.11 195), oklch(0.488 0.121 195)); box-shadow: 0 0 0 3px light-dark(oklch(0.84 0.11 195 / 0.18), oklch(0.488 0.121 195 / 0.18)), 0 0 18px light-dark(oklch(0.84 0.11 195 / 0.25), oklch(0.488 0.121 195 / 0.25)); }
+        .sigma-btn { background: linear-gradient(180deg, light-dark(oklch(0.80 0.11 195), oklch(0.510 0.121 195)), light-dark(oklch(0.66 0.11 195), oklch(0.587 0.121 195))); color: light-dark(oklch(0.16 0.03 195), oklch(0.981 0.021 195));
+          box-shadow: 0 0 22px light-dark(oklch(0.80 0.11 195 / 0.35), oklch(0.510 0.121 195 / 0.35)), inset 0 1px 0 rgb(var(--ov) / 0.35); transition: filter .15s, transform .1s, box-shadow .15s; }
+        .sigma-btn:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 0 30px light-dark(oklch(0.80 0.11 195 / 0.55), oklch(0.510 0.121 195 / 0.55)), inset 0 1px 0 rgb(var(--ov) / 0.35); }
         .sigma-btn:active:not(:disabled) { transform: translateY(1px); }
       `}</style>
 
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-3 text-5xl font-bold tracking-[0.25em]" style={{ color: teal, textShadow: '0 0 28px oklch(0.84 0.11 195 / 0.45)' }}>SIGMA</div>
+          <div className="mx-auto mb-3 text-5xl font-bold tracking-[0.25em]" style={{ color: teal, textShadow: '0 0 28px light-dark(oklch(0.84 0.11 195 / 0.45), oklch(0.488 0.121 195 / 0.45))' }}>SIGMA</div>
           <div className="mx-auto mb-3 h-px w-24" style={{ background: `linear-gradient(90deg, transparent, ${teal}, transparent)` }} />
           <p className="text-sm text-muted mt-1">Sistema Integral de Gestión y Monitoreo Avanzado</p>
         </div>
 
         <form onSubmit={submit} className="relative rounded-xl p-6 flex flex-col gap-4" style={{
-          background: 'linear-gradient(170deg, color-mix(in oklab, oklch(0.25 0.03 190 / 0.62) var(--tint-k), #fff), color-mix(in oklab, oklch(0.17 0.024 190 / 0.55) var(--tint-k), #fff))',
+          background: 'linear-gradient(170deg, light-dark(oklch(0.25 0.03 190 / 0.62), oklch(0.948 0.021 190 / 0.62)), light-dark(oklch(0.17 0.024 190 / 0.55), oklch(0.977 0.017 190 / 0.55)))',
           backdropFilter: 'blur(14px)',
-          boxShadow: 'inset 0 0 0 1px oklch(0.70 0.08 195 / 0.30), inset 0 1px 0 rgb(var(--ov) / 0.08), 0 24px 60px oklch(0.04 0.02 190 / 0.6)',
+          boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.70 0.08 195 / 0.30), oklch(0.565 0.088 195 / 0.3)), inset 0 1px 0 rgb(var(--ov) / 0.08), 0 24px 60px light-dark(oklch(0.04 0.02 190 / 0.6), oklch(0.400 0.030 190 / 0.15))',
         }}>
           {esquina({ top: 0, left: 0, borderTop: brd, borderLeft: brd, borderTopLeftRadius: 12 })}
           {esquina({ bottom: 0, right: 0, borderBottom: brd, borderRight: brd, borderBottomRightRadius: 12 })}
 
           <div>
-            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'color-mix(in oklab, oklch(0.74 0.06 192) var(--acc-k), #000)' }}>Usuario</label>
+            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'light-dark(oklch(0.74 0.06 192), oklch(0.543 0.066 192))' }}>Usuario</label>
             <input
               type="text"
               autoComplete="username"
@@ -86,7 +86,7 @@ export function Login() {
           </div>
 
           <div>
-            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'color-mix(in oklab, oklch(0.74 0.06 192) var(--acc-k), #000)' }}>Contraseña</label>
+            <label className="text-[0.78rem] font-bold uppercase tracking-wider block mb-1" style={{ color: 'light-dark(oklch(0.74 0.06 192), oklch(0.543 0.066 192))' }}>Contraseña</label>
             <input
               type="password"
               autoComplete="current-password"
@@ -98,7 +98,7 @@ export function Login() {
           </div>
 
           {error && (
-            <div className="text-danger text-sm bg-[#2D1212] rounded-lg px-3 py-2">{error}</div>
+            <div className="text-danger text-sm bg-[color:light-dark(#2D1212,oklch(0.958 0.031 21))] rounded-lg px-3 py-2">{error}</div>
           )}
 
           <button

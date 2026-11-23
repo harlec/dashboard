@@ -65,7 +65,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
               bg-ink/[0.06] hover:bg-ink/[0.10] transition-colors"
           >
             {[0, 1, 2].map(i => (
-              <span key={i} className="w-[17px] h-[2px] rounded-full" style={{ background: 'oklch(0.84 0.06 200)' }} />
+              <span key={i} className="w-[17px] h-[2px] rounded-full" style={{ background: 'light-dark(oklch(0.84 0.06 200), oklch(0.488 0.066 200))' }} />
             ))}
           </button>
 
@@ -91,7 +91,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
           )}
         </div>
 
-        <div className="flex-shrink-0 text-[1.4rem] font-bold tracking-[0.2em]" style={{ color: 'color-mix(in oklab, oklch(0.84 0.11 195) var(--acc-k), #000)' }}>SIGMA</div>
+        <div className="flex-shrink-0 text-[1.4rem] font-bold tracking-[0.2em]" style={{ color: 'light-dark(oklch(0.84 0.11 195), oklch(0.488 0.121 195))' }}>SIGMA</div>
 
         <div className="hidden md:flex gap-1 min-w-0 overflow-x-auto [scrollbar-width:none]">
           {LINKS.map(({ to, label }) => (
@@ -99,7 +99,7 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
               className={`px-3 xl:px-3.5 py-1.5 rounded-[11px] text-[0.84rem] xl:text-[0.95rem] font-medium transition-all whitespace-nowrap ${
                 pathname === to ? 'text-ink' : 'text-ink/60 hover:bg-ink/10 hover:text-ink'}`}
               style={pathname === to
-                ? { background: 'color-mix(in oklab, oklch(0.34 0.045 210 / .75) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px oklch(0.70 0.09 200 / .35)' }
+                ? { background: 'light-dark(oklch(0.34 0.045 210 / .75), oklch(0.916 0.032 210 / 0.75))', boxShadow: 'inset 0 0 0 1px light-dark(oklch(0.70 0.09 200 / .35), oklch(0.565 0.099 200 / 0.35))' }
                 : undefined}>
               {label}
             </Link>

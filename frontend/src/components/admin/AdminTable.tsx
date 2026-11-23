@@ -47,13 +47,13 @@ export function AdminTable<T>({ columns, data, keyField, onEdit, onDelete, loadi
                   <div className="flex gap-2 justify-end">
                     {onEdit && (
                       <button onClick={() => onEdit(row)}
-                        className="px-3 py-1 rounded-md bg-[#1a2a1a] text-brand text-xs font-bold hover:brightness-110 transition-all">
+                        className="px-3 py-1 rounded-md bg-[color:light-dark(#1a2a1a,oklch(0.943 0.025 144))] text-brand text-xs font-bold hover:brightness-110 transition-all">
                         Editar
                       </button>
                     )}
                     {onDelete && (
                       <button onClick={() => onDelete(row)}
-                        className="px-3 py-1 rounded-md bg-[#2d1212] text-danger text-xs font-bold hover:brightness-110 transition-all">
+                        className="px-3 py-1 rounded-md bg-[color:light-dark(#2d1212,oklch(0.958 0.031 21))] text-danger text-xs font-bold hover:brightness-110 transition-all">
                         Eliminar
                       </button>
                     )}

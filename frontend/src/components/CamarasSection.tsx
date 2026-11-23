@@ -13,8 +13,8 @@ export function CamarasSection({ camaras }: Props) {
           📷 Cámaras Dahua
         </div>
         <div className="flex gap-2">
-          <Badge label={`${up} Online`}  cls="bg-[#1D2A15] text-brand" />
-          <Badge label={`${down} Offline`} cls="bg-[#2D1212] text-danger" />
+          <Badge label={`${up} Online`}  cls="bg-[color:light-dark(#1D2A15,oklch(0.942 0.029 134))] text-brand" />
+          <Badge label={`${down} Offline`} cls="bg-[color:light-dark(#2D1212,oklch(0.958 0.031 21))] text-danger" />
         </div>
       </div>
 

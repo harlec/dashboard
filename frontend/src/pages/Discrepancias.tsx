@@ -109,10 +109,10 @@ export function Discrepancias() {
       par: `${abbrev(p.desde)} → ${abbrev(p.hasta)}`, n: p.total,
       ancho: `${Math.round(p.total / max * 100)}%`,
       color: p.total >= 150
-        ? 'linear-gradient(90deg, oklch(0.58 0.15 20), oklch(0.70 0.17 22))'
+        ? 'linear-gradient(90deg, light-dark(oklch(0.58 0.15 20), oklch(0.631 0.165 20)), light-dark(oklch(0.70 0.17 22), oklch(0.565 0.170 22)))'
         : p.total >= 80
-          ? 'linear-gradient(90deg, oklch(0.66 0.12 62), oklch(0.80 0.14 62))'
-          : 'linear-gradient(90deg, oklch(0.52 0.09 210), oklch(0.68 0.11 205))',
+          ? 'linear-gradient(90deg, light-dark(oklch(0.66 0.12 62), oklch(0.587 0.132 62)), light-dark(oklch(0.80 0.14 62), oklch(0.510 0.154 62)))'
+          : 'linear-gradient(90deg, light-dark(oklch(0.52 0.09 210), oklch(0.664 0.099 210)), light-dark(oklch(0.68 0.11 205), oklch(0.576 0.121 205)))',
     }))
   }, [resumen?.topPares])
 
@@ -138,9 +138,9 @@ export function Discrepancias() {
   const vias = useMemo(() => (resumen?.topVias ?? []).slice(0, 7).map((v, i) => ({
     rank: i + 1, via: v.via, est: v.estacion, ratio: `${v.total}/${v.totalTransitos}`,
     pct: `${v.pct.toFixed(1)}%`,
-    pctFg: v.pct >= 15 ? 'oklch(0.80 0.15 22)' : v.pct >= 10 ? 'oklch(0.86 0.13 62)' : 'oklch(0.88 0.02 265)',
+    pctFg: v.pct >= 15 ? 'light-dark(oklch(0.80 0.15 22), oklch(0.510 0.165 22))' : v.pct >= 10 ? 'light-dark(oklch(0.86 0.13 62), oklch(0.477 0.143 62))' : 'light-dark(oklch(0.88 0.02 265), oklch(0.270 0.020 265))',
     ancho: `${Math.min(100, Math.round(v.pct / 20 * 100))}%`,
-    color: COLORS[v.estacion] ?? 'oklch(0.70 0.02 265)',
+    color: COLORS[v.estacion] ?? 'light-dark(oklch(0.70 0.02 265), oklch(0.450 0.020 265))',
   })), [resumen?.topVias])
 
   // ── Panel inferior conmutable ─────────────────────────────────
@@ -157,8 +157,8 @@ export function Discrepancias() {
           { txt: r.unidad, fg: COLORS[r.unidad] ?? gris, peso: 600 },
           { txt: r.via, fg: null, peso: 600 },
           { txt: r.ticket ? String(r.ticket) : '—', fg: gris, peso: 500 },
-          { txt: r.catTabulada, fg: 'oklch(0.86 0.12 62)', peso: 600 },
-          { txt: r.catDetectada, fg: 'oklch(0.82 0.11 205)', peso: 600 },
+          { txt: r.catTabulada, fg: 'light-dark(oklch(0.86 0.12 62), oklch(0.477 0.132 62))', peso: 600 },
+          { txt: r.catDetectada, fg: 'light-dark(oklch(0.82 0.11 205), oklch(0.499 0.121 205))', peso: 600 },
           { txt: r.placaDetectada || r.placaTabulada || '—', fg: gris, peso: 500 },
         ]),
       }
@@ -174,7 +174,7 @@ export function Discrepancias() {
         { txt: v.estacion, fg: COLORS[v.estacion] ?? gris, peso: 600 },
         { txt: `${v.tasaSem1.toFixed(1)}%`, fg: gris, peso: 500 },
         { txt: `${v.tasaSem2.toFixed(1)}%`, fg: null, peso: 600 },
-        { txt: `${v.delta > 0 ? '+' : ''}${v.delta.toFixed(1)} pp`, fg: v.delta >= 1 ? 'oklch(0.80 0.14 25)' : 'oklch(0.86 0.12 62)', peso: 600 },
+        { txt: `${v.delta > 0 ? '+' : ''}${v.delta.toFixed(1)} pp`, fg: v.delta >= 1 ? 'light-dark(oklch(0.80 0.14 25), oklch(0.510 0.154 25))' : 'light-dark(oklch(0.86 0.12 62), oklch(0.477 0.132 62))', peso: 600 },
         { txt: String(v.totalSem2), fg: gris, peso: 500 },
       ]),
     }
@@ -192,10 +192,10 @@ export function Discrepancias() {
       txt: String(h.hora).padStart(2, '0'), fg: i % 2 ? 'transparent' : 'var(--tx-dim)',
       alto: `${Math.round(Number(h.tasaError) / max * 100)}%`,
       color: h.tasaError === max
-        ? 'linear-gradient(180deg, oklch(0.70 0.17 22), oklch(0.58 0.16 20))'
+        ? 'linear-gradient(180deg, light-dark(oklch(0.70 0.17 22), oklch(0.565 0.170 22)), light-dark(oklch(0.58 0.16 20), oklch(0.631 0.170 20)))'
         : h.tasaError === min
-          ? 'linear-gradient(180deg, oklch(0.76 0.11 205), oklch(0.62 0.10 205))'
-          : 'linear-gradient(180deg, oklch(0.82 0.13 62), oklch(0.70 0.12 62))',
+          ? 'linear-gradient(180deg, light-dark(oklch(0.76 0.11 205), oklch(0.532 0.121 205)), light-dark(oklch(0.62 0.10 205), oklch(0.609 0.110 205)))'
+          : 'linear-gradient(180deg, light-dark(oklch(0.82 0.13 62), oklch(0.499 0.143 62)), light-dark(oklch(0.70 0.12 62), oklch(0.565 0.132 62)))',
     }))
     const nota = `Pico ${String(peak.hora).padStart(2, '0')}:00 con ${peak.tasaError}% — revisar calibración por volumen · valle ${String(valle.hora).padStart(2, '0')}:00 con ${valle.tasaError}%`
     return { barras, maxLabel: max, nota }
@@ -217,8 +217,8 @@ export function Discrepancias() {
           {PERIODOS.map(({ key, label }) => (
             <div key={key} onClick={() => setPeriodo(key)} style={{
               padding: '7px 15px', borderRadius: 10, fontSize: 15, fontWeight: periodo === key ? 600 : 500, cursor: 'pointer',
-              color: periodo === key ? 'oklch(0.22 0.04 62)' : 'var(--tx-muted)',
-              background: periodo === key ? 'linear-gradient(180deg, oklch(0.84 0.13 68), oklch(0.76 0.13 62))' : 'transparent',
+              color: periodo === key ? 'light-dark(oklch(0.22 0.04 62), oklch(0.959 0.028 62))' : 'var(--tx-muted)',
+              background: periodo === key ? 'linear-gradient(180deg, light-dark(oklch(0.84 0.13 68), oklch(0.488 0.143 68)), light-dark(oklch(0.76 0.13 62), oklch(0.532 0.143 62)))' : 'transparent',
             }}>{label}</div>
           ))}
           {periodo === 'rango' && (['desde', 'hasta'] as const).map(k => (
@@ -233,38 +233,38 @@ export function Discrepancias() {
       {/* ── KPI ────────────────────────────────────────────── */}
       <div style={{ height: 112, flex: '0 0 auto', display: 'grid', opacity: cargando ? 0.35 : 1, transition: 'opacity .2s', pointerEvents: cargando ? 'none' : undefined, gridTemplateColumns: '1.05fr 0.78fr 0.78fr 2.1fr', gap: 14 }}>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.38 0.09 62 / 0.50) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.84 0.09 62) var(--acc-k), #000)' }}>Efectividad</div>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.38 0.09 62 / 0.50), oklch(0.901 0.063 62 / 0.5)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.84 0.09 62), oklch(0.488 0.099 62))' }}>Efectividad</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.90 0.11 62) var(--acc-k), #000)' }}>
+            <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.90 0.11 62), oklch(0.455 0.121 62))' }}>
               {cargando ? '···' : ef.toFixed(1)}<span style={{ fontSize: 24 }}>%</span>
             </div>
-            <div style={{ fontSize: 17, fontWeight: 400, color: 'oklch(0.68 0.05 62)' }}>meta 99.5% · faltan {brecha} pp</div>
+            <div style={{ fontSize: 17, fontWeight: 400, color: 'light-dark(oklch(0.68 0.05 62), oklch(0.470 0.050 62))' }}>meta 99.5% · faltan {brecha} pp</div>
           </div>
           <div style={{ height: 6, borderRadius: 999, background: 'rgb(var(--ov) / 0.08)', overflow: 'hidden' }}>
-            <div style={{ width: `${barraEf}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, oklch(0.74 0.13 85), oklch(0.84 0.13 62))', boxShadow: '0 0 12px oklch(0.82 0.13 62 / 0.50)' }} />
+            <div style={{ width: `${barraEf}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, light-dark(oklch(0.74 0.13 85), oklch(0.543 0.143 85)), light-dark(oklch(0.84 0.13 62), oklch(0.488 0.143 62)))', boxShadow: '0 0 12px light-dark(oklch(0.82 0.13 62 / 0.50), oklch(0.499 0.143 62 / 0.5))' }} />
           </div>
         </div>
 
         <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, rgb(var(--s2) / 0.60) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.72 0.03 265)' }}>Discrepancias</div>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.72 0.03 265), oklch(0.430 0.030 265))' }}>Discrepancias</div>
           <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>
             {cargando ? '···' : (resumen?.total ?? 0).toLocaleString('en-US')}
           </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.58 0.02 265)' }}>{periodo === 'rango' ? `${desde} → ${hasta}` : PERIODOS.find(p => p.key === periodo)?.label}</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.58 0.02 265), oklch(0.570 0.020 265))' }}>{periodo === 'rango' ? `${desde} → ${hasta}` : PERIODOS.find(p => p.key === periodo)?.label}</div>
         </div>
 
-        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, color-mix(in oklab, oklch(0.30 0.045 200 / 0.55) var(--tint-k), #fff) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'color-mix(in oklab, oklch(0.76 0.06 200) var(--acc-k), #000)' }}>Tránsitos</div>
-          <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'color-mix(in oklab, oklch(0.92 0.06 200) var(--acc-k), #000)' }}>
+        <div style={{ boxSizing: 'border-box', borderRadius: 20, padding: '14px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, light-dark(oklch(0.30 0.045 200 / 0.55), oklch(0.930 0.032 200 / 0.55)) 0%, rgb(var(--s1) / 0.55) 100%)', boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.09), 0 12px 34px rgb(var(--shadow) / 0.30)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.76 0.06 200), oklch(0.532 0.066 200))' }}>Tránsitos</div>
+          <div style={{ fontSize: 42, fontWeight: 300, letterSpacing: '-0.035em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: 'light-dark(oklch(0.92 0.06 200), oklch(0.444 0.066 200))' }}>
             {cargando ? '···' : (resumen?.totalTransacciones ?? 0).toLocaleString('en-US')}
           </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'oklch(0.60 0.03 200)' }}>base del cálculo</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.60 0.03 200), oklch(0.550 0.030 200))' }}>base del cálculo</div>
         </div>
 
         <Panel style={{ padding: '12px 20px', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'oklch(0.62 0.02 265)' }}>Por estación</div>
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'light-dark(oklch(0.62 0.02 265), oklch(0.530 0.020 265))' }}>Por estación</div>
             <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx-dim)' }}>% efectividad · discrepancias del período</div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
@@ -390,12 +390,12 @@ export function Discrepancias() {
                   <div key={p} onClick={() => setPanelInferior(p)} style={{
                     padding: '5px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     color: panelInferior === p ? 'var(--tx)' : 'var(--tx-muted)',
-                    background: panelInferior === p ? 'color-mix(in oklab, oklch(0.34 0.045 210 / 0.75) var(--tint-k), #fff)' : 'transparent',
-                    boxShadow: panelInferior === p ? 'inset 0 0 0 1px oklch(0.70 0.09 200 / 0.35)' : 'none',
+                    background: panelInferior === p ? 'light-dark(oklch(0.34 0.045 210 / 0.75), oklch(0.916 0.032 210 / 0.75))' : 'transparent',
+                    boxShadow: panelInferior === p ? 'inset 0 0 0 1px light-dark(oklch(0.70 0.09 200 / 0.35), oklch(0.565 0.099 200 / 0.35))' : 'none',
                   }}>{p === 'mantenimiento' ? 'Prioridad' : 'Detalle'}</div>
                 ))}
               </div>
-              <div style={{ padding: '6px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'color-mix(in oklab, oklch(0.80 0.08 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.35 0.05 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
+              <div style={{ padding: '6px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'light-dark(oklch(0.80 0.08 200), oklch(0.510 0.088 200))', background: 'light-dark(oklch(0.35 0.05 210 / 0.45), oklch(0.912 0.035 210 / 0.45))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.07)' }}>
                 Exportar PDF
               </div>
             </div>
@@ -413,7 +413,7 @@ export function Discrepancias() {
               : panel.filas.map((f, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: panel.cols, gap: 12, alignItems: 'center', fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>
                   {f.map((c, j) => (
-                    <div key={j} style={{ minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: c.peso, color: c.fg ?? 'oklch(0.88 0.008 265)' }}>{c.txt}</div>
+                    <div key={j} style={{ minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: c.peso, color: c.fg ?? 'light-dark(oklch(0.88 0.008 265), oklch(0.270 0.012 265))' }}>{c.txt}</div>
                   ))}
                 </div>
               ))}
@@ -445,8 +445,8 @@ export function Discrepancias() {
                 ))}
               </div>
               {horas.nota && (
-                <div style={{ height: 34, flex: '0 0 auto', marginTop: 8, display: 'flex', alignItems: 'center', gap: 9, padding: '0 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, color: 'color-mix(in oklab, oklch(0.80 0.06 200) var(--acc-k), #000)', background: 'color-mix(in oklab, oklch(0.32 0.04 210 / 0.45) var(--tint-k), #fff)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.72 0.17 25)' }} />{horas.nota}
+                <div style={{ height: 34, flex: '0 0 auto', marginTop: 8, display: 'flex', alignItems: 'center', gap: 9, padding: '0 14px', borderRadius: 11, fontSize: 14, fontWeight: 500, color: 'light-dark(oklch(0.80 0.06 200), oklch(0.510 0.066 200))', background: 'light-dark(oklch(0.32 0.04 210 / 0.45), oklch(0.923 0.028 210 / 0.45))', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'light-dark(oklch(0.72 0.17 25), oklch(0.554 0.170 25))' }} />{horas.nota}
                 </div>
               )}
             </div>
