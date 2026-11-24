@@ -2,7 +2,10 @@ namespace AunorApi.DTOs;
 
 public record BitRegistroRequest(
     string? Descripcion, List<int>? SedeIds, DateTime? Fecha, int? CategoriaId, int? ResponsableId,
-    int? ProveedorId, string? Solicitante, int? DuracionMin, byte? Estado, string? EquipoRef);
+    int? ProveedorId, string? Solicitante, int? DuracionMin, byte? Estado, string? EquipoRef,
+    DateTime? FechaSolucion = null);
+
+public record BitResolverRequest(DateTime? Fecha);
 
 public record BitComentarioRequest(string? Texto);
 

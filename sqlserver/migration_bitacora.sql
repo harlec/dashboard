@@ -121,6 +121,14 @@ CREATE TABLE dbo.BitComentario (
 );
 GO
 
+-- ── FechaSolucion: una actividad "En proceso" puede resolverse otro día ──
+IF COL_LENGTH('dbo.BitRegistro','FechaSolucion') IS NULL
+    ALTER TABLE dbo.BitRegistro ADD FechaSolucion DATETIME2 NULL;
+GO
+-- Los "Hecho" existentes se resolvieron el mismo día de la actividad
+UPDATE dbo.BitRegistro SET FechaSolucion = FechaActividad WHERE Estado = 1 AND FechaSolucion IS NULL;
+GO
+
 -- ── Índices ──────────────────────────────────────────────────
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_BitRegistro_Fecha')
 CREATE INDEX IX_BitRegistro_Fecha ON dbo.BitRegistro (FechaActividad DESC);

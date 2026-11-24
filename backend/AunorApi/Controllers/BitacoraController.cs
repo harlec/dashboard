@@ -38,7 +38,7 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
         x.CategoriaId, categoria = x.Categoria.Nombre,
         x.ResponsableId, responsable = x.Responsable.Nombre,
         x.ProveedorId, proveedor = x.Proveedor != null ? x.Proveedor.Nombre : null,
-        x.Solicitante, x.DuracionMin, x.Estado, x.EquipoRef,
+        x.Solicitante, x.DuracionMin, x.Estado, x.EquipoRef, fechaSolucion = x.FechaSolucion,
         sedes = x.Sedes.Select(s => new { id = s.SedeId, codigo = s.Sede.Codigo }).OrderBy(s => s.codigo),
         puedeEditar = BitacoraReglas.PuedeEditar(x.CreadoPorUsuarioId, x.CreadoEn, UsuarioId, EsAdmin, ahora),
     };
@@ -66,7 +66,7 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
     // Devuelve el error de validación (400) o null si todo es válido. Completa los valores por defecto.
     async Task<(IActionResult? Error, int CategoriaId, int ResponsableId, List<int> SedeIds)> Resolver(BitRegistroRequest r, DateTime ahora)
     {
-        var errores = BitacoraReglas.Validar(new(r.Descripcion, r.SedeIds, r.Fecha, r.DuracionMin, r.Solicitante, r.EquipoRef, r.Estado), ahora);
+        var errores = BitacoraReglas.Validar(new(r.Descripcion, r.SedeIds, r.Fecha, r.DuracionMin, r.Solicitante, r.EquipoRef, r.Estado, r.FechaSolucion), ahora);
         if (errores.Count > 0) return (BadRequest(new { error = errores[0], errores }), 0, 0, []);
 
         var sedeIds = r.SedeIds!.Distinct().ToList();
@@ -115,6 +115,7 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
             CreadoPorUsuarioId = UsuarioId, CreadoEn = ahora, ModificadoEn = ahora,
             Sedes = sedeIds.Select(id => new BitRegistroSede { SedeId = id }).ToList(),
         };
+        reg.FechaSolucion = BitacoraReglas.FechaSolucionFinal(reg.Estado, r.FechaSolucion, reg.FechaActividad, null, null, ahora);
         db.BitRegistros.Add(reg);
         await db.SaveChangesAsync();
         await audit.RegistrarAsync("BITACORA_CREADA", $"bitacora:{reg.Id}", reg.Descripcion);
@@ -141,7 +142,10 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
         reg.FechaActividad = BitacoraReglas.FechaPorDefecto(r.Fecha, reg.FechaActividad);
         reg.CategoriaId = categoriaId; reg.ResponsableId = responsableId;
         reg.ProveedorId = r.ProveedorId; reg.Solicitante = Limpio(r.Solicitante);
-        reg.DuracionMin = r.DuracionMin; reg.Estado = BitacoraReglas.EstadoPorDefecto(r.Estado ?? reg.Estado);
+        reg.DuracionMin = r.DuracionMin;
+        var estadoAnterior = reg.Estado;
+        reg.Estado = BitacoraReglas.EstadoPorDefecto(r.Estado ?? reg.Estado);
+        reg.FechaSolucion = BitacoraReglas.FechaSolucionFinal(reg.Estado, r.FechaSolucion, reg.FechaActividad, estadoAnterior, reg.FechaSolucion, ahora);
         reg.EquipoRef = Limpio(r.EquipoRef); reg.ModificadoEn = ahora;
 
         db.BitRegistroSedes.RemoveRange(reg.Sedes.Where(s => !sedeIds.Contains(s.SedeId)));
@@ -150,6 +154,23 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
         await db.SaveChangesAsync();
         await audit.RegistrarAsync("BITACORA_MODIFICADA", $"bitacora:{id}", reg.Descripcion);
         return Ok(new { reg.Id });
+    }
+
+    // POST api/bitacora/{id}/resolver { fecha? } — cierra una actividad "En proceso", aunque sea otro día.
+    // Cualquier usuario de TI puede cerrarla (es un cambio de estado, queda en la auditoría).
+    [HttpPost("{id:int}/resolver")]
+    public async Task<IActionResult> Resolver(int id, [FromBody] BitResolverRequest? r)
+    {
+        var reg = await db.BitRegistros.FirstOrDefaultAsync(x => x.Id == id && !x.Eliminado);
+        if (reg is null) return NotFound();
+        var ahora = DateTime.Now;
+        var fecha = r?.Fecha ?? ahora;
+        if (fecha > ahora.AddMinutes(5)) return BadRequest(new { error = "La fecha de solución no puede ser futura" });
+        if (fecha.Date < reg.FechaActividad.Date) return BadRequest(new { error = "La solución no puede ser anterior a la actividad" });
+        reg.Estado = BitacoraReglas.EstadoHecho; reg.FechaSolucion = fecha; reg.ModificadoEn = ahora;
+        await db.SaveChangesAsync();
+        await audit.RegistrarAsync("BITACORA_RESUELTA", $"bitacora:{id}", $"solución {fecha:yyyy-MM-dd HH:mm}");
+        return Ok(new { reg.Id, fechaSolucion = reg.FechaSolucion });
     }
 
     [HttpDelete("{id:int}")]
@@ -245,7 +266,7 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
 
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add("Bitácora");
-        string[] cab = ["Fecha", "Sedes", "Categoría", "Descripción", "Responsable", "Proveedor", "Solicitante", "Duración (min)", "Estado"];
+        string[] cab = ["Fecha", "Sedes", "Categoría", "Descripción", "Responsable", "Proveedor", "Solicitante", "Duración (min)", "Estado", "Fecha solución"];
         for (var i = 0; i < cab.Length; i++) ws.Cell(1, i + 1).Value = cab[i];
         var head = ws.Range(1, 1, 1, cab.Length);
         head.Style.Font.Bold = true; head.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E5F"); head.Style.Font.FontColor = XLColor.White;
@@ -262,6 +283,7 @@ public class BitacoraController(AppDbContext db, AuditService audit) : Controlle
             ws.Cell(row, 7).Value = f.Solicitante ?? "";
             if (f.DuracionMin is { } d) ws.Cell(row, 8).Value = d;
             ws.Cell(row, 9).Value = f.Estado == BitacoraReglas.EstadoEnProceso ? "En proceso" : "Hecho";
+            if (f.FechaSolucion is { } fs) { ws.Cell(row, 10).Value = fs; ws.Cell(row, 10).Style.DateFormat.Format = "dd/MM/yyyy"; }
         }
         ws.SheetView.FreezeRows(1);
         ws.Columns().AdjustToContents(1, 1, 60);

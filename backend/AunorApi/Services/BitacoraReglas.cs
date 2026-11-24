@@ -18,7 +18,8 @@ public static partial class BitacoraReglas
 
     public record Entrada(
         string? Descripcion, IReadOnlyCollection<int>? SedeIds, DateTime? Fecha,
-        int? DuracionMin, string? Solicitante, string? EquipoRef, byte? Estado);
+        int? DuracionMin, string? Solicitante, string? EquipoRef, byte? Estado,
+        DateTime? FechaSolucion = null);
 
     // ── Normalización: minúsculas y sin tildes ─────────────────────────────
     public static string Normalizar(string? s)
@@ -73,12 +74,28 @@ public static partial class BitacoraReglas
         if (e.Solicitante is { Length: > MaxTexto }) errores.Add($"El solicitante admite hasta {MaxTexto} caracteres");
         if (e.EquipoRef is { Length: > MaxTexto }) errores.Add($"La referencia de equipo admite hasta {MaxTexto} caracteres");
         if (e.Estado is { } es && es is not (EstadoHecho or EstadoEnProceso)) errores.Add("Estado inválido");
+        if (e.FechaSolucion is { } fs)
+        {
+            if (fs > ahora.AddMinutes(5)) errores.Add("La fecha de solución no puede ser futura");
+            else if (fs.Date < (e.Fecha ?? ahora).Date) errores.Add("La solución no puede ser anterior a la actividad");
+        }
         return errores;
     }
 
     // ── Valores por defecto: un registro incompleto es mejor que ninguno ───
     public static DateTime FechaPorDefecto(DateTime? fecha, DateTime ahora) => fecha ?? ahora;
     public static byte EstadoPorDefecto(byte? estado) => estado ?? EstadoHecho;
+
+    // Fecha de solución: "En proceso" no tiene; "Hecho" usa la indicada y, si no, el mismo día de la
+    // actividad. Al cerrar algo que estaba en proceso sin indicar fecha, es el momento del cierre.
+    public static DateTime? FechaSolucionFinal(byte estado, DateTime? indicada, DateTime fechaActividad,
+                                               byte? estadoAnterior, DateTime? solucionAnterior, DateTime ahora)
+    {
+        if (estado != EstadoHecho) return null;
+        if (indicada is { } f) return f;
+        if (estadoAnterior == EstadoEnProceso) return ahora;
+        return solucionAnterior ?? fechaActividad;
+    }
 
     // ── Permisos: el admin edita todo; el resto solo lo suyo, hasta 7 días después ──
     public static bool PuedeEditar(int creadoPorUsuarioId, DateTime creadoEn, int usuarioId, bool esAdmin, DateTime ahora) =>

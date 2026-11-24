@@ -348,6 +348,8 @@ function Lista({ cat, version, onCambio }: { cat: Catalogos; version: number; on
   const [err, setErr] = useState('')
   const [editando, setEditando] = useState<Registro | null>(null)
   const [borrando, setBorrando] = useState<number | null>(null)
+  const [resolviendo, setResolviendo] = useState<number | null>(null)
+  const [fechaSol, setFechaSol] = useState(ymd(new Date()))
 
   // La búsqueda por texto espera a que se deje de escribir
   useEffect(() => {
@@ -361,6 +363,14 @@ function Lista({ cat, version, onCambio }: { cat: Catalogos; version: number; on
 
   const setF = (patch: Partial<Filtros>) => { setFiltros(f => ({ ...f, ...patch })); setPage(1) }
   const totalPag = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1
+
+  const resolver = async (r: Registro) => {
+    try {
+      // Hoy → el servidor usa el momento actual; otro día → mediodía de esa fecha
+      await bitacoraApi.resolver(r.id, fechaSol === ymd(new Date()) ? null : isoLocal(new Date(`${fechaSol}T12:00:00`)))
+      setResolviendo(null); onCambio()
+    } catch (e) { setErr((e as Error).message) }
+  }
 
   const eliminar = async (id: number) => {
     try { await bitacoraApi.eliminar(id); setBorrando(null); onCambio() }
@@ -407,6 +417,9 @@ function Lista({ cat, version, onCambio }: { cat: Catalogos; version: number; on
                 <span>{r.responsable}</span>
                 {r.proveedor && <span>{r.proveedor}</span>}
                 {r.estado === 2 && <span className="bit-tag">En proceso</span>}
+                {r.estado === 1 && r.fechaSolucion && r.fechaSolucion.slice(0, 10) !== r.fecha.slice(0, 10) && (
+                  <span className="bit-tag" title="Se resolvió otro día">Resuelto el {fechaCorta(r.fechaSolucion).slice(0, 5)}</span>
+                )}
                 {r.equipoRef && <span className="bit-tag">{r.equipoRef}</span>}
               </div>
             </div>
@@ -414,6 +427,20 @@ function Lista({ cat, version, onCambio }: { cat: Catalogos; version: number; on
               {r.sedes.map(s => <span key={s.id} className="bit-tag">{s.codigo}</span>)}
             </div>
             <div className="w-14 text-right bit-note shrink-0">{duracionTxt(r.duracionMin)}</div>
+            {r.estado === 2 && (
+              <div className="flex items-center gap-1 shrink-0">
+                {resolviendo === r.id ? (
+                  <>
+                    <input type="date" aria-label="Fecha de solución" className="bit-input" min={r.fecha.slice(0, 10)} max={ymd(new Date())}
+                      value={fechaSol} onChange={e => setFechaSol(e.target.value)} />
+                    <button className="bit-btn-sec" onClick={() => resolver(r)}>Confirmar</button>
+                    <button className="bit-btn-sec" onClick={() => setResolviendo(null)}>Cancelar</button>
+                  </>
+                ) : (
+                  <button className="bit-btn-sec" onClick={() => { setFechaSol(ymd(new Date())); setResolviendo(r.id) }}>Resolver</button>
+                )}
+              </div>
+            )}
             {r.puedeEditar && (
               <div className="flex gap-1 shrink-0">
                 {borrando === r.id ? (
@@ -457,6 +484,7 @@ function EditarModal({ r, cat, onClose, onGuardado }: { r: Registro; cat: Catalo
   const [duracion, setDuracion] = useState<number | null>(r.duracionMin)
   const [fecha, setFecha] = useState(r.fecha.slice(0, 10))
   const [enProceso, setEnProceso] = useState(r.estado === 2)
+  const [fechaSolucion, setFechaSolucion] = useState((r.fechaSolucion ?? (r.estado === 2 ? ymd(new Date()) : r.fecha)).slice(0, 10))
   const [err, setErr] = useState('')
   const [guardando, setGuardando] = useState(false)
 
@@ -476,6 +504,11 @@ function EditarModal({ r, cat, onClose, onGuardado }: { r: Registro; cat: Catalo
       await bitacoraApi.editar(r.id, {
         descripcion: desc.trim(), sedeIds, fecha: fechaIso, categoriaId, responsableId, proveedorId,
         solicitante: solicitante.trim() || null, duracionMin: duracion, estado: enProceso ? 2 : 1, equipoRef: r.equipoRef,
+        // Solo si sigue "Hecho": si no cambió el día se conserva el original; si se está cerrando ahora, hoy
+        fechaSolucion: enProceso ? null
+          : r.fechaSolucion && fechaSolucion === r.fechaSolucion.slice(0, 10) ? r.fechaSolucion.slice(0, 19)
+          : r.estado === 2 && fechaSolucion === ymd(new Date()) ? null
+          : isoLocal(new Date(`${fechaSolucion}T12:00:00`)),
       })
       onGuardado()
     } catch (e) { setErr((e as Error).message) } finally { setGuardando(false) }
@@ -522,6 +555,13 @@ function EditarModal({ r, cat, onClose, onGuardado }: { r: Registro; cat: Catalo
         <label className="flex items-center gap-2 bit-note mt-3 cursor-pointer">
           <input type="checkbox" className="accent-brand w-4 h-4" checked={enProceso} onChange={e => setEnProceso(e.target.checked)} /> Sigue en proceso
         </label>
+        {!enProceso && (
+          <div className="mt-3 max-w-[14rem]">
+            <label className="bit-label" htmlFor="ed-sol-fecha">Fecha de solución</label>
+            <input id="ed-sol-fecha" type="date" className="bit-input w-full" min={fecha} max={ymd(new Date())}
+              value={fechaSolucion} onChange={e => setFechaSolucion(e.target.value)} />
+          </div>
+        )}
 
         {err && <div role="alert" className="bit-error mt-3">{err}</div>}
         <div className="flex justify-end gap-2 mt-4">

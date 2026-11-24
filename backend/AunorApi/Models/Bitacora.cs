@@ -58,6 +58,7 @@ public class BitRegistro
     public string?  Solicitante     { get; set; }
     public int?     DuracionMin     { get; set; }
     public byte     Estado          { get; set; } = 1;   // 1 = Hecho; 2 = En proceso; resto reservado
+    public DateTime? FechaSolucion  { get; set; }        // cuándo quedó resuelta (puede ser otro día que FechaActividad)
     public string?  EquipoRef       { get; set; }
     public int      CreadoPorUsuarioId { get; set; }
     public DateTime CreadoEn        { get; set; }

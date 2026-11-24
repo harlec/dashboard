@@ -14,7 +14,7 @@ export interface Registro {
   id: number; fecha: string; descripcion: string
   categoriaId: number; categoria: string; responsableId: number; responsable: string
   proveedorId: number | null; proveedor: string | null; solicitante: string | null
-  duracionMin: number | null; estado: number; equipoRef: string | null
+  duracionMin: number | null; estado: number; equipoRef: string | null; fechaSolucion: string | null
   sedes: { id: number; codigo: string }[]; puedeEditar: boolean
 }
 export interface Pagina { total: number; page: number; pageSize: number; items: Registro[] }
@@ -26,6 +26,7 @@ export interface Reciente { descripcion: string; categoriaId: number; categoria:
 export interface RegistroInput {
   descripcion: string; sedeIds: number[]; fecha?: string | null; categoriaId?: number | null; responsableId?: number | null
   proveedorId?: number | null; solicitante?: string | null; duracionMin?: number | null; estado?: number | null; equipoRef?: string | null
+  fechaSolucion?: string | null
 }
 export interface Filtros {
   desde?: string; hasta?: string; sedeId?: number | ''; categoriaId?: number | ''; responsableId?: number | ''; q?: string
@@ -57,6 +58,7 @@ export const bitacoraApi = {
   exportarUrl: (f: Filtros) => `${BASE}/exportar?${qs(f)}`,
   crear:     (r: RegistroInput) => req<{ id: number; hoy: number }>('', { method: 'POST', body: JSON.stringify(r) }),
   editar:    (id: number, r: RegistroInput) => req<{ id: number }>(`/${id}`, { method: 'PUT', body: JSON.stringify(r) }),
+  resolver:  (id: number, fecha?: string | null) => req<{ id: number }>(`/${id}/resolver`, { method: 'POST', body: JSON.stringify({ fecha: fecha ?? null }) }),
   eliminar:  (id: number) => req<void>(`/${id}`, { method: 'DELETE' }),
   admin: {
     lista:     (cat: string) => req<Record<string, unknown>[]>(`/admin/${cat}`),

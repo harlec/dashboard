@@ -323,3 +323,76 @@ public class BitacoraIntegracionTests
         Assert.Equal((s, c, p, k), (db.BitSedes.Count(), db.BitCategorias.Count(), db.BitPersonas.Count(), db.BitPalabrasClave.Count()));
     }
 }
+
+// ── Fecha de solución: una actividad "En proceso" puede resolverse otro día ──
+public class BitacoraSolucionTests
+{
+    static readonly DateTime Ahora = new(2026, 11, 23, 10, 0, 0);
+    static readonly DateTime Actividad = new(2026, 11, 20, 9, 0, 0);
+
+    [Fact] public void En_proceso_no_tiene_fecha_de_solucion() =>
+        Assert.Null(FechaSolucionFinal(EstadoEnProceso, null, Actividad, null, null, Ahora));
+
+    [Fact] public void Hecho_sin_fecha_se_resuelve_el_mismo_dia_de_la_actividad() =>
+        Assert.Equal(Actividad, FechaSolucionFinal(EstadoHecho, null, Actividad, null, null, Ahora));
+
+    [Fact] public void Cerrar_algo_en_proceso_sin_fecha_usa_el_momento_del_cierre() =>
+        Assert.Equal(Ahora, FechaSolucionFinal(EstadoHecho, null, Actividad, EstadoEnProceso, null, Ahora));
+
+    [Fact] public void La_fecha_indicada_manda() =>
+        Assert.Equal(Ahora.AddDays(-1), FechaSolucionFinal(EstadoHecho, Ahora.AddDays(-1), Actividad, EstadoEnProceso, null, Ahora));
+
+    [Fact] public void Reabrir_borra_la_solucion() =>
+        Assert.Null(FechaSolucionFinal(EstadoEnProceso, null, Actividad, EstadoHecho, Ahora, Ahora));
+
+    [Fact] public void Solucion_anterior_a_la_actividad_o_futura_se_rechaza()
+    {
+        var baseE = new Entrada("x", [1], Actividad, null, null, null, null);
+        Assert.NotEmpty(Validar(baseE with { FechaSolucion = Actividad.AddDays(-1) }, Ahora));
+        Assert.NotEmpty(Validar(baseE with { FechaSolucion = Ahora.AddDays(2) }, Ahora));
+        Assert.Empty(Validar(baseE with { FechaSolucion = Ahora }, Ahora));
+    }
+
+    static (AppDbContext db, BitacoraController c) Nuevo(string nombre)
+    {
+        var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(nombre).Options);
+        db.BitSedes.Add(new BitSede { Id = 1, Codigo = "SAN", Nombre = "Santa" });
+        db.BitCategorias.Add(new BitCategoria { Id = 1, Nombre = "Otro" });
+        db.BitPersonas.Add(new BitPersonal { Id = 1, Nombre = "Hugo", UsuarioSigmaId = 7 });
+        db.SaveChanges();
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, "7"), new Claim(ClaimTypes.Name, "u7"), new Claim(ClaimTypes.Role, "ti")], "test"));
+        var ctx = new DefaultHttpContext { User = user };
+        var audit = new AuditService(db, new HttpContextAccessor { HttpContext = ctx }, NullLogger<AuditService>.Instance);
+        return (db, new BitacoraController(db, audit) { ControllerContext = new ControllerContext { HttpContext = ctx } });
+    }
+
+    [Fact]
+    public async Task Hecho_al_crear_se_resuelve_el_mismo_dia_y_en_proceso_queda_abierto()
+    {
+        var (db, c) = Nuevo(nameof(Hecho_al_crear_se_resuelve_el_mismo_dia_y_en_proceso_queda_abierto));
+        await c.Crear(new BitRegistroRequest("hecha", [1], null, null, null, null, null, null, null, null));
+        await c.Crear(new BitRegistroRequest("abierta", [1], null, null, null, null, null, null, 2, null));
+        var hecha = db.BitRegistros.Single(x => x.Descripcion == "hecha");
+        var abierta = db.BitRegistros.Single(x => x.Descripcion == "abierta");
+        Assert.Equal(hecha.FechaActividad, hecha.FechaSolucion);
+        Assert.Null(abierta.FechaSolucion);
+    }
+
+    [Fact]
+    public async Task Resolver_otro_dia_guarda_la_fecha_de_cierre()
+    {
+        var (db, c) = Nuevo(nameof(Resolver_otro_dia_guarda_la_fecha_de_cierre));
+        await c.Crear(new BitRegistroRequest("abierta", [1], DateTime.Now.AddDays(-3), null, null, null, null, null, 2, null));
+        var reg = db.BitRegistros.Single();
+
+        Assert.IsType<BadRequestObjectResult>(await c.Resolver(reg.Id, new BitResolverRequest(reg.FechaActividad.AddDays(-1))));   // antes de la actividad
+        Assert.IsType<BadRequestObjectResult>(await c.Resolver(reg.Id, new BitResolverRequest(DateTime.Now.AddDays(2))));           // futura
+        Assert.IsType<OkObjectResult>(await c.Resolver(reg.Id, new BitResolverRequest(null)));                                       // hoy
+
+        Assert.Equal(BitacoraReglas.EstadoHecho, reg.Estado);
+        Assert.Equal(DateTime.Today, reg.FechaSolucion!.Value.Date);
+        Assert.NotEqual(reg.FechaActividad.Date, reg.FechaSolucion.Value.Date);   // se resolvió otro día
+        Assert.IsType<NotFoundResult>(await c.Resolver(999, null));
+    }
+}
