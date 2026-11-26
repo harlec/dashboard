@@ -1,3 +1,4 @@
+import { CheckCircleIcon } from '@heroicons/react/24/outline'
 import type { EstacionLive, EquipoLive } from '../api/client'
 
 interface Props {
@@ -61,7 +62,7 @@ export function DownEquiposList({ estaciones, onEquipoClick, compact }: Props) {
       {/* Cuerpo */}
       {caidos.length === 0 ? (
         <div className={`flex flex-col items-center justify-center gap-1.5 text-center ${compact ? 'py-6' : 'py-10'}`}>
-          <div className={compact ? 'text-xl' : 'text-2xl'}>✓</div>
+          <CheckCircleIcon className={compact ? 'w-6 h-6 text-ok' : 'w-8 h-8 text-ok'} />
           <div style={compact ? { fontWeight: 600, fontSize: 14, color: 'light-dark(oklch(0.564 0.159 156), #3fb978)' } : undefined} className={compact ? '' : 'font-bold text-brand-light text-[0.88rem]'}>
             Todos operativos
           </div>

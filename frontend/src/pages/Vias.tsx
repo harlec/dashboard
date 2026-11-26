@@ -1,3 +1,4 @@
+import { BellIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { api, type EquipoLive, type Mantenimiento } from '../api/client'
 import { useLiveDashboard } from '../hooks/useLiveDashboard'
@@ -76,11 +77,13 @@ export function Vias() {
           cursor: 'pointer', fontSize: 15, fontWeight: 500, padding: '7px 16px', borderRadius: 999, color: 'var(--tx-muted)',
           background: 'rgb(var(--s1) / 0.80)', boxShadow: 'inset 0 0 0 1px rgb(var(--ov) / 0.06)',
         }}>
-          {muted ? '🔇 Silenciado' : '🔔 Sonido activo'}
+          {muted
+            ? <><SpeakerXMarkIcon className="w-4 h-4 inline-block align-[-3px]" /> Silenciado</>
+            : <><BellIcon className="w-4 h-4 inline-block align-[-3px]" /> Sonido activo</>}
         </div>
       </div>
 
-      {mantenimientos.map(m => banner(`m${m.id}`, false, '🔧 Mantenimiento',
+      {mantenimientos.map(m => banner(`m${m.id}`, false, 'Mantenimiento',
         `${m.estacion ?? m.via ?? m.equipo} — ${m.motivo} (hasta ${new Date(m.hasta).toLocaleTimeString('es-PE', { hour12: false })})`))}
 
       {grupos.map((g, i) => banner(`g${i}`, true, g.tipo === 'peaje' ? 'Incidente de peaje' : 'Incidente de vía',

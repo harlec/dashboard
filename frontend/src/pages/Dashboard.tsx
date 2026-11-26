@@ -1,3 +1,4 @@
+import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/24/outline'
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { WallTopbar } from '../components/WallTopbar'
 import {
@@ -119,7 +120,7 @@ function DeltaChip({ delta, dec = 1, bueno }: { delta: number | null; dec?: numb
   const ok = bueno(delta)
   return (
     <span style={{ fontSize: 14, fontWeight: 600, color: ok ? SEM.ok : PANEL.rojo }}>
-      {delta > 0 ? '▲ ' : '▼ '}{Math.abs(delta).toFixed(dec)}
+      {delta > 0 ? <ArrowUpIcon className="w-3 h-3 inline-block align-[-1px]" strokeWidth={3} /> : <ArrowDownIcon className="w-3 h-3 inline-block align-[-1px]" strokeWidth={3} />} {Math.abs(delta).toFixed(dec)}
     </span>
   )
 }

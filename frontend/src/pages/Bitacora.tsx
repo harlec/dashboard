@@ -1,3 +1,5 @@
+import { ArrowPathIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MonitorTopbar } from '../components/MonitorTopbar'
@@ -56,7 +58,7 @@ export function Bitacora() {
 
   return (
     <div className="min-h-screen page-bg">
-      <MonitorTopbar />
+      <MonitorTopbar activo="Bitácora" />
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-5">
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -240,7 +242,7 @@ function Formulario({ cat, recientes, onGuardado }: FormProps) {
             {recientes.map(r => (
               <button key={r.descripcion} type="button" className="bit-chip" onClick={() => aplicarReciente(r)}
                 title={r.descripcion} style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                ↻ {r.descripcion.length > 38 ? r.descripcion.slice(0, 38) + '…' : r.descripcion}
+                <ArrowPathIcon className="w-3.5 h-3.5 inline-block align-[-2px]" /> {r.descripcion.length > 38 ? r.descripcion.slice(0, 38) + '…' : r.descripcion}
               </button>
             ))}
           </div>
@@ -295,7 +297,7 @@ function Formulario({ cat, recientes, onGuardado }: FormProps) {
 
       <div className="mt-4">
         <button type="button" className="bit-note underline" aria-expanded={masDetalles} onClick={() => setMasDetalles(v => !v)}>
-          {masDetalles ? '▾' : '▸'} Más detalles
+          {masDetalles ? <ChevronDownIcon className="w-4 h-4 inline-block align-[-3px]" /> : <ChevronRightIcon className="w-4 h-4 inline-block align-[-3px]" />} Más detalles
         </button>
         {(masDetalles || sinPersona) && (
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -451,7 +453,7 @@ function Lista({ cat, version, onCambio }: { cat: Catalogos; version: number; on
                 ) : (
                   <>
                     <button className="bit-btn-sec" aria-label={`Editar: ${r.descripcion}`} onClick={() => setEditando(r)}>Editar</button>
-                    <button className="bit-btn-sec" aria-label={`Eliminar: ${r.descripcion}`} onClick={() => setBorrando(r.id)}>✕</button>
+                    <button className="bit-btn-sec" aria-label={`Eliminar: ${r.descripcion}`} onClick={() => setBorrando(r.id)}><XMarkIcon className="w-4 h-4 inline-block align-[-3px]" /></button>
                   </>
                 )}
               </div>
@@ -462,9 +464,9 @@ function Lista({ cat, version, onCambio }: { cat: Catalogos; version: number; on
 
       {data && data.total > PAGE_SIZE && (
         <div className="flex items-center justify-between mt-3">
-          <button className="bit-btn-sec" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Anterior</button>
+          <button className="bit-btn-sec" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeftIcon className="w-4 h-4 inline-block align-[-3px]" /> Anterior</button>
           <span className="bit-note">Página {page} de {totalPag} · {data.total} actividades</span>
-          <button className="bit-btn-sec" disabled={page >= totalPag} onClick={() => setPage(p => p + 1)}>Siguiente →</button>
+          <button className="bit-btn-sec" disabled={page >= totalPag} onClick={() => setPage(p => p + 1)}>Siguiente <ChevronRightIcon className="w-4 h-4 inline-block align-[-3px]" /></button>
         </div>
       )}
 

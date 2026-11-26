@@ -3,6 +3,7 @@ using AunorApi.Data;
 using AunorApi.Hubs;
 using AunorApi.Services;
 using AunorApi.Services.NetMon;
+using AunorApi.Services.ReporteDiario;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -172,6 +173,12 @@ builder.Services.AddSingleton<ReporteDiscrepanciasDiarioService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteDiscrepanciasDiarioService>());
 builder.Services.AddSingleton<AlertaDiscrepanciasService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AlertaDiscrepanciasService>());
+
+// ── Reporte diario Sigma (convive con el reporte de discrepancias de arriba) ──
+builder.Services.AddSingleton<ReporteDiarioService>();
+builder.Services.AddSingleton<ReporteDiarioEnvioService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ReporteDiarioEnvioService>());
+builder.Services.AddHostedService<LatenciaSitioMuestreoService>();
 
 // ── Reportes PDF ────────────────────────────────────────────
 PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new PdfFontResolver();

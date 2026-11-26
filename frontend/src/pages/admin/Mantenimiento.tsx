@@ -1,3 +1,4 @@
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { api, type Mantenimiento } from '../../api/client'
 import { AdminTable } from '../../components/admin/AdminTable'
@@ -118,7 +119,7 @@ export function AdminMantenimiento() {
         {error && <div className="text-xs text-danger mb-2">{error}</div>}
         <button onClick={crear} disabled={saving}
           className="px-4 py-2 bg-brand text-white text-sm font-bold rounded-lg hover:brightness-110 transition-all disabled:opacity-50">
-          {saving ? 'Activando…' : '🔧 Activar mantenimiento'}
+          {saving ? 'Activando…' : <><WrenchScrewdriverIcon className="w-4 h-4 inline-block align-[-3px]" /> Activar mantenimiento</>}
         </button>
       </div>
 
@@ -131,7 +132,7 @@ export function AdminMantenimiento() {
             { key: 'hasta', label: 'Hasta', render: r => fmt(r.hasta) },
             { key: 'creadoPor', label: 'Creado por' },
             { key: 'estado', label: 'Estado', render: r => activo(r)
-                ? <span className="text-brand font-bold">🔧 Activo</span>
+                ? <span className="text-brand font-bold"><WrenchScrewdriverIcon className="w-4 h-4 inline-block align-[-3px]" /> Activo</span>
                 : <span className="text-muted">Finalizado</span> },
             { key: 'acciones', label: '', render: r => activo(r)
                 ? <button onClick={() => terminar(r)}

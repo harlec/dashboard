@@ -1,3 +1,4 @@
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { useEffect, useMemo, useState } from 'react'
 import { api, type ReporteTipo, type ReporteEstimado } from '../api/client'
 import { ScaledStage } from '../components/ScaledStage'
@@ -147,7 +148,7 @@ export function Reportes() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', color: on ? 'var(--tx)' : 'var(--tx-2)' }}>{t.nombre}</div>
-                    <div style={{ width: 19, height: 19, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'light-dark(oklch(0.973 0.028 200), oklch(0.18 0.04 200))', background: on ? 'light-dark(oklch(0.499 0.121 200), oklch(0.82 0.11 200))' : 'transparent', boxShadow: on ? 'none' : 'inset 0 0 0 1px light-dark(oklch(0.894 0.010 265), oklch(0.40 0.015 265))' }}>{on ? '✓' : ''}</div>
+                    <div style={{ width: 19, height: 19, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'light-dark(oklch(0.973 0.028 200), oklch(0.18 0.04 200))', background: on ? 'light-dark(oklch(0.499 0.121 200), oklch(0.82 0.11 200))' : 'transparent', boxShadow: on ? 'none' : 'inset 0 0 0 1px light-dark(oklch(0.894 0.010 265), oklch(0.40 0.015 265))' }}>{on ? <CheckIcon style={{ width: 13, height: 13, strokeWidth: 3 }} /> : null}</div>
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.45, color: 'var(--tx-muted)' }}>{t.desc}</div>
                 </div>

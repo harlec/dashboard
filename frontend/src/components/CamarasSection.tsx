@@ -1,3 +1,4 @@
+import { CameraIcon } from '@heroicons/react/24/outline'
 import type { CamaraStatus } from '../api/client'
 
 interface Props { camaras: CamaraStatus[] }
@@ -10,7 +11,7 @@ export function CamarasSection({ camaras }: Props) {
     <div className="bg-surface rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="text-[1rem] font-extrabold text-[color:var(--tx)] flex items-center gap-2">
-          📷 Cámaras Dahua
+          <CameraIcon className="w-5 h-5" /> Cámaras Dahua
         </div>
         <div className="flex gap-2">
           <Badge label={`${up} Online`}  cls="bg-[color:light-dark(oklch(0.942 0.029 134), #1D2A15)] text-brand" />

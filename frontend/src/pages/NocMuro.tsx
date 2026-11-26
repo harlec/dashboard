@@ -1,3 +1,6 @@
+import { Bars3Icon } from '@heroicons/react/24/outline'
+import { useAuth } from '../hooks/useAuth'
+import { linksPara } from '../components/navLinks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type ViaConteo, type IncidenteItem, type EquipoLive, type DisponibilidadDiaria } from '../api/client'
@@ -21,20 +24,6 @@ const ALEATICA = {
   azul:        'light-dark(oklch(0.546 0.150 223), #00BBE7)', // Azul ALEATICA
   amarillo:    'light-dark(oklch(0.456 0.170 98), #FFDD00)', // Amarillo ALEATICA
 } as const
-
-// Mismos destinos que NavBar.tsx — el muro es una pantalla aparte (sin el nav normal
-// por el presupuesto de píxeles fijo), este menú es la única forma de llegar al resto
-// desde acá cuando alguien la ve con mouse en vez de en la TV.
-const MENU_LINKS = [
-  { to: '/',              label: 'Panel de control' },
-  { to: '/vias',          label: 'Vías' },
-  { to: '/incidentes',    label: 'Incidentes' },
-  { to: '/reporte',       label: 'Reporte SLA' },
-  { to: '/reportes',      label: 'Reportes' },
-  { to: '/discrepancias', label: 'Discrepancias' },
-  { to: '/ocr',           label: 'OCR Placas' },
-  { to: '/admin',         label: 'Admin' },
-] as const
 
 // ── Escala la pantalla de 1920×1080 al tamaño real del monitor (ej. TV 4K de 65") ──
 // El diseño es a píxel fijo por spec, así que en vez de rehacerlo fluido se escala
@@ -172,6 +161,7 @@ function severidadDac(v: ViaConteo): 'up' | 'degraded' | 'down' {
 
 
 export function NocMuro() {
+  const { user } = useAuth()
   const reloj = useReloj()
   const escala = useEscalaPantalla()
   const { playDown, playUp } = useAlertSound()
@@ -456,9 +446,9 @@ export function NocMuro() {
             <button onClick={() => setMenuAbierto(v => !v)} aria-label="Menú" style={{
               width: 36, height: 36, borderRadius: 8, border: 'none', cursor: 'pointer',
               background: menuAbierto ? 'rgb(var(--ov) / 0.10)' : 'transparent',
-              color: 'var(--tx-muted)', fontSize: 20, lineHeight: 1,
+              color: 'var(--tx-muted)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>☰</button>
+            }}><Bars3Icon style={{ width: 24, height: 24 }} /></button>
             {menuAbierto && (
               <>
                 <div onClick={() => setMenuAbierto(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
@@ -468,11 +458,11 @@ export function NocMuro() {
                   boxShadow: 'inset 0 1px 0 rgb(var(--ov) / 0.07), 0 14px 40px rgb(var(--shadow) / 0.45)',
                   display: 'flex', flexDirection: 'column', gap: 2,
                 }}>
-                  {MENU_LINKS.map(l => (
+                  {linksPara(user?.rol).map(l => (
                     <Link key={l.to} to={l.to} onClick={() => setMenuAbierto(false)} className="noc-menu-item" style={{
-                      display: 'block', padding: '9px 14px', borderRadius: 8, textDecoration: 'none',
+                      display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap', padding: '9px 14px', borderRadius: 8, textDecoration: 'none',
                       fontSize: 15, fontWeight: 500, color: 'light-dark(oklch(0.300 0.012 265), oklch(0.85 0.006 265))',
-                    }}>{l.label}</Link>
+                    }}><l.Icon style={{ width: 18, height: 18, flex: '0 0 auto' }} />{l.label}</Link>
                   ))}
                 </div>
               </>

@@ -1,3 +1,4 @@
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { api, type IncidenteDetalle } from '../api/client'
 import { TIPO_LABELS, TIPO_COLORS } from '../lib/incidentes'
@@ -58,7 +59,7 @@ export function IncidenteDetalleModal({ id, onClose }: Props) {
           <button
             onClick={onClose}
             className="text-muted hover:bg-[color:light-dark(oklch(0.958 0.031 21), #2D1212)] hover:text-danger px-2 py-1 rounded-md transition-colors"
-          >✕</button>
+          ><XMarkIcon className="w-5 h-5" /></button>
         </div>
 
         {/* Body */}

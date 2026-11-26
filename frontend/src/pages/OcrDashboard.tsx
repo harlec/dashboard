@@ -1,3 +1,4 @@
+import { ArrowDownIcon, ArrowDownTrayIcon, ArrowRightIcon, ArrowUpIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState, useCallback, useMemo, type CSSProperties } from 'react'
 import { api } from '../api/client'
 import type { OcrResumen, OcrAnalisis, OcrDetalle, OcrItem, OcrVia, OcrTendencias, OcrCelda, OcrHeatmapRow, OcrViaEvolucion, OcrMejorViaPeriodo, OcrTodaVia } from '../api/client'
@@ -430,7 +431,7 @@ function TodasViasPanel({ vias, periodo, soloPrepago }: { vias: OcrTodaVia[]; pe
           <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, letterSpacing: '.1em', color: 'var(--tx-muted)', fontWeight: 700 }}>EXPORTAR</span>
           {([['csv', 'CSV'], ['xlsx', 'Excel'], ['pdf', 'PDF']] as const).map(([f, label]) => (
             <div key={f} onClick={() => exportar(f)} title={`Descargar ${label} con el período, orden y estación actuales`}
-              style={{ ...chip(false), color: 'light-dark(oklch(0.501 0.106 155), #8fd6a8)', boxShadow: 'inset 0 0 0 1px rgba(63,185,120,.4)' }}>⬇ {label}</div>
+              style={{ ...chip(false), color: 'light-dark(oklch(0.501 0.106 155), #8fd6a8)', boxShadow: 'inset 0 0 0 1px rgba(63,185,120,.4)' }}><ArrowDownTrayIcon className="w-4 h-4 inline-block align-[-3px]" /> {label}</div>
           ))}
         </div>
         <span style={{ fontFamily: 'var(--app-font)', fontSize: 10, color: '#6b8196', marginLeft: 'auto', maxWidth: 560, textAlign: 'right' }}>
@@ -741,7 +742,7 @@ export function OcrDashboard() {
 
                   {analisis.topConfusiones.length === 0 ? (
                     <div style={{ padding: 32, textAlign: 'center', color: 'light-dark(oklch(0.564 0.159 156), #3fb978)', fontFamily: 'var(--app-font)', fontSize: 13 }}>
-                      ✓ Sin sustituciones de caracteres en el período
+                      <CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> Sin sustituciones de caracteres en el período
                     </div>
                   ) : (
                     <div style={{ overflowY: 'auto', maxHeight: 360 }}>
@@ -818,7 +819,7 @@ export function OcrDashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                           <span style={{ fontSize: 13, color: 'var(--tx-2)', fontWeight: 600 }}>{e.estacion}</span>
                           <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--app-font)', fontSize: 11 }}>
-                            <span style={{ color: 'light-dark(oklch(0.595 0.170 22), #ef4b54)' }}>✗ {e.sinDetectar + e.errores}</span>
+                            <span style={{ color: 'light-dark(oklch(0.595 0.170 22), #ef4b54)' }}><XMarkIcon className="w-3 h-3 inline-block align-[-2px]" /> {e.sinDetectar + e.errores}</span>
                             <span style={{ color: colorTasa(e.efectividad), fontWeight: 700 }}>{e.efectividad}%</span>
                           </div>
                         </div>
@@ -968,7 +969,7 @@ export function OcrDashboard() {
                           return (
                             <span style={{ marginLeft: 'auto', fontFamily: 'var(--app-font)', fontSize: 11,
                               color: delta > 2 ? 'light-dark(oklch(0.595 0.170 22), #ef4b54)' : delta < -2 ? 'light-dark(oklch(0.564 0.159 156), #3fb978)' : 'var(--tx-muted)' }}>
-                              {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(1)}% vs hace 30d
+                              {delta > 0 ? <ArrowUpIcon className="w-3 h-3 inline-block align-[-1px]" strokeWidth={3} /> : delta < 0 ? <ArrowDownIcon className="w-3 h-3 inline-block align-[-1px]" strokeWidth={3} /> : <ArrowRightIcon className="w-3 h-3 inline-block align-[-1px]" strokeWidth={3} />} {Math.abs(delta).toFixed(1)}% vs hace 30d
                             </span>
                           )
                         })()}

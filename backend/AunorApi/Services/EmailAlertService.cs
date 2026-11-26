@@ -160,6 +160,43 @@ public class EmailAlertService(IConnectionStringProvider cs, IWebHostEnvironment
         return (host, port, user, pass);
     }
 
+    // Correo HTML con imágenes PNG incrustadas (CID) — lo usa el reporte diario Sigma.
+    public async Task<(bool ok, string message)> SendHtmlConImagenesAsync(
+        string subject, string htmlBody, List<string> destinatarios, IEnumerable<(string Cid, byte[] Png)> imagenes)
+    {
+        if (destinatarios.Count == 0) return (false, "No hay destinatarios.");
+        var (smtpHost, smtpPort, smtpUser, smtpPass) = await GetCredencialesAsync();
+        if (string.IsNullOrEmpty(smtpHost) || string.IsNullOrEmpty(smtpUser))
+            return (false, "Falta configurar SMTP Host y/o SMTP Usuario en Configuración.");
+        try
+        {
+            var msg = new MimeMessage();
+            msg.From.Add(MailboxAddress.Parse(smtpUser));
+            foreach (var to in destinatarios) msg.To.Add(MailboxAddress.Parse(to));
+            msg.Subject = subject;
+
+            var builder = new BodyBuilder { HtmlBody = htmlBody };
+            foreach (var (cid, png) in imagenes)
+            {
+                var res = builder.LinkedResources.Add($"{cid}.png", png, ContentType.Parse("image/png"));
+                res.ContentId = cid;
+            }
+            msg.Body = builder.ToMessageBody();
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(smtpUser, smtpPass);
+            await client.SendAsync(msg);
+            await client.DisconnectAsync(true);
+            return (true, $"Enviado a {destinatarios.Count} destinatario(s).");
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error enviando reporte diario: {subject}", subject);
+            return (false, $"Error SMTP: {ex.Message}");
+        }
+    }
+
     private async Task<(bool ok, string? error)> SendAsync(string subject, string htmlBody, List<string>? destinatarios)
     {
         var (smtpHost, smtpPort, smtpUser, smtpPass) = await GetCredencialesAsync();

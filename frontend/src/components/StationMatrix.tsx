@@ -1,3 +1,4 @@
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import type { EstacionLive, EquipoLive } from '../api/client'
 import { EquipoChip }    from './EquipoChip'
 import { StationGauge }  from './StationGauge'
@@ -38,7 +39,7 @@ export function StationMatrix({ estaciones, onEquipoClick, estacionesEnMtto }: P
                   <div className="relative flex flex-col items-center gap-0.5 px-3 pt-2.5 pb-2">
                     {enMtto ? (
                       <div className="absolute top-1.5 right-2.5 flex items-center gap-1">
-                        <span className="text-[0.7rem]">🔧</span>
+                        <WrenchScrewdriverIcon className="w-3 h-3 text-blue-400" />
                         <span className="text-[0.58rem] font-bold text-blue-400 uppercase tracking-wide whitespace-nowrap">
                           Mantenimiento
                         </span>

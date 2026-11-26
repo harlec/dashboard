@@ -1,3 +1,4 @@
+import { CameraIcon, ComputerDesktopIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { api, type EquipoDetail, type EquipoLive, type IncidenteItem, type IncidenteTipo } from '../api/client'
 import { useAuth } from '../hooks/useAuth'
@@ -86,7 +87,7 @@ export function EquipoModal({ equipo, onClose }: Props) {
           <button
             onClick={onClose}
             className="text-muted hover:bg-[color:light-dark(oklch(0.958 0.031 21), #2D1212)] hover:text-danger px-2 py-1 rounded-md transition-colors"
-          >✕</button>
+          ><XMarkIcon className="w-5 h-5" /></button>
         </div>
 
         {/* Body */}
@@ -96,13 +97,13 @@ export function EquipoModal({ equipo, onClose }: Props) {
               {TIPOS_CAMARA.includes(equipo.tipoNombre) && (
                 <a href={`http://${equipo.ip}`} target="_blank" rel="noopener noreferrer"
                   className="px-3 py-2 bg-brand text-white text-sm font-bold rounded-lg hover:brightness-110 transition-all">
-                  📷 Abrir cámara
+                  <CameraIcon className="w-4 h-4 inline-block align-[-3px]" /> Abrir cámara
                 </a>
               )}
               {TIPOS_PC.includes(equipo.tipoNombre) && (
                 <button onClick={() => descargarVnc(equipo)}
                   className="px-3 py-2 bg-surface-3 text-[color:var(--tx)] text-sm font-bold rounded-lg hover:brightness-110 transition-all border border-border">
-                  🖥 Abrir VNC
+                  <ComputerDesktopIcon className="w-4 h-4 inline-block align-[-3px]" /> Abrir VNC
                 </button>
               )}
             </div>
@@ -110,7 +111,7 @@ export function EquipoModal({ equipo, onClose }: Props) {
 
           {equipo.tipoDescripcion && (
             <div className="text-[0.78rem] text-muted bg-surface-3 rounded-lg px-3 py-2 mb-4">
-              ℹ {equipo.tipoDescripcion}
+              <InformationCircleIcon className="w-4 h-4 inline-block align-[-3px]" /> {equipo.tipoDescripcion}
             </div>
           )}
 

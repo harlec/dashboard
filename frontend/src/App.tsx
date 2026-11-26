@@ -9,6 +9,7 @@ import { Vias }            from './pages/Vias'
 import { Incidentes }      from './pages/Incidentes'
 import { ReporteSLA }      from './pages/ReporteSLA'
 import { Reportes }        from './pages/Reportes'
+import { ReporteDiario }   from './pages/ReporteDiario'
 import { Discrepancias }   from './pages/Discrepancias'
 import { Transitos }       from './pages/Transitos'
 import { AdminLayout }       from './pages/admin/AdminLayout'
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="/incidentes"      element={muro(<Incidentes />)} />
         <Route path="/reporte"         element={muro(<ReporteSLA />)} />
         <Route path="/reportes"        element={muro(<Reportes />)} />
+        <Route path="/reporte-diario"  element={muro(<ReporteDiario />)} />
         <Route path="/discrepancias"   element={muro(<Discrepancias />)} />
         <Route path="/transitos"       element={muro(<Transitos />)} />
         <Route path="/ocr"             element={muro(<OcrDashboard />)} />

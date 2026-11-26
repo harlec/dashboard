@@ -1,3 +1,4 @@
+import { CheckCircleIcon, CheckIcon, ClockIcon, ExclamationTriangleIcon, NoSymbolIcon } from '@heroicons/react/24/outline'
 import { useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Input, Select } from '../components/admin/FormModal'
@@ -267,10 +268,10 @@ function Fila({ t, i, btn, checked, onCheck, abierto, camaras, clips, borrar, on
 }) {
   // Estado del lote para este evento (aunque la fila no esté expandida)
   const estados = Object.entries(clips).filter(([k]) => k.startsWith(`${i}-`)).map(([, v]) => v)
-  const resumen = estados.length === 0 ? '' :
-    estados.some(e => e === 'cargando') ? '⏳' :
-    estados.every(e => e !== 'cargando' && e.estado === 'Completado') ? '✅' :
-    estados.some(e => e !== 'cargando' && e.estado === 'FueraDeRetencion') ? '⌛ sin video' : '⚠️'
+  const resumen = estados.length === 0 ? null :
+    estados.some(e => e === 'cargando') ? <ClockIcon className="w-4 h-4 inline-block align-[-3px]" /> :
+    estados.every(e => e !== 'cargando' && e.estado === 'Completado') ? <CheckCircleIcon className="w-4 h-4 inline-block align-[-3px] text-ok" /> :
+    estados.some(e => e !== 'cargando' && e.estado === 'FueraDeRetencion') ? <><NoSymbolIcon className="w-4 h-4 inline-block align-[-3px]" /> sin video</> : <ExclamationTriangleIcon className="w-4 h-4 inline-block align-[-3px] text-warn" />
 
   return (
     <>
@@ -334,7 +335,7 @@ function HashChip({ hash }: { hash?: string }) {
   return (
     <span className="flex items-center gap-1 text-xs text-muted" title={`SHA-256: ${hash}`}>
       sha256 {hash.slice(0, 12)}…
-      <button onClick={copiar} className="underline hover:text-brand" type="button">{copiado ? 'copiado ✓' : 'copiar'}</button>
+      <button onClick={copiar} className="underline hover:text-brand" type="button">{copiado ? <>copiado <CheckIcon className="w-3 h-3 inline-block" /></> : 'copiar'}</button>
     </span>
   )
 }

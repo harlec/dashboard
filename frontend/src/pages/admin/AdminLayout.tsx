@@ -1,19 +1,20 @@
+import { BuildingOffice2Icon, ChartPieIcon, Cog6ToothIcon, ComputerDesktopIcon, GlobeAltIcon, MagnifyingGlassIcon, MapIcon, ServerStackIcon, TagIcon, UsersIcon, VideoCameraIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 const links = [
-  { to: '/admin',           label: '📊 Resumen',     end: true },
-  { to: '/admin/estaciones', label: '🏢 Estaciones'  },
-  { to: '/admin/vias',       label: '🛣 Vías'         },
-  { to: '/admin/equipos',    label: '🖥 Equipos'      },
-  { to: '/admin/tipos-equipo', label: '🏷 Tipos de equipo' },
-  { to: '/admin/mantenimiento', label: '🔧 Mantenimiento' },
-  { to: '/admin/servicios',     label: '🗄 Servicios' },
-  { to: '/admin/servicio-checks', label: '🔎 Chequeos de servicio' },
-  { to: '/admin/nvr',        label: '📹 NVR y canales' },
-  { to: '/admin/red',        label: '🌐 Red (firewalls)' },
-  { to: '/admin/usuarios',   label: '👤 Usuarios'     },
-  { to: '/admin/config',     label: '⚙ Configuración' },
+  { to: '/admin',           Icon: ChartPieIcon, label: 'Resumen',     end: true },
+  { to: '/admin/estaciones', Icon: BuildingOffice2Icon, label: 'Estaciones'  },
+  { to: '/admin/vias',       Icon: MapIcon, label: 'Vías'         },
+  { to: '/admin/equipos',    Icon: ComputerDesktopIcon, label: 'Equipos'      },
+  { to: '/admin/tipos-equipo', Icon: TagIcon, label: 'Tipos de equipo' },
+  { to: '/admin/mantenimiento', Icon: WrenchScrewdriverIcon, label: 'Mantenimiento' },
+  { to: '/admin/servicios',     Icon: ServerStackIcon, label: 'Servicios' },
+  { to: '/admin/servicio-checks', Icon: MagnifyingGlassIcon, label: 'Chequeos de servicio' },
+  { to: '/admin/nvr',        Icon: VideoCameraIcon, label: 'NVR y canales' },
+  { to: '/admin/red',        Icon: GlobeAltIcon, label: 'Red (firewalls)' },
+  { to: '/admin/usuarios',   Icon: UsersIcon, label: 'Usuarios'     },
+  { to: '/admin/config',     Icon: Cog6ToothIcon, label: 'Configuración' },
 ]
 
 export function AdminLayout() {
@@ -32,14 +33,15 @@ export function AdminLayout() {
           Panel Admin
         </div>
         <nav className="flex flex-col gap-0.5 px-2">
-          {links.map(({ to, label, end }) => (
+          {links.map(({ to, label, end, Icon }) => (
             <NavLink key={to} to={to} end={end}
               className={({ isActive }) =>
-                `px-3 py-2 rounded-lg text-sm transition-colors ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                   isActive
                     ? 'bg-brand/20 text-brand font-bold'
                     : 'text-muted hover:bg-surface-3 hover:text-[color:var(--tx)]'
                 }`}>
+              <Icon className="w-[18px] h-[18px] flex-shrink-0" />
               {label}
             </NavLink>
           ))}

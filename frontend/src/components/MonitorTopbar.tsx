@@ -1,22 +1,12 @@
+import { Bars3Icon } from '@heroicons/react/24/outline'
+import { WallTopbar } from './WallTopbar'
+import { linksPara } from './navLinks'
 import { ThemeToggle } from './ThemeToggle'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
-interface Props { signalStatus?: 'idle' | 'ok' | 'error' }
-
-const LINKS = [
-  { to: '/',              label: 'Panel de control' },
-  { to: '/vias',          label: 'Vías' },
-  { to: '/incidentes',    label: 'Incidentes' },
-  { to: '/bitacora',      label: 'Bitácora', soloTi: true },
-  { to: '/reporte',       label: 'Reporte SLA' },
-  { to: '/reportes',      label: 'Reportes' },
-  { to: '/discrepancias', label: 'Discrepancias' },
-  { to: '/ocr',            label: 'OCR Placas' },
-  // Oficios: oculto del menú mientras se termina de probar (ruta /oficios sigue activa)
-  { to: '/admin',          label: 'Admin' },
-]
+interface Props { activo: string; signalStatus?: 'idle' | 'ok' | 'error' }
 
 function useClock() {
   const [now, setNow] = useState(() => new Date())
@@ -27,12 +17,24 @@ function useClock() {
   return now
 }
 
-// Topbar compartido de toda la app — hamburger (drawer de navegación en
-// pantallas angostas) + wordmark + nav inline (desde lg) + estado en vivo +
-// usuario + reloj. Reemplaza al NavBar anterior en App.tsx.
-export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
+// Barra para las pantallas fluidas (Bitácora, reporte diario), que no usan el lienzo
+// de 1920. En escritorio dibuja la misma WallTopbar a escala, para que el menú se vea
+// igual que en el resto de Sigma; en pantallas angostas, una versión compacta.
+function useAncho() {
+  const [ancho, setAncho] = useState(() => document.documentElement.clientWidth)
+  useEffect(() => {
+    const medir = () => setAncho(document.documentElement.clientWidth)
+    medir()
+    window.addEventListener('resize', medir)
+    return () => window.removeEventListener('resize', medir)
+  }, [])
+  return ancho
+}
+
+export function MonitorTopbar({ activo, signalStatus = 'ok' }: Props) {
+  const ancho = useAncho()
   const { user, logout } = useAuth()
-  const linksVisibles = LINKS.filter(l => !('soloTi' in l) || user?.rol === 'admin' || user?.rol === 'ti')
+  const linksVisibles = linksPara(user?.rol)
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -46,6 +48,13 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [open])
+
+  if (ancho >= 1024) return (
+    <div style={{ zoom: ancho / 1920, width: 1920, boxSizing: 'border-box', padding: '22px 30px 8px', position: 'relative', zIndex: 50, fontFamily: 'var(--app-font)', color: 'var(--tx)' }}>
+      <style>{`@keyframes breathe { 0%,100%{opacity:1} 50%{opacity:.35} }`}</style>
+      <WallTopbar activo={activo} signalStatus={signalStatus} />
+    </div>
+  )
 
   const dotColor = {
     idle:  'bg-[color:var(--tx-muted)]',
@@ -63,23 +72,22 @@ export function MonitorTopbar({ signalStatus = 'ok' }: Props) {
             onClick={() => setOpen(o => !o)}
             aria-label="Menú de navegación"
             aria-expanded={open}
-            className="w-10 h-10 rounded-[13px] flex flex-col items-center justify-center gap-[5px]
+            className="w-10 h-10 rounded-[13px] flex items-center justify-center
               bg-ink/[0.06] hover:bg-ink/[0.10] transition-colors"
           >
-            {[0, 1, 2].map(i => (
-              <span key={i} className="w-[17px] h-[2px] rounded-full" style={{ background: 'light-dark(oklch(0.488 0.066 200), oklch(0.84 0.06 200))' }} />
-            ))}
+            <Bars3Icon className="w-[22px] h-[22px]" style={{ color: 'light-dark(oklch(0.488 0.066 200), oklch(0.84 0.06 200))' }} />
           </button>
 
           {open && (
             <div className="absolute left-0 top-[calc(100%+8px)] w-56 bg-surface-2 border border-border
               rounded-xl p-1.5 shadow-2xl z-50">
-              {linksVisibles.map(({ to, label }) => (
+              {linksVisibles.map(({ to, label, Icon }) => (
                 <Link key={to} to={to} onClick={() => setOpen(false)}
-                  className={`block px-3 py-2 rounded-lg text-[0.85rem] transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.85rem] transition-colors ${
                     pathname === to
                       ? 'bg-ink/10 text-ink font-semibold'
                       : 'text-ink/60 hover:bg-ink/10 hover:text-ink'}`}>
+                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                   {label}
                 </Link>
               ))}

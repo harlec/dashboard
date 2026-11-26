@@ -1,3 +1,4 @@
+import { CheckCircleIcon, ExclamationTriangleIcon, KeyIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { FormModal, Field, Input, Select } from '../../components/admin/FormModal'
@@ -96,9 +97,9 @@ export function AdminRed() {
               { key: 'nombre', label: 'Nombre' }, { key: 'sitio', label: 'Sitio' }, { key: 'marca', label: 'Marca' },
               { key: 'ipMgmt', label: 'IP gestión' },
               { key: 'rolHa', label: 'HA', render: r => r.grupoHa ? `${r.rolHa} (${r.grupoHa})` : r.rolHa },
-              { key: 'tieneKey', label: 'API key', render: r => r.tieneKey ? '🔑 cargada' : '⚠ falta' },
-              { key: 'certSha256', label: 'Huella TLS', render: r => r.certSha256 ? '✅' : '⚠ falta' },
-              { key: 'activo', label: 'Activo', render: r => r.activo ? '✅' : '❌' },
+              { key: 'tieneKey', label: 'API key', render: r => r.tieneKey ? <span className="inline-flex items-center gap-1"><KeyIcon className="w-4 h-4" />cargada</span> : <span className="inline-flex items-center gap-1"><ExclamationTriangleIcon className="w-4 h-4 text-warn" />falta</span> },
+              { key: 'certSha256', label: 'Huella TLS', render: r => r.certSha256 ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : <span className="inline-flex items-center gap-1"><ExclamationTriangleIcon className="w-4 h-4 text-warn" />falta</span> },
+              { key: 'activo', label: 'Activo', render: r => r.activo ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : <XCircleIcon className="w-5 h-5 text-danger" aria-label="No" /> },
             ]}
             data={equipos} keyField="id" loading={loading}
             onEdit={r => { setError(''); setEq({ ...r, apiKey: '' }) }} onDelete={eliminarEquipo} />
@@ -124,7 +125,7 @@ export function AdminRed() {
               { key: 'dispositivo', label: 'Equipo' }, { key: 'interfaz', label: 'Interfaz' }, { key: 'rol', label: 'Rol' },
               { key: 'in', label: 'Contratado ↓ / ↑ (Mbps)', render: r => `${r.mbpsContratadoIn ?? '—'} / ${r.mbpsContratadoOut ?? '—'}` },
               { key: 'um', label: 'Aviso / Crítico', render: r => `${r.umbralWarnPct}% / ${r.umbralCritPct}%` },
-              { key: 'medirAlerta', label: 'Alerta', render: r => r.medirAlerta ? '✅' : 'informativo' },
+              { key: 'medirAlerta', label: 'Alerta', render: r => r.medirAlerta ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : 'informativo' },
             ]}
             data={enlaces} keyField="id" loading={loading}
             onEdit={r => { setError(''); setEn({ ...r }) }} />

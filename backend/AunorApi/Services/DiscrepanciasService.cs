@@ -71,7 +71,7 @@ public class DiscrepanciasService(ConsolidadoConnectionProvider consolidado)
     //   - INNER JOIN disjus garantiza tránsitos en el universo válido
     //   - tra_titra = 'TR' excluye violaciones, cierres, abortadas, etc.
     //     (esos tipos tienen discrepancia manual/DAC por diseño, no por error del cobrador)
-    private const string FiltroTipo = @"
+    internal const string FiltroTipo = @"
         AND tra_tipop IN ('E','S','O','M','T')
         AND tra_titra = 'TR'
         AND (tra_tiobs = 'A' OR tra_tiobs IS NULL)";

@@ -1,3 +1,4 @@
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { api, type IncidenteItem, type IncidenteResumen, type IncidenteTipo } from '../api/client'
 import { useAuth } from '../hooks/useAuth'
@@ -389,7 +390,7 @@ export function Incidentes() {
                     width: 19, height: 19, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700,
                     color: 'light-dark(oklch(0.973 0.028 200), oklch(0.18 0.04 200))', background: marcado ? 'light-dark(oklch(0.510 0.121 200), oklch(0.80 0.11 200))' : 'transparent',
                     boxShadow: marcado ? 'none' : 'inset 0 0 0 1px light-dark(oklch(0.894 0.010 265), oklch(0.40 0.015 265))',
-                  }}>{marcado ? '✓' : ''}</div>
+                  }}>{marcado ? <CheckIcon style={{ width: 14, height: 14, strokeWidth: 3 }} /> : null}</div>
                   <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{inc.equipoNombre}</div>
                   <div style={{ fontWeight: 600, color: COLORS[inc.estacion] ?? gris }}>{inc.estacion}</div>
                   <div style={{ color: 'var(--tx-muted)' }}>{inc.via}</div>

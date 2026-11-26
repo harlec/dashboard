@@ -1,3 +1,4 @@
+import { CheckIcon, PlayIcon, XMarkIcon, PaintBrushIcon, SignalIcon, BellIcon, ChartBarSquareIcon, EnvelopeIcon, SpeakerWaveIcon, PuzzlePieceIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Field, Input } from '../../components/admin/FormModal'
 import { useAlertSound } from '../../hooks/useAlertSound'
@@ -12,6 +13,15 @@ const LABELS: Record<string, { label: string; desc: string; type?: string }> = {
   hora_reporte_discrepancias:  { label: 'Hora reporte diario de discrepancias', desc: 'Hora del día en formato HH:mm (ej. 08:00) en que se envía el reporte' },
   email_alerta_discrepancias:  { label: 'Email alerta de discrepancias', desc: 'Destinatarios de la alerta cuando una vía supera el umbral (separados por coma) — se revisa cada hora en punto' },
   umbral_alerta_discrepancias: { label: 'Umbral de alerta de discrepancias (%)', desc: 'Si alguna vía supera este % de discrepancia en la última hora, se envía una alerta' },
+  reporte_diario_activo: { label: '2. Envío automático diario', desc: '1 = se envía automático a la hora configurada, 0 = apagado (el reporte de discrepancias anterior sigue funcionando aparte)' },
+  email_reporte_diario:  { label: '1. ¿A quién se envía? (destinatarios)', desc: 'Destinatarios del reporte diario Sigma (separados por coma)' },
+  hora_reporte_diario:   { label: '3. Hora de envío', desc: 'HH:mm hora de Lima. También es el corte de la ventana (08:00 → 08:00)' },
+  reporte_diario_url:    { label: '4. Enlace del botón «Abrir en Sigma»', desc: 'Dirección completa de la vista web, ej. http://servidor:8090/reporte-diario. Vacío = el correo no muestra el botón' },
+  reporte_evento_comun_equipos:     { label: 'Evento común: equipos mínimos', desc: 'Equipos de la misma plaza que deben caer juntos para agruparse (por defecto 3)' },
+  reporte_evento_comun_ventana_min: { label: 'Evento común: ventana (min)', desc: 'Minutos dentro de los cuales deben caer (por defecto 10)' },
+  reporte_latencia_umbral_ms:       { label: 'Umbral de latencia (ms)', desc: 'Umbral que se dibuja en "Latencia por sitio" (por defecto 24)' },
+  reporte_via_min_transitos:        { label: 'Vías críticas: tránsitos mínimos', desc: 'Una vía con menos tránsitos no entra al top de críticas (por defecto 50)' },
+  reporte_incluir_mantenimiento:    { label: 'Disponibilidad: contar mantenimiento', desc: '1 = las caídas en mantenimiento restan disponibilidad; 0 = no (por defecto)' },
   intervalo_min:    { label: 'Intervalo ping (min)', desc: 'Cada cuántos minutos se hace ping' },
   pings_por_ciclo:  { label: 'Pings por host',     desc: 'Cantidad de pings por equipo por ciclo' },
   timeout_ping_s:   { label: 'Timeout ping (seg)', desc: 'Segundos antes de considerar timeout' },
@@ -50,6 +60,10 @@ export function AdminConfiguracion() {
   const [testingReporte, setTestingReporte] = useState(false)
   const [testReporteResult, setTestReporteResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [testingReporteDisc, setTestingReporteDisc] = useState(false)
+  // Reporte diario Sigma (nuevo)
+  const [rdDestino, setRdDestino] = useState('')
+  const [rdBusy, setRdBusy] = useState<'prueba' | 'config' | null>(null)
+  const [rdResult, setRdResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [testReporteDiscResult, setTestReporteDiscResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [testingAlertaDisc, setTestingAlertaDisc] = useState(false)
   const [testAlertaDiscResult, setTestAlertaDiscResult] = useState<{ ok: boolean; message: string } | null>(null)
@@ -280,11 +294,24 @@ export function AdminConfiguracion() {
           />
           <button onClick={() => save(clave)} disabled={saving === clave}
             className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap">
-            {saved[clave] ? '✓ Guardado' : saving === clave ? '…' : 'Guardar'}
+            {saved[clave] ? <><CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> Guardado</> : saving === clave ? '…' : 'Guardar'}
           </button>
         </div>
       </div>
     )
+  }
+
+  const enviarReporteDiario = async (modo: 'prueba' | 'config') => {
+    setRdBusy(modo); setRdResult(null)
+    try {
+      const r = await fetch(modo === 'prueba' ? '/api/reporte-diario/enviar-prueba' : '/api/reporte-diario/enviar', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: modo === 'prueba' ? JSON.stringify({ destinatarios: rdDestino }) : undefined,
+      })
+      const data = await r.json().catch(() => ({}))
+      setRdResult({ ok: r.ok, message: data.message ?? (r.ok ? 'Enviado.' : 'Error al enviar.') })
+    } catch { setRdResult({ ok: false, message: 'No se pudo contactar al servidor.' }) }
+    finally { setRdBusy(null) }
   }
 
   const prueba = (cond: string, title: string, desc: string, btn: string, busyTxt: string,
@@ -299,14 +326,14 @@ export function AdminConfiguracion() {
         </button>
         {res && (
           <div className={`text-xs mt-2 ${res.ok ? 'text-green-500' : 'text-red-500'}`}>
-            {res.ok ? '✓ ' : '✗ '}{res.message}
+            {res.ok ? <CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> : <XMarkIcon className="w-4 h-4 inline-block align-[-3px]" />} {res.message}
           </div>
         )}
       </div>
     )
 
-  const tabs: { id: string; label: string; icon: string; claves: string[]; contenido?: () => ReactNode }[] = [
-    { id: 'apariencia', label: 'Apariencia', icon: '🎨', claves: [], contenido: () => (<>
+  const tabs: { id: string; label: string; Icon: typeof BellIcon; claves: string[]; contenido?: () => ReactNode }[] = [
+    { id: 'apariencia', label: 'Apariencia', Icon: PaintBrushIcon, claves: [], contenido: () => (<>
       <div className={card}>
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -335,7 +362,7 @@ export function AdminConfiguracion() {
             </button>
           ))}
         </div>
-        {saved['escala_fuente'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
+        {saved['escala_fuente'] && <div className="text-xs mt-2 text-green-500"><CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> Guardado</div>}
       </div>
 
       <div className={card}>
@@ -349,7 +376,7 @@ export function AdminConfiguracion() {
             </button>
           ))}
         </div>
-        {saved['fuente_sistema'] && <div className="text-xs mt-2 text-green-500">✓ Guardado</div>}
+        {saved['fuente_sistema'] && <div className="text-xs mt-2 text-green-500"><CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> Guardado</div>}
       </div>
 
       <div className={card}>
@@ -393,14 +420,47 @@ export function AdminConfiguracion() {
         {fondoError && <div className="text-xs mt-2 text-red-400">{fondoError}</div>}
       </div>
     </>) },
-    { id: 'monitoreo', label: 'Monitoreo', icon: '📡',
+    { id: 'monitoreo', label: 'Monitoreo', Icon: SignalIcon,
       claves: ['intervalo_min', 'pings_por_ciclo', 'timeout_ping_s', 'agente_puerto', 'agente_servicios_permitidos'] },
-    { id: 'notificaciones', label: 'Notificaciones', icon: '🔔',
+    { id: 'notificaciones', label: 'Notificaciones', Icon: BellIcon,
       claves: ['alertas_activas', 'email_alertas', 'smtp_host', 'smtp_puerto', 'smtp_usuario', 'smtp_password', 'telegram_bot_token', 'telegram_chat_id'],
       contenido: () => prueba('telegram_bot_token', 'Probar Telegram',
         'Guarda el token y el chat ID primero, luego envía un mensaje de prueba al grupo.',
         'Enviar mensaje de prueba', 'Enviando…', testing, testTelegram, testResult) },
-    { id: 'reportes', label: 'Reportes', icon: '📧',
+    { id: 'reporte-sigma', label: 'Reporte Sigma', Icon: ChartBarSquareIcon,
+      claves: ['email_reporte_diario', 'reporte_diario_activo', 'hora_reporte_diario', 'reporte_diario_url',
+        'reporte_evento_comun_equipos', 'reporte_evento_comun_ventana_min', 'reporte_latencia_umbral_ms',
+        'reporte_via_min_transitos', 'reporte_incluir_mantenimiento'],
+      contenido: () => (<>
+        {rows.some(r => r.clave === 'email_reporte_diario') && (
+          <div className={card}>
+            <div className={titulo}>Reporte diario Sigma (nuevo) — probar antes de activar</div>
+            <div className="text-xs text-muted mb-2">
+              Es el reporte nuevo, distinto del “reporte diario de discrepancias” (pestaña Reportes). La vista previa usa las últimas 24 h reales (08:00 → 08:00); la primera vez tarda porque calcula los snapshots de 30 días.
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <a href="/api/reporte-diario/preview" target="_blank" rel="noreferrer"
+                className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 hover:brightness-110 whitespace-nowrap">Ver vista previa</a>
+              <a href="/reporte-diario" target="_blank" rel="noreferrer"
+                className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 hover:brightness-110 whitespace-nowrap">Ver vista web</a>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center mt-3">
+              <input value={rdDestino} onChange={e => setRdDestino(e.target.value)} placeholder="correo para la prueba (varios con coma)"
+                className="flex-1 min-w-[240px] px-3 py-2 rounded-lg text-sm bg-surface-2 border border-border" />
+              <button onClick={() => enviarReporteDiario('prueba')} disabled={rdBusy !== null || !rdDestino.trim()}
+                className="px-3 py-2 rounded-lg text-sm font-bold bg-brand text-white hover:brightness-110 disabled:opacity-50 whitespace-nowrap">
+                {rdBusy === 'prueba' ? 'Enviando…' : 'Enviar prueba solo a este correo'}
+              </button>
+              <button onClick={() => enviarReporteDiario('config')} disabled={rdBusy !== null}
+                className="px-3 py-2 rounded-lg text-sm font-bold bg-surface-3 hover:brightness-110 disabled:opacity-50 whitespace-nowrap">
+                {rdBusy === 'config' ? 'Enviando…' : 'Enviar ahora a los destinatarios configurados'}
+              </button>
+            </div>
+            {rdResult && <div className={`text-xs mt-2 ${rdResult.ok ? 'text-green-500' : 'text-red-500'}`}>{rdResult.ok ? <CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> : <XMarkIcon className="w-4 h-4 inline-block align-[-3px]" />} {rdResult.message}</div>}
+          </div>
+        )}
+      </>) },
+    { id: 'reportes', label: 'Reportes', Icon: EnvelopeIcon,
       claves: ['email_reporte_semanal', 'email_reporte_discrepancias', 'hora_reporte_discrepancias', 'email_alerta_discrepancias', 'umbral_alerta_discrepancias'],
       contenido: () => (<>
         {prueba('email_reporte_semanal', 'Probar reporte semanal',
@@ -413,7 +473,7 @@ export function AdminConfiguracion() {
           'Guarda destinatarios y umbral primero, luego revisa ahora mismo si alguna vía superó el umbral en la última hora y envía el correo si corresponde (se revisa automático cada hora en punto).',
           'Revisar y enviar ahora', 'Revisando…', testingAlertaDisc, testAlertaDiscrepancias, testAlertaDiscResult)}
       </>) },
-    { id: 'sonidos', label: 'Sonidos', icon: '🔊', claves: [], contenido: () => (<>
+    { id: 'sonidos', label: 'Sonidos', Icon: SpeakerWaveIcon, claves: [], contenido: () => (<>
       {TONOS.map(({ tipo, label, desc }) => {
         const archivo = values[`tono_${tipo}_archivo`]
         const busy    = tonoBusy === tipo
@@ -436,7 +496,7 @@ export function AdminConfiguracion() {
               </button>
               <button onClick={() => probarTono(tipo)}
                 className="px-3 py-2 rounded-lg text-sm font-bold transition-all bg-surface-3 text-[color:var(--tx)] hover:brightness-110 whitespace-nowrap">
-                ▶ Probar
+                <PlayIcon className="w-4 h-4 inline-block align-[-3px]" /> Probar
               </button>
               {archivo && (
                 <button onClick={() => restaurarTono(tipo)} disabled={busy}
@@ -445,19 +505,19 @@ export function AdminConfiguracion() {
                 </button>
               )}
             </div>
-            {tonoError[tipo] && <div className="text-xs mt-2 text-red-500">✗ {tonoError[tipo]}</div>}
+            {tonoError[tipo] && <div className="text-xs mt-2 text-red-500"><XMarkIcon className="w-4 h-4 inline-block align-[-3px]" /> {tonoError[tipo]}</div>}
           </div>
         )
       })}
     </>) },
-    { id: 'integraciones', label: 'Integraciones', icon: '🔌', claves: ['consolidado_conn'] },
+    { id: 'integraciones', label: 'Integraciones', Icon: PuzzlePieceIcon, claves: ['consolidado_conn'] },
   ]
 
   // Claves sin pestaña propia (y que no son de apariencia/tonos) caen en "Otros".
   const conocidas = new Set([...tabs.flatMap(t => t.claves),
     'escala_fuente', 'fondo_imagen', 'dashboard_estilo', 'fondo_oscuridad', 'fuente_sistema'])
   const otras = rows.map(r => r.clave).filter(c => !conocidas.has(c) && !c.startsWith('tono_'))
-  if (otras.length) tabs.push({ id: 'otros', label: 'Otros', icon: '⋯', claves: otras })
+  if (otras.length) tabs.push({ id: 'otros', label: 'Otros', Icon: EllipsisHorizontalIcon, claves: otras })
 
   const actual = tabs.find(t => t.id === tab) ?? tabs[0]
 
@@ -477,7 +537,7 @@ export function AdminConfiguracion() {
                 ? 'border-brand text-brand'
                 : 'border-transparent text-muted hover:text-[color:var(--tx)]'
             }`}>
-            <span className="mr-1.5">{t.icon}</span>{t.label}
+            <t.Icon className="w-4 h-4 inline-block align-[-3px] mr-1.5" />{t.label}
           </button>
         ))}
       </div>

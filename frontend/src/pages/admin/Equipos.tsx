@@ -1,3 +1,4 @@
+import { CheckCircleIcon, CheckIcon, ExclamationTriangleIcon, PauseCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { FormModal, Field, Input, Select } from '../../components/admin/FormModal'
@@ -138,8 +139,8 @@ export function AdminEquipos() {
             { key: 'ip',         label: 'IP', render: r => <code className="text-brand text-xs">{r.ip}</code> },
             { key: 'tipo',       label: 'Tipo', render: r => (r as any).tipoEquipo?.nombre ?? '—' },
             { key: 'via',        label: 'Vía', render: r => (r as any).via ? `${(r as any).via.estacion?.nombre} — ${(r as any).via.numero}` : '—' },
-            { key: 'monitorear', label: 'Monitorear', render: r => r.monitorear ? '✅' : '⏸' },
-            { key: 'esCritico',  label: 'Crítico', render: r => r.esCritico ? '⚠️' : '—' },
+            { key: 'monitorear', label: 'Monitorear', render: r => r.monitorear ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : <PauseCircleIcon className="w-5 h-5 text-muted" aria-label="Pausado" /> },
+            { key: 'esCritico',  label: 'Crítico', render: r => r.esCritico ? <ExclamationTriangleIcon className="w-5 h-5 text-warn" aria-label="Crítico" /> : '—' },
             { key: 'agente', label: 'Agente', render: r => r.agenteInstalado
                 ? <button onClick={() => openRestart(r)}
                     className="px-3 py-1 rounded-md bg-[color:light-dark(oklch(0.943 0.025 144), #1a2a1a)] text-brand text-xs font-bold hover:brightness-110 transition-all">
@@ -223,7 +224,7 @@ export function AdminEquipos() {
         )}
         {restartResult && (
           <div className={`text-xs ${restartResult.ok ? 'text-green-500' : 'text-red-500'}`}>
-            {restartResult.ok ? '✓ ' : '✗ '}{restartResult.message}
+            {restartResult.ok ? <CheckIcon className="w-4 h-4 inline-block align-[-3px]" /> : <XMarkIcon className="w-4 h-4 inline-block align-[-3px]" />} {restartResult.message}
           </div>
         )}
       </FormModal>

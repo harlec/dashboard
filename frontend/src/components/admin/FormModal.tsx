@@ -1,3 +1,4 @@
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import type { ReactNode } from 'react'
 
 interface Props {
@@ -23,7 +24,7 @@ export function FormModal({ title, open, onClose, onSubmit, loading, children, s
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--line)]">
           <h2 className="font-bold text-[1rem] text-[color:var(--tx)]">{title}</h2>
           <button onClick={onClose}
-            className="text-muted hover:text-danger px-2 py-1 rounded-md transition-colors">✕</button>
+            className="text-muted hover:text-danger px-2 py-1 rounded-md transition-colors"><XMarkIcon className="w-5 h-5" /></button>
         </div>
 
         {/* Body */}

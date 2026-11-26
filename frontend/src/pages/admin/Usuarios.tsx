@@ -1,3 +1,4 @@
+import { ArrowRightIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { FormModal, Field, Input, Select } from '../../components/admin/FormModal'
@@ -80,7 +81,7 @@ export function AdminUsuarios() {
                 {r.rol === 'ti' ? 'TI' : r.rol}
               </span>
             },
-            { key: 'activo', label: 'Activo', render: r => r.activo ? '✅' : '❌' },
+            { key: 'activo', label: 'Activo', render: r => r.activo ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : <XCircleIcon className="w-5 h-5 text-danger" aria-label="No" /> },
           ]}
           data={rows} keyField="id" loading={loading}
           onEdit={openEdit}
@@ -141,7 +142,7 @@ export function AdminUsuarios() {
         <div className="border-t border-border pt-3">
           <button onClick={() => setModal('password')}
             className="text-sm text-warn hover:underline">
-            Cambiar contraseña →
+            Cambiar contraseña <ArrowRightIcon className="w-4 h-4 inline-block align-[-3px]" />
           </button>
         </div>
       </FormModal>

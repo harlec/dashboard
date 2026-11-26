@@ -1,3 +1,4 @@
+import { CheckCircleIcon, PauseCircleIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { FormModal, Field, Input, Select } from '../../components/admin/FormModal'
@@ -114,7 +115,7 @@ export function AdminServicioChecks() {
             { key: 'host',      label: 'Host/URL', render: r => <code className="text-brand text-xs">{r.host}{r.puerto ? `:${r.puerto}` : ''}</code> },
             { key: 'ubicacion', label: 'Ubicación', render: r => r.ubicacion ?? '—' },
             { key: 'estado',    label: 'Estado actual', render: r => <EstadoBadge c={r} /> },
-            { key: 'monitorear', label: 'Monitorear', render: r => r.monitorear ? '✅' : '⏸' },
+            { key: 'monitorear', label: 'Monitorear', render: r => r.monitorear ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : <PauseCircleIcon className="w-5 h-5 text-muted" aria-label="Pausado" /> },
           ]}
           data={filtered} keyField="id" loading={loading}
           onEdit={openEdit} onDelete={remove}

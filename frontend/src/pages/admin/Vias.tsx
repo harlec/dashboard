@@ -1,3 +1,4 @@
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { AdminTable } from '../../components/admin/AdminTable'
 import { FormModal, Field, Input, Select } from '../../components/admin/FormModal'
@@ -70,7 +71,7 @@ export function AdminVias() {
             { key: 'numero',  label: 'Número' },
             { key: 'nombre',  label: 'Nombre' },
             { key: 'estacion', label: 'Estación', render: r => (r as any).estacion?.nombre ?? '—' },
-            { key: 'activo',  label: 'Activo', render: r => r.activo ? '✅' : '❌' },
+            { key: 'activo',  label: 'Activo', render: r => r.activo ? <CheckCircleIcon className="w-5 h-5 text-ok" aria-label="Sí" /> : <XCircleIcon className="w-5 h-5 text-danger" aria-label="No" /> },
           ]}
           data={rows} keyField="id" loading={loading}
           onEdit={openEdit} onDelete={remove}
